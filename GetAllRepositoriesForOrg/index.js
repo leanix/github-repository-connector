@@ -3,10 +3,34 @@
  * triggered by an orchestrator function.
  * 
  */
+const {graphql} = require("@octokit/graphql");
 
-module.exports = async function (context, orgName) {
+module.exports = async function (context, {orgName, ghToken}) {
     // retrieves all ids of an organisation
-    const allRepoIds = ["id1", "id2", "id3"];
-    context.log('got org name ', orgName)
-    context.done(null, allRepoIds);
+    const data = await graphql({
+        query: `
+            query getOrgRepositories($queryString: String!) {
+              search(query: $queryString, type: REPOSITORY, first: 5) {
+                repositoryCount
+                edges {
+                  node {
+                    ... on Repository {
+                      id
+                    }
+                  }
+                }
+                pageInfo {
+                  hasNextPage
+                  startCursor
+                }
+              }
+            }
+        `,
+        queryString: `org:${orgName}`,
+        headers: {
+            authorization: `token ${ghToken}`,
+        },
+    });
+    const finalData = data.search.edges.map(e => e.node.id)
+    context.done(null, finalData);
 };

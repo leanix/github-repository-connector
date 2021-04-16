@@ -9,8 +9,9 @@ const df = require("durable-functions");
 module.exports = df.orchestrator(function* (context) {
     const orgName = "leanix";
     const scannerCapacity = 100;
+    const ghToken = process.env["ghToken"];
 
-    const repositoriesIds = yield context.df.callActivity("GetAllRepositoriesForOrg", orgName);
+    const repositoriesIds = yield context.df.callActivity("GetAllRepositoriesForOrg", {orgName, ghToken});
 
     const workPerScanner = [];
     for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
@@ -28,7 +29,7 @@ module.exports = df.orchestrator(function* (context) {
 
     context.log('fanning in');
     const partialResults = yield context.df.Task.all(output)
-    
+
     const sasUrl = yield context.df.callActivity('SaveLdifToStorage', partialResults)
 
     return sasUrl;

@@ -1,11 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="b7bbbd3e-45d5-41b7-b7b3-03600c3e2a6b" name="Default Changelist" comment="" />
+    <list default="true" id="b7bbbd3e-45d5-41b7-b7b3-03600c3e2a6b" name="Default Changelist" comment="Bootstrapped fan out/ fan in pattern for github repo scanning as discussed in architecture diagram">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GetAllRepositoriesForOrg/function.json" beforeDir="false" afterPath="$PROJECT_DIR$/GetAllRepositoriesForOrg/function.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GetAllRepositoriesForOrg/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/GetAllRepositoriesForOrg/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GithubRepoScanOschestrator/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/GithubRepoScanOschestrator/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="JupyterTrust" id="5bcfe979-64ee-4b71-8f6f-864bd60838cc" />
   <component name="MavenImportPreferences">
@@ -22,10 +46,30 @@
   </component>
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_package_manager_path" value="npm" />
+    <property name="ts.external.directory.path" value="$APPLICATION_HOME_DIR$/plugins/JavaScriptLanguage/jsLanguageServicesImpl/external" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
+      <option name="arquillianRunConfiguration">
+        <value>
+          <option name="containerStateName" value="" />
+        </value>
+      </option>
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -36,10 +80,71 @@
       <option name="presentableId" value="Default" />
       <updated>1618565035582</updated>
       <workItem from="1618565037095" duration="95000" />
+      <workItem from="1618565138537" duration="356000" />
+      <workItem from="1618565568005" duration="4761000" />
     </task>
+    <task id="LOCAL-00001" summary="initial commit">
+      <created>1618565152894</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1618565152894</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Bootstrapped fan out/ fan in pattern for github repo scanning as discussed in architecture diagram">
+      <created>1618565402929</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1618565402929</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="initial commit" />
+    <MESSAGE value="Bootstrapped fan out/ fan in pattern for github repo scanning as discussed in architecture diagram" />
+    <option name="LAST_COMMIT_MESSAGE" value="Bootstrapped fan out/ fan in pattern for github repo scanning as discussed in architecture diagram" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state width="1398" height="231" key="GridCell.Tab.0.bottom" timestamp="1618565494654">
+      <screen x="1440" y="-98" width="1920" height="1057" />
+    </state>
+    <state width="1398" height="231" key="GridCell.Tab.0.bottom/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618565494654" />
+    <state width="1398" height="231" key="GridCell.Tab.0.center" timestamp="1618565494654">
+      <screen x="1440" y="-98" width="1920" height="1057" />
+    </state>
+    <state width="1398" height="231" key="GridCell.Tab.0.center/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618565494654" />
+    <state width="1398" height="231" key="GridCell.Tab.0.left" timestamp="1618565494653">
+      <screen x="1440" y="-98" width="1920" height="1057" />
+    </state>
+    <state width="1398" height="231" key="GridCell.Tab.0.left/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618565494653" />
+    <state width="1398" height="231" key="GridCell.Tab.0.right" timestamp="1618565494654">
+      <screen x="1440" y="-98" width="1920" height="1057" />
+    </state>
+    <state width="1398" height="231" key="GridCell.Tab.0.right/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618565494654" />
+    <state x="2213" y="292" key="SubscriptionsDialog" timestamp="1618566825721">
+      <screen x="1440" y="-98" width="1920" height="1057" />
+    </state>
+    <state x="2213" y="292" key="SubscriptionsDialog/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618566825721" />
+    <state x="1867" y="117" key="Vcs.Push.Dialog.v2" timestamp="1618565409044">
+      <screen x="1440" y="-98" width="1920" height="1057" />
+    </state>
+    <state x="320" y="201" key="Vcs.Push.Dialog.v2/1440.-98.1920.1057/0.23.1440.877@0.23.1440.877" timestamp="1618565175171" />
+    <state x="1867" y="117" key="Vcs.Push.Dialog.v2/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618565409044" />
   </component>
 </project>
