@@ -1,3 +1,3 @@
-#Github Repository Connector
+# Github Repository Connector
 
 Implemented in azure durable functions
