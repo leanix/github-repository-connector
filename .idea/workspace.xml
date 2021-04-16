@@ -10,18 +10,23 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b7bbbd3e-45d5-41b7-b7b3-03600c3e2a6b" name="Default Changelist" comment="Bootstrapped fan out/ fan in pattern for github repo scanning as discussed in architecture diagram">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GetAllRepositoriesForOrg/function.json" beforeDir="false" afterPath="$PROJECT_DIR$/GetAllRepositoriesForOrg/function.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GetAllRepositoriesForOrg/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/GetAllRepositoriesForOrg/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GithubRepoScanOschestrator/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/GithubRepoScanOschestrator/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+    <list default="true" id="b7bbbd3e-45d5-41b7-b7b3-03600c3e2a6b" name="Default Changelist" comment="added graphql client for graphql queries support. &#10;todo: fix GetAllRepositoriesForOrg act function to use pagination to use all repos">
+      <change afterPath="$PROJECT_DIR$/start-http.http" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GithubRepoScanOschestrator/function.json" beforeDir="false" afterPath="$PROJECT_DIR$/GithubRepoScanOrchestrator/function.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/GithubRepoScanOschestrator/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/GithubRepoScanOrchestrator/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HttpStartOrgScan/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/HttpStartOrgScan/index.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="HTTP Request" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
@@ -58,6 +63,52 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
+  <component name="RestClientSettings">
+    <option name="REQUEST_HISTORY">
+      <list>
+        <RestClientRequest>
+          <option name="httpMethod" value="POST" />
+          <option name="urlBase" value="http://localhost:7071/api/orchestrators/some" />
+          <option name="urlPath" value="" />
+          <option name="headers">
+            <list>
+              <KeyValuePair>
+                <option name="key" value="Host" />
+                <option name="value" value="localhost:7071" />
+              </KeyValuePair>
+              <KeyValuePair>
+                <option name="key" value="Content-Type" />
+                <option name="value" value="application/json" />
+              </KeyValuePair>
+            </list>
+          </option>
+          <option name="haveTextToSend" value="true" />
+          <option name="textToSend" value="{&#10;  &quot;orgName&quot;: &quot;leanix&quot;,&#10;  &quot;ghToken&quot;: &quot;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&quot;&#10;}" />
+          <option name="filesToSend" value="" />
+        </RestClientRequest>
+        <RestClientRequest>
+          <option name="httpMethod" value="POST" />
+          <option name="urlBase" value="http://localhost:7071/api/orchestrators/some" />
+          <option name="urlPath" value="" />
+          <option name="headers">
+            <list>
+              <KeyValuePair>
+                <option name="key" value="Host" />
+                <option name="value" value="localhost:7071" />
+              </KeyValuePair>
+              <KeyValuePair>
+                <option name="key" value="Content-Type" />
+                <option name="value" value="application/json" />
+              </KeyValuePair>
+            </list>
+          </option>
+          <option name="haveTextToSend" value="true" />
+          <option name="textToSend" value="{&#10;  &quot;id&quot;: 999,&#10;  &quot;value&quot;: &quot;content&quot;&#10;}" />
+          <option name="filesToSend" value="" />
+        </RestClientRequest>
+      </list>
+    </option>
+  </component>
   <component name="RunManager">
     <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
       <option name="arquillianRunConfiguration">
@@ -70,6 +121,14 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="start-http#1" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" path="$PROJECT_DIR$/start-http.http" runType="Run single request">
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="HTTP Request.start-http#1" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -81,7 +140,7 @@
       <updated>1618565035582</updated>
       <workItem from="1618565037095" duration="95000" />
       <workItem from="1618565138537" duration="356000" />
-      <workItem from="1618565568005" duration="4761000" />
+      <workItem from="1618565568005" duration="7474000" />
     </task>
     <task id="LOCAL-00001" summary="initial commit">
       <created>1618565152894</created>
@@ -97,7 +156,14 @@
       <option name="project" value="LOCAL" />
       <updated>1618565402929</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="added graphql client for graphql queries support. &#10;todo: fix GetAllRepositoriesForOrg act function to use pagination to use all repos">
+      <created>1618571380998</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1618571380998</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -118,24 +184,34 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="initial commit" />
     <MESSAGE value="Bootstrapped fan out/ fan in pattern for github repo scanning as discussed in architecture diagram" />
-    <option name="LAST_COMMIT_MESSAGE" value="Bootstrapped fan out/ fan in pattern for github repo scanning as discussed in architecture diagram" />
+    <MESSAGE value="added graphql client for graphql queries support. &#10;todo: fix GetAllRepositoriesForOrg act function to use pagination to use all repos" />
+    <option name="LAST_COMMIT_MESSAGE" value="added graphql client for graphql queries support. &#10;todo: fix GetAllRepositoriesForOrg act function to use pagination to use all repos" />
   </component>
   <component name="WindowStateProjectService">
-    <state width="1398" height="231" key="GridCell.Tab.0.bottom" timestamp="1618565494654">
-      <screen x="1440" y="-98" width="1920" height="1057" />
+    <state x="1540" y="2" width="1720" height="857" key="DiffContextDialog" timestamp="1618580965478">
+      <screen x="0" y="23" width="1440" height="877" />
     </state>
+    <state x="1540" y="2" width="1720" height="857" key="DiffContextDialog/0.23.1440.877@0.23.1440.877" timestamp="1618580965478" />
+    <state x="1540" y="2" width="1720" height="857" key="DiffContextDialog/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618571375231" />
+    <state width="1398" height="231" key="GridCell.Tab.0.bottom" timestamp="1618580920848">
+      <screen x="0" y="23" width="1440" height="877" />
+    </state>
+    <state width="1398" height="231" key="GridCell.Tab.0.bottom/0.23.1440.877@0.23.1440.877" timestamp="1618580920848" />
     <state width="1398" height="231" key="GridCell.Tab.0.bottom/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618565494654" />
-    <state width="1398" height="231" key="GridCell.Tab.0.center" timestamp="1618565494654">
-      <screen x="1440" y="-98" width="1920" height="1057" />
+    <state width="1398" height="231" key="GridCell.Tab.0.center" timestamp="1618580920846">
+      <screen x="0" y="23" width="1440" height="877" />
     </state>
+    <state width="1398" height="231" key="GridCell.Tab.0.center/0.23.1440.877@0.23.1440.877" timestamp="1618580920846" />
     <state width="1398" height="231" key="GridCell.Tab.0.center/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618565494654" />
-    <state width="1398" height="231" key="GridCell.Tab.0.left" timestamp="1618565494653">
-      <screen x="1440" y="-98" width="1920" height="1057" />
+    <state width="1398" height="231" key="GridCell.Tab.0.left" timestamp="1618580920846">
+      <screen x="0" y="23" width="1440" height="877" />
     </state>
+    <state width="1398" height="231" key="GridCell.Tab.0.left/0.23.1440.877@0.23.1440.877" timestamp="1618580920846" />
     <state width="1398" height="231" key="GridCell.Tab.0.left/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618565494653" />
-    <state width="1398" height="231" key="GridCell.Tab.0.right" timestamp="1618565494654">
-      <screen x="1440" y="-98" width="1920" height="1057" />
+    <state width="1398" height="231" key="GridCell.Tab.0.right" timestamp="1618580920847">
+      <screen x="0" y="23" width="1440" height="877" />
     </state>
+    <state width="1398" height="231" key="GridCell.Tab.0.right/0.23.1440.877@0.23.1440.877" timestamp="1618580920847" />
     <state width="1398" height="231" key="GridCell.Tab.0.right/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618565494654" />
     <state x="2213" y="292" key="SubscriptionsDialog" timestamp="1618566825721">
       <screen x="1440" y="-98" width="1920" height="1057" />
@@ -146,5 +222,9 @@
     </state>
     <state x="320" y="201" key="Vcs.Push.Dialog.v2/1440.-98.1920.1057/0.23.1440.877@0.23.1440.877" timestamp="1618565175171" />
     <state x="1867" y="117" key="Vcs.Push.Dialog.v2/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618565409044" />
+    <state x="385" y="213" width="670" height="676" key="search.everywhere.popup" timestamp="1618580739161">
+      <screen x="0" y="23" width="1440" height="877" />
+    </state>
+    <state x="385" y="213" width="670" height="676" key="search.everywhere.popup/0.23.1440.877@0.23.1440.877" timestamp="1618580739161" />
   </component>
 </project>

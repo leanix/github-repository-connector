@@ -7,9 +7,11 @@
 const df = require("durable-functions");
 
 module.exports = df.orchestrator(function* (context) {
-    const orgName = "leanix";
+    const {
+        orgName,
+        ghToken
+    } = context.bindingData.input;
     const scannerCapacity = 100;
-    const ghToken = process.env["ghToken"];
 
     const repositoriesIds = yield context.df.callActivity("GetAllRepositoriesForOrg", {orgName, ghToken});
 

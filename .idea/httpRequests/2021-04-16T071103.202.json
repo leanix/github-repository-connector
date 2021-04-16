@@ -1,0 +1,8 @@
+{
+  "id": "4460e04f4b724de9a08c694936b98ef3",
+  "statusQueryGetUri": "http://localhost:7071/runtime/webhooks/durabletask/instances/4460e04f4b724de9a08c694936b98ef3?taskHub=DurableFunctionsHub&connection=Storage&code=rvbIemTspjbyE8d2BrDR1OhUiLwu4/hBZOeBeByiiyytWQNnezO2IA==",
+  "sendEventPostUri": "http://localhost:7071/runtime/webhooks/durabletask/instances/4460e04f4b724de9a08c694936b98ef3/raiseEvent/{eventName}?taskHub=DurableFunctionsHub&connection=Storage&code=rvbIemTspjbyE8d2BrDR1OhUiLwu4/hBZOeBeByiiyytWQNnezO2IA==",
+  "terminatePostUri": "http://localhost:7071/runtime/webhooks/durabletask/instances/4460e04f4b724de9a08c694936b98ef3/terminate?reason={text}&taskHub=DurableFunctionsHub&connection=Storage&code=rvbIemTspjbyE8d2BrDR1OhUiLwu4/hBZOeBeByiiyytWQNnezO2IA==",
+  "rewindPostUri": "http://localhost:7071/runtime/webhooks/durabletask/instances/4460e04f4b724de9a08c694936b98ef3/rewind?reason={text}&taskHub=DurableFunctionsHub&connection=Storage&code=rvbIemTspjbyE8d2BrDR1OhUiLwu4/hBZOeBeByiiyytWQNnezO2IA==",
+  "purgeHistoryDeleteUri": "http://localhost:7071/runtime/webhooks/durabletask/instances/4460e04f4b724de9a08c694936b98ef3?taskHub=DurableFunctionsHub&connection=Storage&code=rvbIemTspjbyE8d2BrDR1OhUiLwu4/hBZOeBeByiiyytWQNnezO2IA=="
+}
