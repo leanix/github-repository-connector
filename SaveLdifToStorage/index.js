@@ -3,12 +3,23 @@
  * triggered by an orchestrator function.
  * 
  */
+const {ContainerClient} = require("@azure/storage-blob");
 
-module.exports = async function (context, partialResults) {
+module.exports = async function (context, {partialResults, containerSasUrl, workspaceId}) {
     const combinedResults = partialResults.flatMap(partial => partial);
+    context.log('stats: partial results#', partialResults.length, 'complete partial results#',
+        partialResults.map(x => x.length).reduce((sum, c) => sum + c, 0), 'combined results#', combinedResults.length)
 
-    // save to required azure storage
+    const containerClient = new ContainerClient(containerSasUrl);
 
-    // send sas url
-    return `sas-url`;
+    const blobName = `${workspaceId}-${Date.now()}.json`;
+    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+    const finalLdifData = JSON.stringify(combinedResults);
+
+    try {
+        await blockBlobClient.upload(finalLdifData, Buffer.byteLength(finalLdifData))
+    } catch (e) {
+        return '__UPLOAD_FAILED';
+    }
+    return blobName;
 };

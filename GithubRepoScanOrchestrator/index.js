@@ -9,7 +9,9 @@ const df = require("durable-functions");
 module.exports = df.orchestrator(function* (context) {
     const {
         orgName,
-        ghToken
+        ghToken,
+        workspaceId,
+        containerSasUrl,
     } = context.bindingData.input;
     const scannerCapacity = 100;
 
@@ -21,7 +23,6 @@ module.exports = df.orchestrator(function* (context) {
     }
 
     const output = []
-    context.log('fanning out');
     for (let i = 0; i < workPerScanner.length; i++) {
         // This will starts Activity Functions in parallel
         output.push(
@@ -29,10 +30,7 @@ module.exports = df.orchestrator(function* (context) {
         )
     }
 
-    context.log('fanning in');
     const partialResults = yield context.df.Task.all(output)
 
-    const sasUrl = yield context.df.callActivity('SaveLdifToStorage', partialResults)
-
-    return sasUrl;
+    return yield context.df.callActivity('SaveLdifToStorage', {partialResults, workspaceId, containerSasUrl});
 });

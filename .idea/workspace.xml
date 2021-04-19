@@ -6,15 +6,35 @@
         <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
         <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
       </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:feature" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:feature" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:CID-95" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:test" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
     </expand>
-    <select />
+    <select>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:test" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="BRANCH:test/large-ldif-processing" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </select>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b7bbbd3e-45d5-41b7-b7b3-03600c3e2a6b" name="Default Changelist" comment="added graphql client for graphql queries support. &#10;todo: fix GetAllRepositoriesForOrg act function to use pagination to use all repos">
-      <change afterPath="$PROJECT_DIR$/start-http.http" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GithubRepoScanOschestrator/function.json" beforeDir="false" afterPath="$PROJECT_DIR$/GithubRepoScanOrchestrator/function.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GithubRepoScanOschestrator/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/GithubRepoScanOrchestrator/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HttpStartOrgScan/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/HttpStartOrgScan/index.js" afterDir="false" />
+    <list default="true" id="b7bbbd3e-45d5-41b7-b7b3-03600c3e2a6b" name="Default Changelist" comment="remove dev request log file">
+      <change beforePath="$PROJECT_DIR$/SaveLdifToStorage/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/SaveLdifToStorage/index.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,6 +79,9 @@
     <property name="ts.external.directory.path" value="$APPLICATION_HOME_DIR$/plugins/JavaScriptLanguage/jsLanguageServicesImpl/external" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
     </key>
@@ -66,6 +89,46 @@
   <component name="RestClientSettings">
     <option name="REQUEST_HISTORY">
       <list>
+        <RestClientRequest>
+          <option name="httpMethod" value="POST" />
+          <option name="urlBase" value="http://localhost:7071/api/orchestrators/v" />
+          <option name="urlPath" value="" />
+          <option name="headers">
+            <list>
+              <KeyValuePair>
+                <option name="key" value="HOST" />
+                <option name="value" value="localhost:7071" />
+              </KeyValuePair>
+              <KeyValuePair>
+                <option name="key" value="Content-Type" />
+                <option name="value" value="application/json" />
+              </KeyValuePair>
+            </list>
+          </option>
+          <option name="haveTextToSend" value="true" />
+          <option name="textToSend" value="{&#10;  &quot;orgName&quot;: &quot;leanix&quot;,&#10;  &quot;ghToken&quot;: &quot;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&quot;,&#10;  &quot;containerSasUrl&quot;: &quot;https://githubrepoconnector.blob.core.windows.net/test-blob-container?sp=raw&amp;st=2021-04-19T07:10:30Z&amp;se=2021-05-08T15:10:30Z&amp;spr=https&amp;sv=2020-02-10&amp;sr=c&amp;sig=%2BmCIp0qlTAT44o5fLJ7owDNMldWdbo7tTw5wqAwXblg%3D&quot;,&#10;  &quot;workspaceId&quot;: &quot;dff3adab-ad01-4479-a517-f112d87d4092&quot;&#10;}" />
+          <option name="filesToSend" value="" />
+        </RestClientRequest>
+        <RestClientRequest>
+          <option name="httpMethod" value="POST" />
+          <option name="urlBase" value="http://localhost:7071/api/orchestrators/v" />
+          <option name="urlPath" value="" />
+          <option name="headers">
+            <list>
+              <KeyValuePair>
+                <option name="key" value="HOST" />
+                <option name="value" value="localhost:7071" />
+              </KeyValuePair>
+              <KeyValuePair>
+                <option name="key" value="Content-Type" />
+                <option name="value" value="application/json" />
+              </KeyValuePair>
+            </list>
+          </option>
+          <option name="haveTextToSend" value="true" />
+          <option name="textToSend" value="{&#10;  &quot;orgName&quot;: &quot;leanix&quot;,&#10;  &quot;ghToken&quot;: &quot;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&quot;,&#10;  &quot;containerSasUrl&quot;: &quot;https://githubrepoconnector.blob.core.windows.net/test-blob-container?sp=rw&amp;st=2021-04-19T05:45:21Z&amp;se=2021-04-30T13:45:21Z&amp;spr=https&amp;sv=2020-02-10&amp;sr=c&amp;sig=Kzu55NmZLbqJno5rLZ3OLp7nC18FY%2FM%2BPfEIzTZfihk%3D&quot;,&#10;  &quot;workspaceId&quot;: &quot;dff3adab-ad01-4479-a517-f112d87d4092&quot;&#10;}" />
+          <option name="filesToSend" value="" />
+        </RestClientRequest>
         <RestClientRequest>
           <option name="httpMethod" value="POST" />
           <option name="urlBase" value="http://localhost:7071/api/orchestrators/some" />
@@ -110,17 +173,6 @@
     </option>
   </component>
   <component name="RunManager">
-    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
-      <option name="arquillianRunConfiguration">
-        <value>
-          <option name="containerStateName" value="" />
-        </value>
-      </option>
-      <option name="TEST_OBJECT" value="class" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="start-http#1" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" path="$PROJECT_DIR$/start-http.http" runType="Run single request">
       <method v="2" />
     </configuration>
@@ -163,7 +215,21 @@
       <option name="project" value="LOCAL" />
       <updated>1618571380998</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="save the ldif to azure storage with workspace id as name">
+      <created>1618817260573</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1618817260574</updated>
+    </task>
+    <task id="LOCAL-00005" summary="remove dev request log file">
+      <created>1618817275561</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1618817275561</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -174,7 +240,19 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="test/large-ldif-processing" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
           </value>
         </entry>
       </map>
@@ -185,34 +263,36 @@
     <MESSAGE value="initial commit" />
     <MESSAGE value="Bootstrapped fan out/ fan in pattern for github repo scanning as discussed in architecture diagram" />
     <MESSAGE value="added graphql client for graphql queries support. &#10;todo: fix GetAllRepositoriesForOrg act function to use pagination to use all repos" />
-    <option name="LAST_COMMIT_MESSAGE" value="added graphql client for graphql queries support. &#10;todo: fix GetAllRepositoriesForOrg act function to use pagination to use all repos" />
+    <MESSAGE value="save the ldif to azure storage with workspace id as name" />
+    <MESSAGE value="remove dev request log file" />
+    <option name="LAST_COMMIT_MESSAGE" value="remove dev request log file" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="1540" y="2" width="1720" height="857" key="DiffContextDialog" timestamp="1618580965478">
-      <screen x="0" y="23" width="1440" height="877" />
+    <state x="1540" y="2" width="1720" height="857" key="DiffContextDialog" timestamp="1618817444722">
+      <screen x="1440" y="-98" width="1920" height="1057" />
     </state>
     <state x="1540" y="2" width="1720" height="857" key="DiffContextDialog/0.23.1440.877@0.23.1440.877" timestamp="1618580965478" />
-    <state x="1540" y="2" width="1720" height="857" key="DiffContextDialog/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618571375231" />
-    <state width="1398" height="231" key="GridCell.Tab.0.bottom" timestamp="1618580920848">
-      <screen x="0" y="23" width="1440" height="877" />
+    <state x="1540" y="2" width="1720" height="857" key="DiffContextDialog/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618817444722" />
+    <state width="1878" height="203" key="GridCell.Tab.0.bottom" timestamp="1618817107196">
+      <screen x="1440" y="-98" width="1920" height="1057" />
     </state>
     <state width="1398" height="231" key="GridCell.Tab.0.bottom/0.23.1440.877@0.23.1440.877" timestamp="1618580920848" />
-    <state width="1398" height="231" key="GridCell.Tab.0.bottom/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618565494654" />
-    <state width="1398" height="231" key="GridCell.Tab.0.center" timestamp="1618580920846">
-      <screen x="0" y="23" width="1440" height="877" />
+    <state width="1878" height="203" key="GridCell.Tab.0.bottom/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618817107196" />
+    <state width="1878" height="203" key="GridCell.Tab.0.center" timestamp="1618817107195">
+      <screen x="1440" y="-98" width="1920" height="1057" />
     </state>
     <state width="1398" height="231" key="GridCell.Tab.0.center/0.23.1440.877@0.23.1440.877" timestamp="1618580920846" />
-    <state width="1398" height="231" key="GridCell.Tab.0.center/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618565494654" />
-    <state width="1398" height="231" key="GridCell.Tab.0.left" timestamp="1618580920846">
-      <screen x="0" y="23" width="1440" height="877" />
+    <state width="1878" height="203" key="GridCell.Tab.0.center/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618817107195" />
+    <state width="1878" height="203" key="GridCell.Tab.0.left" timestamp="1618817107195">
+      <screen x="1440" y="-98" width="1920" height="1057" />
     </state>
     <state width="1398" height="231" key="GridCell.Tab.0.left/0.23.1440.877@0.23.1440.877" timestamp="1618580920846" />
-    <state width="1398" height="231" key="GridCell.Tab.0.left/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618565494653" />
-    <state width="1398" height="231" key="GridCell.Tab.0.right" timestamp="1618580920847">
-      <screen x="0" y="23" width="1440" height="877" />
+    <state width="1878" height="203" key="GridCell.Tab.0.left/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618817107195" />
+    <state width="1878" height="203" key="GridCell.Tab.0.right" timestamp="1618817107196">
+      <screen x="1440" y="-98" width="1920" height="1057" />
     </state>
     <state width="1398" height="231" key="GridCell.Tab.0.right/0.23.1440.877@0.23.1440.877" timestamp="1618580920847" />
-    <state width="1398" height="231" key="GridCell.Tab.0.right/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618565494654" />
+    <state width="1878" height="203" key="GridCell.Tab.0.right/1440.-98.1920.1057/0.23.1440.877@1440.-98.1920.1057" timestamp="1618817107196" />
     <state x="2213" y="292" key="SubscriptionsDialog" timestamp="1618566825721">
       <screen x="1440" y="-98" width="1920" height="1057" />
     </state>
