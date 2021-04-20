@@ -2,7 +2,7 @@
 
 module.exports = async function (context, req) {
     const client = df.getClient(context);
-    const instanceId = await client.startNew("GithubRepoScanOschestrator", undefined, req.body);
+    const instanceId = await client.startNew("GithubRepoScanOrchestrator", undefined, req.body);
 
     context.log(`Started orchestration with ID = '${instanceId}'.`);
 

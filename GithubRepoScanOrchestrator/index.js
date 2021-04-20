@@ -7,10 +7,18 @@
 const df = require("durable-functions");
 
 module.exports = df.orchestrator(function* (context) {
-    const orgName = "leanix";
+    const {
+        orgName,
+        ghToken,
+        workspaceId,
+        containerSasUrl,
+    } = context.bindingData.input;
     const scannerCapacity = 100;
 
-    const repositoriesIds = yield context.df.callActivity("GetAllRepositoriesForOrg", orgName);
+    // storing ghToken in env so that the token is not logged or stored during activity function calls
+    process.env['ghToken'] = ghToken;
+
+    const repositoriesIds = yield context.df.callActivity("GetAllRepositoriesForOrg", {orgName});
 
     const workPerScanner = [];
     for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
@@ -18,7 +26,6 @@ module.exports = df.orchestrator(function* (context) {
     }
 
     const output = []
-    context.log('fanning out');
     for (let i = 0; i < workPerScanner.length; i++) {
         // This will starts Activity Functions in parallel
         output.push(
@@ -26,10 +33,7 @@ module.exports = df.orchestrator(function* (context) {
         )
     }
 
-    context.log('fanning in');
     const partialResults = yield context.df.Task.all(output)
-    
-    const sasUrl = yield context.df.callActivity('SaveLdifToStorage', partialResults)
 
-    return sasUrl;
+    return yield context.df.callActivity('SaveLdifToStorage', {partialResults, workspaceId, containerSasUrl});
 });
