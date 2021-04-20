@@ -8,6 +8,7 @@ const {graphql} = require("@octokit/graphql");
 const graphqlClient = graphql.defaults({
     headers: {
         authorization: `token ${process.env['ghToken']}`,
+        // authorization: `token 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 `,
     },
 });
 

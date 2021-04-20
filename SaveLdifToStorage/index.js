@@ -9,25 +9,23 @@ module.exports = async function (context, {partialResults, containerSasUrl, work
     const combinedResults = partialResults.flatMap(partial => partial);
     let existingLanguagesIds = []
     let existingLabelsIds = []
-    // const data1 = getReposData(repoIds).map(convertToLdif(existingLanguagesIds, existingLabelsIds));
     let data = []
     let partialData = []
-    let existingLanguagesIds2 = []
-    let existingLabelsIds2 = []
-    // const reposData = getReposData(repoIds)
     combinedResults.map(repoData => {
-        [partialData, existingLanguagesIds2, existingLabelsIds2] = convertToLdif(repoData, existingLanguagesIds, existingLabelsIds)
-        existingLanguagesIds = existingLanguagesIds2
-        existingLabelsIds = existingLabelsIds2
-        data = [data, ...partialData]
+        [partialData, existingLanguagesIds, existingLabelsIds] = convertToLdif(repoData, existingLanguagesIds, existingLabelsIds)
+        data = [...data, ...partialData]
     })
-    // save to required azure storage
-
-    // send sas url
-    // return `sas-url`;
-
-
-
+    /* Creating one final LDIF to store into the blob after strigifying the object */
+    const finalLDIF = {
+        "connectorId": "github-connector",
+        "connectorType": "github-connector",
+        "connectorVersion": "1.0.0",
+        "processingDirection": "inbound",
+        "processingMode": "full",
+        "lxVersion": "1.0.0",
+        "description": "Map organisation github repos to LeanIX Fact Sheets",
+        "content": data
+    }
     context.log('stats: partial results#', partialResults.length, 'complete partial results#',
         partialResults.map(x => x.length).reduce((sum, c) => sum + c, 0), 'combined results#', combinedResults.length)
 
@@ -35,9 +33,10 @@ module.exports = async function (context, {partialResults, containerSasUrl, work
 
     const blobName = `${workspaceId}-${Date.now()}.json`;
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-    const finalLdifData = JSON.stringify(combinedResults);
+    const finalLdifData = JSON.stringify(finalLDIF);
 
     try {
+        /* Uploading the final stringified json object as a block blob */
         await blockBlobClient.upload(finalLdifData, Buffer.byteLength(finalLdifData))
     } catch (e) {
         return '__UPLOAD_FAILED';
@@ -45,6 +44,9 @@ module.exports = async function (context, {partialResults, containerSasUrl, work
     return blobName;
 };
 
+/* covertToLdif function take a single repoData object and extracts 3 types of 
+   content objects, Repository, Language and Label. To avoid repetition, already
+   considered languages and labels are maintained as arrays and updated accordingly */
 function convertToLdif(repoData, existingLanguagesIds, existingLabelsIds) {
     const ldif = {
         type: "Repository",
@@ -83,8 +85,5 @@ function convertToLdif(repoData, existingLanguagesIds, existingLabelsIds) {
                 }
             }
     })
-    console.log("LINE 2070, LDIF for REPO is ", ldif)
-    console.log("LINE 2071, LDIF for LANG is ", langLdifs)
-    console.log("LINE 2072, LDIF for LABEL is ", labelLdifs)
     return [[ldif, ...langLdifs, ...labelLdifs], existingLanguagesIds, existingLabelsIds];
 }
