@@ -5,12 +5,12 @@
  */
 const {graphql} = require("@octokit/graphql");
 
-const graphqlClient = graphql.defaults({
-    headers: {
-        authorization: `token ${process.env['ghToken']}`,
-        // authorization: `token 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 `,
-    },
-});
+// const graphqlClient = graphql.defaults({
+//     headers: {
+//         authorization: `token ${process.env['ghToken']}`,
+//         // authorization: `token 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 `,
+//     },
+// });
 
 async function getRepositoriesIds(graphqlClient, {queryString, pageCount, cursor}) {
     const data = await graphqlClient({
@@ -58,6 +58,12 @@ module.exports = async function (context, {orgName}) {
     // retrieves all ids of an organisation
 
     const queryString = `org:${orgName}`;
+    const graphqlClient = graphql.defaults({
+      headers: {
+          authorization: `token ${process.env['ghToken']}`,
+          // authorization: `token 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 `,
+      },
+   });
     const finalResult = await getAllRepositoryIds(graphqlClient, queryString);
     context.done(null, finalResult);
 };
