@@ -5,7 +5,7 @@
  */
 const {ContainerClient} = require("@azure/storage-blob");
 
-module.exports = async function (context, {partialResults, containerSasUrl, workspaceId}) {
+module.exports = async function (context, {partialResults, GetOrgTeamsData, containerSasUrl, workspaceId}) {
     const combinedResults = partialResults.flatMap(partial => partial);
     let existingLanguagesIds = []
     let existingLabelsIds = []

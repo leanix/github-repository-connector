@@ -29,11 +29,12 @@ module.exports = df.orchestrator(function* (context) {
     for (let i = 0; i < workPerScanner.length; i++) {
         // This will starts Activity Functions in parallel
         output.push(
-            context.df.callActivity('GetAndConvertSubReposDataToLdif', workPerScanner[i])
+            context.df.callActivity('GetSubReposData', workPerScanner[i])
         )
     }
 
     const partialResults = yield context.df.Task.all(output)
+    const teamResults = yield context.df.callActivity('GetOrgTeamsData', {orgName});
 
-    return yield context.df.callActivity('SaveLdifToStorage', {partialResults, workspaceId, containerSasUrl});
+    return yield context.df.callActivity('SaveLdifToStorage', {partialResults, teamResults, workspaceId, containerSasUrl});
 });
