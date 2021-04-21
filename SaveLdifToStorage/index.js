@@ -5,7 +5,7 @@
  */
 const {ContainerClient} = require("@azure/storage-blob");
 
-module.exports = async function (context, {partialResults, containerSasUrl, workspaceId}) {
+module.exports = async function (context, {partialResults, GetOrgTeamsData, containerSasUrl, workspaceId}) {
     const combinedResults = partialResults.flatMap(partial => partial);
     context.log('stats: partial results#', partialResults.length, 'complete partial results#',
         partialResults.map(x => x.length).reduce((sum, c) => sum + c, 0), 'combined results#', combinedResults.length)
