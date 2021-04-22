@@ -15,8 +15,8 @@ const ldifHeader = {
     "description": "Map organisation github repos to LeanIX Fact Sheets"
 }
 
-module.exports = async function (context, {partialResults, GetOrgTeamsData, containerSasUrl, workspaceId}) {
-    const contentArray = handleLdifCreation(partialResults, GetOrgTeamsData)
+module.exports = async function (context, {partialResults, teamResults, containerSasUrl, workspaceId}) {
+    const contentArray = handleLdifCreation(partialResults, teamResults)
     const blobName = await uploadToBlob(containerSasUrl, workspaceId, getFinalLdif(contentArray))
     return blobName
 };
@@ -68,11 +68,9 @@ function handleLdifCreation (partialResults, orgTeamsData) {
     }
 
     //pushing teams content objects into the content array
-    if (orgTeamsData && orgTeamsData.length) {
-        for(let teamNode of orgTeamsData.teams.nodes) {
+        for(let teamNode of orgTeamsData) {
             contentArray.push(convertToTeamContent(teamNode))
         }
-    }
     return contentArray
 }
 
@@ -136,7 +134,7 @@ function convertToRepoTopicContent (topicData) {
  */
 function convertToTeamContent (teamData) {
     return {
-        type: "Repository",
+        type: "Team",
         id: teamData.id,
         data: {
             name: teamData.name,
