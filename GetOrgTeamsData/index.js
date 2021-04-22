@@ -46,7 +46,6 @@ async function getPagedRepos(graphqlClient, {teamId, cursor}) {
     }
 }
 
-
 async function getAllReposForTeam(graphqlClient, team) {
     let repoCursor = null;
     let finalResult = [];
@@ -104,7 +103,7 @@ async function getPagedTeamsData(graphqlClient, {orgName, pageCount, cursor}) {
 
     return {
         teams,
-        pageInfo: data.search.pageInfo
+        pageInfo: data.organization.teams.pageInfo
     };
 }
 
