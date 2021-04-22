@@ -35,42 +35,38 @@ function handleLdifCreation (partialResults, orgTeamsData) {
 
         //maintaining a map of all languages used in the repositories
         //we later use this map to create language content items
-        if (repoData.languages) {
-            for(let language of repoData.languages.nodes) {
-                if (!(language.id in reposLanguagesMap)) {
-                    reposLanguagesMap[language.id] = language
-                }
+        for(let language of repoData.languages.nodes) {
+            if (!(language.id in reposLanguagesMap)) {
+                reposLanguagesMap[language.id] = language
             }
         }
 
         //maintaining a map of all repository topics used in the repositories
         //we later use this map to create topic content items
-        if (repoData.repositoryTopics) {
-            for(let repoTopic of repoData.repositoryTopics.nodes) {
-                if (!(repoTopic.topic.id in reposTopicsMap)) {
-                    reposTopicsMap[repoTopic.topic.id] = repoTopic.topic
-                }
+        for(let repoTopic of repoData.repositoryTopics.nodes) {
+            if (!(repoTopic.topic.id in reposTopicsMap)) {
+                reposTopicsMap[repoTopic.topic.id] = repoTopic.topic
             }
         }
 
-        //pushing repository content object into the content array
         contentArray.push(convertToRepositoryContent(repoData))
     }
     
     //pushing language content objects into the content array
-    for(let langNode of Object.keys(reposLanguagesMap)) {
-        contentArray.push(convertToLanguageContent(reposLanguagesMap[langNode]))
+    for(let langNode of Object.values(reposLanguagesMap)) {
+        contentArray.push(convertToLanguageContent(langNode))
     }
 
     //pushing repo topic content objects into the content array
-    for(let repoTopicNode of Object.keys(reposTopicsMap)) {
-        contentArray.push(convertToRepoTopicContent(reposTopicsMap[repoTopicNode]))
+    for(let repoTopicNode of Object.values(reposTopicsMap)) {
+        contentArray.push(convertToRepoTopicContent(repoTopicNode))
     }
 
     //pushing teams content objects into the content array
-        for(let teamNode of orgTeamsData) {
-            contentArray.push(convertToTeamContent(teamNode))
-        }
+    for(let teamNode of orgTeamsData) {
+        contentArray.push(convertToTeamContent(teamNode))
+    }
+
     return contentArray
 }
 
@@ -81,19 +77,16 @@ function handleLdifCreation (partialResults, orgTeamsData) {
 
 /* convert Repo Data to object into repository content object for final LDIF */
 function convertToRepositoryContent (repoData) {
-    let tempArr = repoData.repositoryTopics && repoData.repositoryTopics.nodes.map((node)=> 
-        node.topic.id
-    )
     return {
         type: "Repository",
         id: repoData.id,
         data: {
             name: repoData.name,
             url: repoData.url,
-            languages: repoData.languages && repoData.languages.nodes.map((node)=>
+            languages: repoData.languages.nodes.map((node)=>
                 node.id
             ),
-            topics: repoData.repositoryTopics && repoData.repositoryTopics.nodes.map(({topic})=> 
+            topics: repoData.repositoryTopics.nodes.map(({topic})=> 
                 topic.id
             )
         }
@@ -138,7 +131,7 @@ function convertToTeamContent (teamData) {
         id: teamData.id,
         data: {
             name: teamData.name,
-            repositories: teamData.repositories && teamData.repositories.nodes.map((node)=>
+            repositories: teamData.repositories.nodes.map((node)=>
                 node.id
             )
         }
@@ -174,7 +167,6 @@ async function uploadToBlob (containerSasUrl, workspaceId, finalLdif) {
     const finalLdifData = JSON.stringify(finalLdif);
 
     try {
-        /* Uploading the final stringified json object as a block blob */
         await blockBlobClient.upload(finalLdifData, Buffer.byteLength(finalLdifData))
     } catch (e) {
         return '__UPLOAD_FAILED';
