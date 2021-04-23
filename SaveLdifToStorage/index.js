@@ -162,10 +162,7 @@ async function uploadToBlob (containerSasUrl, workspaceId, finalLdif) {
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
     const finalLdifData = JSON.stringify(finalLdif);
 
-    try {
-        await blockBlobClient.upload(finalLdifData, Buffer.byteLength(finalLdifData))
-    } catch (e) {
-        return '__UPLOAD_FAILED';
-    }
+    await blockBlobClient.upload(finalLdifData, Buffer.byteLength(finalLdifData))
+    
     return blobName;
 }
