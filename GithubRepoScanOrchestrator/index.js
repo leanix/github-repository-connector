@@ -31,7 +31,12 @@ module.exports = df.orchestrator(function* (context) {
     }
 
     const partialResults = yield context.df.Task.all(output)
-    const teamResults = yield context.df.callActivity('GetOrgTeamsData', {orgName});
+    try {
+        var teamResults = yield context.df.callActivity('GetOrgTeamsData', {orgName});
+    } catch (e) {
+        context.log(e);
+        teamResults = [];
+    }
 
     return yield context.df.callActivity('SaveLdifToStorage', {partialResults, teamResults, workspaceId, containerSasUrl});
 });
