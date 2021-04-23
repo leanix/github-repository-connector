@@ -36,17 +36,13 @@ function handleLdifCreation (partialResults, orgTeamsData) {
         //maintaining a map of all languages used in the repositories
         //we later use this map to create language content items
         for(let language of repoData.languages.nodes) {
-            if (!(language.id in reposLanguagesMap)) {
                 reposLanguagesMap[language.id] = language
-            }
         }
 
         //maintaining a map of all repository topics used in the repositories
         //we later use this map to create topic content items
         for(let repoTopic of repoData.repositoryTopics.nodes) {
-            if (!(repoTopic.topic.id in reposTopicsMap)) {
                 reposTopicsMap[repoTopic.topic.id] = repoTopic.topic
-            }
         }
 
         contentArray.push(convertToRepositoryContent(repoData))
