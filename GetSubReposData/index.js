@@ -9,15 +9,106 @@
  *   function app in Kudu
  */
 
+const {graphql} = require("@octokit/graphql");
+
 module.exports = async function (context, repoIds) {
+    const graphqlClient = graphql.defaults({
+        headers: {
+            authorization: `token ${process.env['ghToken']}`,
+        },
+    });
     context.log('partial act func called', repoIds);
-    const data = getReposData(repoIds).map(convertToLdif);
+    const data = getReposData(graphqlClient, repoIds).map(convertToLdif);
     return data;
 };
 
-function getReposData(repoIds) {
-    const data = [];
-    return repoIds;
+function getReposData(graphqlClient, repoIds) {
+    const initialLanguagePageSize = 50;
+    const data = await graphqlClient({
+        query: `
+            query getReposData($repoIds:[String!], $languagePageCount: Int!){
+                nodes(ids: $repoIds){
+                    id
+                    ... on Repository {
+                        name
+                        url
+                        languages(first: $languagePageCount) {
+                            pageInfo {
+                                endCursor
+                                hasNextPage
+                            }
+                            nodes {
+                                name
+                                }
+                            }
+                        repositoryTopics(first: 10) {
+                            nodes {
+                                topic {
+                                    name
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        `,
+        repoIds,
+        languagePageCount: initialLanguagePageSize
+    });
+
+    let repoInfos = data.nodes;
+    for(let repoInfo of repoInfos) {
+        if (repoInfo.languages.pageInfo.hasNextPage) {
+            repoInfo.languages.nodes = await getAllLanguagesForRepo(graphqlClient, repoInfo)
+        }
+    }
+
+    return repoInfos;
+}
+
+async function getAllLanguagesForRepo(graphqlClient, repoInfo){
+    let languageCursor = null;
+    let finalResult = [];
+
+    do {
+        var {languages, pageInfo} = await getPagedLanguages(graphqlClient, {repoId:repoInfo.id, cursor: languageCursor});
+        finalResult = finalResult.concat(languages);
+        languageCursor = pageInfo.endCursor;
+    } while (pageInfo.hasNextPage);
+
+    return finalResult;
+}
+
+async function getPagedLanguages (graphqlClient, {repoId, cursor}) {
+    const languagePageSize = 100;
+    const data = await graphqlClient({
+        query: `
+            query getLanguagesForRepo($repoId: ID!, $pageCount: Int!, $cursor: String) {
+                node(id: $repoId) {
+                    id
+                    ... on Repository {
+                        languages(first: $pageCount, after: $cursor) {
+                            pageInfo {
+                                endCursor
+                                hasNextPage
+                            }
+                            nodes {
+                                name
+                            }
+                        }
+                    }
+                }
+            }
+        `,
+        repoId,
+        cursor,
+        pageCount: languagePageSize
+    });
+    return {
+        languages: data.node.languages.nodes,
+        pageInfo: data.node.languages.pageInfo
+    }
 }
 
 function convertToLdif(repoData) {
