@@ -15,7 +15,10 @@ module.exports = df.orchestrator(function* (context) {
     } = context.bindingData.input;
     const scannerCapacity = 100;
 
-    const repositoriesIds = yield context.df.callActivity("GetAllRepositoriesForOrg", {orgName, ghToken});
+    // storing ghToken in env so that the token is not logged or stored during activity function calls
+    process.env['ghToken'] = ghToken;
+
+    const repositoriesIds = yield context.df.callActivity("GetAllRepositoriesForOrg", {orgName});
 
     const workPerScanner = [];
     for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
