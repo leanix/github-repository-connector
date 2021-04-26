@@ -37,12 +37,14 @@ async function getReposData(graphqlClient, repoIds) {
                                 hasNextPage
                             }
                             nodes {
+                                id
                                 name
                                 }
                             }
                         repositoryTopics(first: 10) {
                             nodes {
                                 topic {
+                                    id
                                     name
                                     }
                                 }
