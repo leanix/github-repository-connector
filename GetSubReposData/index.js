@@ -17,19 +17,20 @@ module.exports = async function (context, repoIds) {
             authorization: `token ${process.env['ghToken']}`,
         },
     });
-    return await getReposData(graphqlClient, repoIds).map(convertToLdif);
+    return await getReposData(graphqlClient, repoIds)
 };
 
 async function getReposData(graphqlClient, repoIds) {
     const initialLanguagePageSize = 50;
     const data = await graphqlClient({
         query: `
-            query getReposData($repoIds:[String!], $languagePageCount: Int!){
+            query getReposData($repoIds:[ID!]!, $languagePageCount: Int!){
                 nodes(ids: $repoIds){
                     id
                     ... on Repository {
                         name
                         url
+                        description
                         languages(first: $languagePageCount) {
                             pageInfo {
                                 endCursor
@@ -49,7 +50,6 @@ async function getReposData(graphqlClient, repoIds) {
                         }
                     }
                 }
-            }
         `,
         repoIds,
         languagePageCount: initialLanguagePageSize
@@ -107,11 +107,4 @@ async function getPagedLanguages(graphqlClient, {repoId, cursor}) {
         languages: data.node.languages.nodes,
         pageInfo: data.node.languages.pageInfo
     }
-}
-
-function convertToLdif(repoData) {
-    const ldif = {
-        id: repoData
-    }
-    return ldif;
 }
