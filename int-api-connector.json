@@ -1,0 +1,269 @@
+{
+    "processors": [
+        {
+            "processorType": "variableProcessor",
+            "filter": {
+                "exactType": "Repository"
+            },
+            "run": 1,
+            "forEach": "${data.topics}",
+            "variables": [
+                {
+                    "key": "topic_${integration.valueOfForEach}",
+                    "value": "${content.id.toString()}"
+                }
+            ],
+            "logLevel": "debug"
+        },
+        {
+            "processorType": "inboundTag",
+            "factSheets": {
+                "external": {
+                    "ids": "${variables['topic_'.concat(content.id)]}",
+                    "type": {
+                        "expr": "externalId"
+                    }
+                }
+            },
+            "filter": {
+                "advanced": "${content.type == 'Topic'}"
+            },
+            "run": 2,
+            "updates": [
+                {
+                    "key": {
+                        "expr": "name"
+                    },
+                    "values": [
+                        {
+                            "expr": "${data.name}"
+                        }
+                    ]
+                },
+                {
+                    "key": {
+                        "expr": "group.name"
+                    },
+                    "values": [
+                        {
+                            "expr": "Github Connectors"
+                        }
+                    ]
+                },
+                {
+                    "key": {
+                        "expr": "group.mode"
+                    },
+                    "values": [
+                        {
+                            "expr": "MULTIPLE"
+                        }
+                    ]
+                },
+                {
+                    "key": {
+                        "expr": "group.restrictToFactSheetTypes"
+                    },
+                    "values": [
+                        {
+                            "expr": "Microservice"
+                        }
+                    ]
+                }
+            ],
+            "logLevel": "debug"
+        },
+        {
+            "processorType": "inboundFactSheet",
+            "type": "Microservice",
+            "filter": {
+                "exactType": "Repository"
+            },
+            "identifier": {
+                "external": {
+                    "id": {
+                        "expr": "${content.id}"
+                    },
+                    "type": {
+                        "expr": "externalId"
+                    }
+                }
+            },
+            "run": 1,
+            "updates": [
+                {
+                    "key": {
+                        "expr": "name"
+                    },
+                    "values": [
+                        {
+                            "expr": "${data.name}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "processorType": "inboundDocument",
+            "processorName": "Link Resources to Microservice",
+            "processorDescription": "this processor helps in creating resources on the microservice FS",
+            "identifier": {
+                "external": {
+                    "id": {
+                        "expr": "${content.id}"
+                    },
+                    "type": {
+                        "expr": "externalId"
+                    }
+                }
+            },
+            "filter": {
+                "exactType": "Repository"
+            },
+            "run": 2,
+            "updates": [
+                {
+                    "key": {
+                        "expr": "name"
+                    },
+                    "values": [
+                        {
+                            "expr": "Repo URL"
+                        }
+                    ]
+                },
+                {
+                    "key": {
+                        "expr": "url"
+                    },
+                    "values": [
+                        {
+                            "expr": "${data.url}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "processorType": "inboundFactSheet",
+            "type": "TechnicalComponent",
+            "filter": {
+                "exactType": "Language"
+            },
+            "identifier": {
+                "external": {
+                    "id": {
+                        "expr": "${content.id}"
+                    },
+                    "type": {
+                        "expr": "externalId"
+                    }
+                }
+            },
+            "run": 1,
+            "updates": [
+                {
+                    "key": {
+                        "expr": "name"
+                    },
+                    "values": [
+                        {
+                            "expr": "${data.name}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "processorType": "inboundFactSheet",
+            "type": "Team",
+            "filter": {
+                "exactType": "Team"
+            },
+            "identifier": {
+                "external": {
+                    "id": {
+                        "expr": "${content.id}"
+                    },
+                    "type": {
+                        "expr": "externalId"
+                    }
+                }
+            },
+            "run": 1,
+            "updates": [
+                {
+                    "key": {
+                        "expr": "name"
+                    },
+                    "values": [
+                        {
+                            "expr": "${data.name}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "processorType": "inboundRelation",
+            "type": "relMicroserviceToTechnicalComponent",
+            "filter": {
+                "exactType": "Repository"
+            },
+            "from": {
+                "external": {
+                    "id": {
+                        "expr": "${content.id}"
+                    },
+                    "type": {
+                        "expr": "externalId"
+                    }
+                }
+            },
+            "to": {
+                "external": {
+                    "id": {
+                        "expr": "${integration.valueOfForEach}"
+                    },
+                    "type": {
+                        "expr": "externalId"
+                    }
+                }
+            },
+            "run": 2,
+            "updates": [],
+            "forEach": "${data.languages}"
+        },
+        {
+            "processorType": "inboundRelation",
+            "type": "relTeamToMicroservice",
+            "filter": {
+                "exactType": "Team"
+            },
+            "from": {
+                "external": {
+                    "id": {
+                        "expr": "${content.id}"
+                    },
+                    "type": {
+                        "expr": "externalId"
+                    }
+                }
+            },
+            "to": {
+                "external": {
+                    "id": {
+                        "expr": "${integration.valueOfForEach}"
+                    },
+                    "type": {
+                        "expr": "externalId"
+                    }
+                }
+            },
+            "run": 2,
+            "updates": [],
+            "forEach": "${data.repositories}"
+        }
+    ],
+    "variables": {}
+}
