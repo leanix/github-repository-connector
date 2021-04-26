@@ -9,17 +9,15 @@ async function getRepositoriesIds(graphqlClient, {queryString, pageCount, cursor
     const data = await graphqlClient({
         query: `
             query getOrgRepositories($queryString: String!, $pageCount: Int!, $cursor: String) {
-              search(query: $queryString, type: REPOSITORY, first: $pageCount, after: $cursor) {
-                edges {
-                  node {
-                    ... on Repository {
-                      id
-                    }
+              organization(login: $queryString) {
+                repositories(first: $pageCount, after: $cursor) {
+                  pageInfo {
+                    endCursor
+                    hasNextPage
                   }
-                }
-                pageInfo {
-                  endCursor
-                  hasNextPage
+                  nodes {
+                    id
+                  }
                 }
               }
             }
@@ -30,8 +28,8 @@ async function getRepositoriesIds(graphqlClient, {queryString, pageCount, cursor
     });
 
     return {
-        ids: data.search.edges.map(e => e.node.id),
-        pageInfo: data.search.pageInfo
+        ids: data.organization.repositories.nodes.map(e => e.id),
+        pageInfo: data.organization.repositories.pageInfo
     };
 }
 
@@ -49,15 +47,12 @@ async function getAllRepositoryIds(graphqlClient, queryString) {
 
 module.exports = async function (context, {orgName}) {
     // retrieves all ids of an organisation
-
-    const queryString = `org:${orgName}`;
-
     const graphqlClient = graphql.defaults({
         headers: {
             authorization: `token ${process.env['ghToken']}`,
         },
     });
 
-    const finalResult = await getAllRepositoryIds(graphqlClient, queryString);
+    const finalResult = await getAllRepositoryIds(graphqlClient, orgName);
     context.done(null, finalResult);
 };
