@@ -17,12 +17,10 @@ module.exports = async function (context, repoIds) {
             authorization: `token ${process.env['ghToken']}`,
         },
     });
-    context.log('partial act func called', repoIds);
-    const data = getReposData(graphqlClient, repoIds).map(convertToLdif);
-    return data;
+    return getReposData(graphqlClient, repoIds).map(convertToLdif);
 };
 
-function getReposData(graphqlClient, repoIds) {
+async function getReposData(graphqlClient, repoIds) {
     const initialLanguagePageSize = 50;
     const data = await graphqlClient({
         query: `
@@ -58,7 +56,7 @@ function getReposData(graphqlClient, repoIds) {
     });
 
     let repoInfos = data.nodes;
-    for(let repoInfo of repoInfos) {
+    for (let repoInfo of repoInfos) {
         if (repoInfo.languages.pageInfo.hasNextPage) {
             repoInfo.languages.nodes = await getAllLanguagesForRepo(graphqlClient, repoInfo)
         }
@@ -67,12 +65,12 @@ function getReposData(graphqlClient, repoIds) {
     return repoInfos;
 }
 
-async function getAllLanguagesForRepo(graphqlClient, repoInfo){
+async function getAllLanguagesForRepo(graphqlClient, repoInfo) {
     let languageCursor = null;
     let finalResult = [];
 
     do {
-        var {languages, pageInfo} = await getPagedLanguages(graphqlClient, {repoId:repoInfo.id, cursor: languageCursor});
+        var {languages, pageInfo} = await getPagedLanguages(graphqlClient, {repoId: repoInfo.id, cursor: languageCursor});
         finalResult = finalResult.concat(languages);
         languageCursor = pageInfo.endCursor;
     } while (pageInfo.hasNextPage);
@@ -80,7 +78,7 @@ async function getAllLanguagesForRepo(graphqlClient, repoInfo){
     return finalResult;
 }
 
-async function getPagedLanguages (graphqlClient, {repoId, cursor}) {
+async function getPagedLanguages(graphqlClient, {repoId, cursor}) {
     const languagePageSize = 100;
     const data = await graphqlClient({
         query: `
