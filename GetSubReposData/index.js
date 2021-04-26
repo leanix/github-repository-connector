@@ -17,7 +17,7 @@ module.exports = async function (context, repoIds) {
             authorization: `token ${process.env['ghToken']}`,
         },
     });
-    return getReposData(graphqlClient, repoIds).map(convertToLdif);
+    return await getReposData(graphqlClient, repoIds).map(convertToLdif);
 };
 
 async function getReposData(graphqlClient, repoIds) {
