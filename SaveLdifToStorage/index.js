@@ -79,6 +79,7 @@ function convertToRepositoryContent (repoData) {
         data: {
             name: repoData.name,
             url: repoData.url,
+            description: repoData.description,
             languages: repoData.languages.nodes.map((node)=>
                 node.id
             ),
@@ -127,6 +128,7 @@ function convertToTeamContent (teamData) {
         id: teamData.id,
         data: {
             name: teamData.name,
+            parent: teamData.parentTeam ? teamData.parentTeam.id : null,
             repositories: teamData.repositories.nodes.map((node)=>
                 node.id
             )
