@@ -2,6 +2,8 @@
 	"processors": [
 		{
 			"processorType": "variableProcessor",
+            "processorName": "repository-topics-map",
+            "processorDescription":"This variable processor creates a map of each repository against its topic ids ",
 			"filter": {
 				"exactType": "Repository"
 			},
@@ -16,6 +18,8 @@
 		},
 		{
 			"processorType": "inboundTag",
+            "processorName": "repository-topic-tags-creation",
+            "processorDescription":"This inboundTag processor creates a tag group and adds tags in it. Also assigns tags to FS fetching from variable",
 			"filter": {
 				"advanced": "${content.type == 'Topic'}"
 			},
@@ -73,6 +77,8 @@
 		},
 		{
 			"processorType": "inboundFactSheet",
+            "processorName": "create-microservice",
+            "processorDescription":"This inboundFactSheet creates a microservice FS for every repository content type",
 			"type": "Microservice",
 			"filter": {
 				"exactType": "Repository"
@@ -114,7 +120,7 @@
 		{
 			"processorType": "inboundDocument",
 			"processorName": "Link Resources to Microservice",
-			"processorDescription": "this processor helps in creating resources on the microservice FS",
+			"processorDescription": "this processor helps in creating resources on the microservice FS to link repository URL",
 			"identifier": {
 				"external": {
 					"id": {
@@ -136,7 +142,7 @@
 					},
 					"values": [
 						{
-							"expr": "Repo URL"
+							"expr": "Repository URL"
 						}
 					]
 				},
@@ -154,6 +160,8 @@
 		},
 		{
 			"processorType": "inboundFactSheet",
+            "processorName": "create-tech-comp-fs",
+            "processorDescription":"This inboundFactSheet processor creates a technical component FS for every language content type",
 			"type": "TechnicalComponent",
 			"filter": {
 				"exactType": "Language"
@@ -184,6 +192,8 @@
 		},
 		{
 			"processorType": "inboundFactSheet",
+            "processorName": "create-team",
+            "processorDescription":"This inboundFactSheet creates a team FS for every team content type",
 			"type": "Team",
 			"filter": {
 				"exactType": "Team"
@@ -214,6 +224,8 @@
 		},
 		{
 			"processorType": "inboundRelation",
+            "processorName": "create-rel-ms-tc",
+            "processorDescription":"This inboundRelation creates a relation b/w microservice and tech comp FS and adds attribute code size on rel",
 			"type": "relMicroserviceToTechnicalComponent",
 			"filter": {
 				"exactType": "Repository"
@@ -255,6 +267,8 @@
 		},
 		{
 			"processorType": "inboundRelation",
+            "processorName": "create-rel-team-ms",
+            "processorDescription":"This inboundRelation creates a relation b/w team and microservice FS",
 			"type": "relTeamToMicroservice",
 			"filter": {
 				"exactType": "Team"
@@ -285,6 +299,8 @@
 		},
 		{
 			"processorType": "inboundRelation",
+            "processorName": "create-rel-team-parent",
+            "processorDescription":"This inboundRelation creates a relation b/w team and it's parent team FS iff parent exists",
 			"type": "relToParent",
 			"filter": {
 				"advanced": "${content.type == 'Team' && content.data.parent != null }"
