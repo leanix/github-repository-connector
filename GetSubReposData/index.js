@@ -36,6 +36,13 @@ async function getReposData(graphqlClient, repoIds) {
                                 endCursor
                                 hasNextPage
                             }
+<<<<<<< HEAD
+                            nodes {
+                                id
+                                name
+                                }
+                            }
+=======
                             edges{
                                 size
                                 node{
@@ -44,6 +51,7 @@ async function getReposData(graphqlClient, repoIds) {
                                 }
                             }
                         }
+>>>>>>> main
                         repositoryTopics(first: 10) {
                             nodes {
                                 topic {
@@ -96,12 +104,17 @@ async function getPagedLanguages(graphqlClient, {repoId, cursor}) {
                                 endCursor
                                 hasNextPage
                             }
+<<<<<<< HEAD
+                            nodes {
+                                name
+=======
                             edges{
                                 size
                                 node{
                                     id
                                     name
                                 }
+>>>>>>> main
                             }
                         }
                     }
