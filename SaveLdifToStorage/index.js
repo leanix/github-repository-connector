@@ -83,7 +83,7 @@ function convertToRepositoryContent (repoData) {
             languages: repoData.languages.edges.map(({size, node})=> {
                 return { 
                     langId: node.id,
-                    size: size
+                    size: (size/1000).toFixed(2)
                 }
             }),
             topics: repoData.repositoryTopics.nodes.map(({topic})=> 
