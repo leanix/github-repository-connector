@@ -21,7 +21,7 @@ module.exports = async function (context, repoIds) {
 };
 
 async function getReposData(graphqlClient, repoIds) {
-    const initialLanguagePageSize = 1;
+    const initialLanguagePageSize = 10;
     const data = await graphqlClient({
         query: `
             query getReposData($repoIds:[ID!]!, $languagePageCount: Int!){
