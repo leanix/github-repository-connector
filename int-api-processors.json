@@ -12,8 +12,7 @@
 					"key": "topic_${integration.valueOfForEach}",
 					"value": "${content.id.toString()}"
 				}
-			],
-			"logLevel": "debug"
+			]
 		},
 		{
 			"processorType": "inboundTag",
@@ -46,7 +45,7 @@
 					},
 					"values": [
 						{
-							"expr": "Github Connectors"
+							"expr": "Github Topics"
 						}
 					]
 				},
@@ -70,8 +69,7 @@
 						}
 					]
 				}
-			],
-			"logLevel": "debug"
+			]
 		},
 		{
 			"processorType": "inboundFactSheet",
@@ -101,7 +99,7 @@
 						}
 					]
 				},
-                	{
+				{
 					"key": {
 						"expr": "description"
 					},
@@ -233,7 +231,7 @@
 			"to": {
 				"external": {
 					"id": {
-						"expr": "${integration.valueOfForEach}"
+						"expr": "${integration.valueOfForEach.langId}"
 					},
 					"type": {
 						"expr": "githubId"
@@ -241,7 +239,18 @@
 				}
 			},
 			"run": 2,
-			"updates": [],
+			"updates": [
+                {
+					"key": {
+						"expr": "codeSizeInKBytes"
+					},
+					"values": [
+						{
+							"expr": "${integration.valueOfForEach.size}"
+						}
+					]
+				}
+            ],
 			"forEach": "${data.languages}"
 		},
 		{
@@ -274,7 +283,7 @@
 			"updates": [],
 			"forEach": "${data.repositories}"
 		},
-        {
+		{
 			"processorType": "inboundRelation",
 			"type": "relToParent",
 			"filter": {
@@ -300,8 +309,7 @@
 					}
 				}
 			},
-			"run": 2,
-            "logLevel":"debug"
+			"run": 2
 		}
 	],
 	"variables": {}
