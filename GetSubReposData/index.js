@@ -21,7 +21,7 @@ module.exports = async function (context, repoIds) {
 };
 
 async function getReposData(graphqlClient, repoIds) {
-    const initialLanguagePageSize = 50;
+    const initialLanguagePageSize = 1;
     const data = await graphqlClient({
         query: `
             query getReposData($repoIds:[ID!]!, $languagePageCount: Int!){
@@ -36,11 +36,14 @@ async function getReposData(graphqlClient, repoIds) {
                                 endCursor
                                 hasNextPage
                             }
-                            nodes {
-                                id
-                                name
+                            edges{
+                                size
+                                node{
+                                    id
+                                    name
                                 }
                             }
+                        }
                         repositoryTopics(first: 10) {
                             nodes {
                                 topic {
@@ -93,8 +96,12 @@ async function getPagedLanguages(graphqlClient, {repoId, cursor}) {
                                 endCursor
                                 hasNextPage
                             }
-                            nodes {
-                                name
+                            edges{
+                                size
+                                node{
+                                    id
+                                    name
+                                }
                             }
                         }
                     }
