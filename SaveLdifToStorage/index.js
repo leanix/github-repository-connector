@@ -22,44 +22,44 @@ module.exports = async function (context, {partialResults, teamResults, containe
 };
 
 /**
- * 
+ *
  * @param {Array} partialResults contains repository information
  * @param {Array} orgTeamsData contains teams information
  */
-function handleLdifCreation (partialResults, orgTeamsData) {
+function handleLdifCreation(partialResults, orgTeamsData) {
     const combinedResults = partialResults.flatMap(partial => partial)
     const reposLanguagesMap = {}
     const reposTopicsMap = {}
     let contentArray = []
-    for(let repoData of combinedResults) {
+    for (let repoData of combinedResults) {
 
         //maintaining a map of all languages used in the repositories
         //we later use this map to create language content items
-        for(let language of repoData.languages.edges) {
-                reposLanguagesMap[language.node.id] = language.node
+        for (let language of repoData.languages.edges) {
+            reposLanguagesMap[language.node.id] = language.node
         }
 
         //maintaining a map of all repository topics used in the repositories
         //we later use this map to create topic content items
-        for(let repoTopic of repoData.repositoryTopics.nodes) {
-                reposTopicsMap[repoTopic.topic.id] = repoTopic.topic
+        for (let repoTopic of repoData.repositoryTopics.nodes) {
+            reposTopicsMap[repoTopic.topic.id] = repoTopic.topic
         }
 
         contentArray.push(convertToRepositoryContent(repoData))
     }
-    
+
     //pushing language content objects into the content array
-    for(let langNode of Object.values(reposLanguagesMap)) {
+    for (let langNode of Object.values(reposLanguagesMap)) {
         contentArray.push(convertToLanguageContent(langNode))
     }
 
     //pushing repo topic content objects into the content array
-    for(let repoTopicNode of Object.values(reposTopicsMap)) {
+    for (let repoTopicNode of Object.values(reposTopicsMap)) {
         contentArray.push(convertToRepoTopicContent(repoTopicNode))
     }
 
     //pushing teams content objects into the content array
-    for(let teamNode of orgTeamsData) {
+    for (let teamNode of orgTeamsData) {
         contentArray.push(convertToTeamContent(teamNode))
     }
 
@@ -67,12 +67,12 @@ function handleLdifCreation (partialResults, orgTeamsData) {
 }
 
 /**
- * 
+ *
  * @param {Object} repoData contains repository info from github
  */
 
 /* convert Repo Data to object into repository content object for final LDIF */
-function convertToRepositoryContent (repoData) {
+function convertToRepositoryContent(repoData) {
     return {
         type: "Repository",
         id: repoData.id,
@@ -80,13 +80,13 @@ function convertToRepositoryContent (repoData) {
             name: repoData.name,
             url: repoData.url,
             description: repoData.description,
-            languages: repoData.languages.edges.map(({size, node})=> {
-                return { 
+            languages: repoData.languages.edges.map(({size, node}) => {
+                return {
                     langId: node.id,
-                    size: (size/1000).toFixed(2)
+                    size: (size / 1000).toFixed(2)
                 }
             }),
-            topics: repoData.repositoryTopics.nodes.map(({topic})=> 
+            topics: repoData.repositoryTopics.nodes.map(({topic}) =>
                 topic.id
             )
         }
@@ -94,10 +94,10 @@ function convertToRepositoryContent (repoData) {
 }
 
 /**
- * 
+ *
  * @param {Object} langData contains language info related to repository
  */
-function convertToLanguageContent (langData) {
+function convertToLanguageContent(langData) {
     return {
         type: 'Language',
         id: langData.id,
@@ -108,10 +108,10 @@ function convertToLanguageContent (langData) {
 }
 
 /**
- * 
+ *
  * @param {Object} topicData contains topic data related to repo
  */
-function convertToRepoTopicContent (topicData) {
+function convertToRepoTopicContent(topicData) {
     return {
         type: 'Topic',
         id: topicData.id,
@@ -122,17 +122,17 @@ function convertToRepoTopicContent (topicData) {
 }
 
 /**
- * 
+ *
  * @param {Object} teamData contains team data as part of org
  */
-function convertToTeamContent (teamData) {
+function convertToTeamContent(teamData) {
     return {
         type: "Team",
         id: teamData.id,
         data: {
             name: teamData.name,
             parent: teamData.parentTeam ? teamData.parentTeam.id : null,
-            repositories: teamData.repositories.nodes.map((node)=>
+            repositories: teamData.repositories.nodes.map((node) =>
                 node.id
             )
         }
@@ -140,11 +140,11 @@ function convertToTeamContent (teamData) {
 }
 
 /**
- * 
+ *
  * @param {Array} contentArray array containing respository info
- * 
+ *
  */
-function getFinalLdif (contentArray) {
+function getFinalLdif(contentArray) {
     const ldifContent = {
         content: contentArray
     }
@@ -154,13 +154,13 @@ function getFinalLdif (contentArray) {
 
 
 /**
- * 
- * @param {String} containerSasUrl SAS url for the container 
+ *
+ * @param {String} containerSasUrl SAS url for the container
  * @param {String} workspaceId LeanIX WS ID related to the organisation
  * @param {Object} finalLdif LDIF object containing repo and lang info
- * 
+ *
  */
-async function uploadToBlob (containerSasUrl, workspaceId, finalLdif) {
+async function uploadToBlob(containerSasUrl, workspaceId, finalLdif) {
     const containerClient = new ContainerClient(containerSasUrl);
 
     const blobName = `${workspaceId}-${Date.now()}.json`;
@@ -168,6 +168,6 @@ async function uploadToBlob (containerSasUrl, workspaceId, finalLdif) {
     const finalLdifData = JSON.stringify(finalLdif);
 
     await blockBlobClient.upload(finalLdifData, Buffer.byteLength(finalLdifData))
-    
+
     return blobName;
 }
