@@ -12,6 +12,7 @@ module.exports = df.orchestrator(function* (context) {
         ghToken,
         workspaceId,
         containerSasUrl,
+        containerName,
     } = context.bindingData.input;
     const scannerCapacity = 100;
 
@@ -41,5 +42,5 @@ module.exports = df.orchestrator(function* (context) {
         teamResults = [];
     }
 
-    return yield context.df.callActivity('SaveLdifToStorage', {partialResults, teamResults, workspaceId, containerSasUrl});
+    return yield context.df.callActivity('SaveLdifToStorage', {partialResults, teamResults, workspaceId, containerSasUrl, containerName});
 });

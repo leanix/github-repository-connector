@@ -3,7 +3,13 @@
  * triggered by an orchestrator function.
  * 
  */
-const {ContainerClient} = require("@azure/storage-blob");
+const {
+    ContainerClient,
+    generateBlobSASQueryParameters,
+    SASProtocol,
+    StorageSharedKeyCredential,
+    BlobSASPermissions
+} = require("@azure/storage-blob");
 
 const ldifHeader = {
     "connectorId": "github-connector",
@@ -15,9 +21,9 @@ const ldifHeader = {
     "description": "Map organisation github repos to LeanIX Fact Sheets"
 }
 
-module.exports = async function (context, {partialResults, teamResults, containerSasUrl, workspaceId}) {
+module.exports = async function (context, {partialResults, teamResults, containerSasUrl, containerName, workspaceId}) {
     const contentArray = handleLdifCreation(partialResults, teamResults)
-    const blobName = await uploadToBlob(containerSasUrl, workspaceId, getFinalLdif(contentArray))
+    const blobName = await uploadToBlob(containerSasUrl, workspaceId, getFinalLdif(contentArray), containerName)
     return blobName
 };
 
@@ -158,9 +164,9 @@ function getFinalLdif(contentArray) {
  * @param {String} containerSasUrl SAS url for the container
  * @param {String} workspaceId LeanIX WS ID related to the organisation
  * @param {Object} finalLdif LDIF object containing repo and lang info
- *
+ * @param containerName Container name of the container sas url
  */
-async function uploadToBlob(containerSasUrl, workspaceId, finalLdif) {
+async function uploadToBlob(containerSasUrl, workspaceId, finalLdif, containerName) {
     const containerClient = new ContainerClient(containerSasUrl);
 
     const blobName = `${workspaceId}-${Date.now()}.json`;
@@ -169,5 +175,29 @@ async function uploadToBlob(containerSasUrl, workspaceId, finalLdif) {
 
     await blockBlobClient.upload(finalLdifData, Buffer.byteLength(finalLdifData))
 
-    return blobName;
+    return generateSasUrlForBlob(process.env['LX_AZ_ACCOUNT_NAME'], process.env['LX_AZ_ACCOUNT_KEY'], containerName, blobName);
+}
+
+function generateSasUrlForBlob(account, accountKey, containerName, blobName) {
+    if (!account || !accountKey) {
+        throw new Error("Azure account details are not set");
+    }
+
+    if (!containerName || !blobName) {
+        throw new Error("Container name or blob name is not supplied");
+    }
+
+    let sharedKeyCredential = new StorageSharedKeyCredential(account, accountKey);
+
+    const blobSASToken = generateBlobSASQueryParameters({
+            containerName,
+            blobName,
+            permissions: BlobSASPermissions.parse("r"),
+            expiresOn: new Date(new Date().valueOf() + 86400), // +1day
+            protocol: SASProtocol.Https,
+        },
+        sharedKeyCredential
+    ).toString();
+
+    return `https://${account}.blob.core.windows.net/${containerName}/${blobName}?${blobSASToken}`;
 }
