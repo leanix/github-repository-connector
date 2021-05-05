@@ -21,7 +21,9 @@ module.exports = async function (context, req) {
 
 function getCustomStatusResponse(status, context, azure_call_id) {
     if (status.runtimeStatus === df.OrchestrationRuntimeStatus.Completed) {
-        const data = status.output
+        const data = {
+            output: status.output
+        }
         context.log('Orchestrator reached status {status.runtimeStatus} - returning \'FINISHED\' response')
         return buildResponseBody(azure_call_id, "FINISHED", data, 200)
     } else if (status.runtimeStatus === df.OrchestrationRuntimeStatus.Pending ||
