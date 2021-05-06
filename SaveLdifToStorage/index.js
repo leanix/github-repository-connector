@@ -175,7 +175,7 @@ async function uploadToBlob(containerSasUrl, workspaceId, finalLdif, containerNa
 
     await blockBlobClient.upload(finalLdifData, Buffer.byteLength(finalLdifData))
 
-    return generateSasUrlForBlob(process.env['LX_AZ_ACCOUNT_NAME'], process.env['LX_AZ_ACCOUNT_KEY'], containerName, blobName);
+    return generateSasUrlForBlob(process.env['LX_AZ_STORAGE_ACCOUNT_NAME'], process.env['LX_AZ_STORAGE_ACCOUNT_KEY'], containerName, blobName);
 }
 
 function generateSasUrlForBlob(account, accountKey, containerName, blobName) {
