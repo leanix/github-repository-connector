@@ -187,17 +187,27 @@ function generateSasUrlForBlob(account, accountKey, containerName, blobName) {
         throw new Error("Container name or blob name is not supplied");
     }
 
-    let sharedKeyCredential = new StorageSharedKeyCredential(account, accountKey);
-
+    const sharedKeyCredential = new StorageSharedKeyCredential(account, accountKey);
+    const {startsOn, expiresOn} = getStartAndExpiresDates();
     const blobSASToken = generateBlobSASQueryParameters({
             containerName,
             blobName,
             permissions: BlobSASPermissions.parse("r"),
-            expiresOn: new Date(new Date().valueOf() + 86400), // +1day
+            startsOn: startsOn,
+            expiresOn: expiresOn,
             protocol: SASProtocol.Https,
         },
         sharedKeyCredential
     ).toString();
 
     return `https://${account}.blob.core.windows.net/${containerName}/${blobName}?${blobSASToken}`;
+}
+
+function getStartAndExpiresDates() {
+    const now = new Date();
+    const addHours = (date, h) => new Date(date.valueOf() + (h * 60 * 60 * 1000));
+    return {
+        startsOn: now,
+        expiresOn: addHours(now, 2)
+    }
 }
