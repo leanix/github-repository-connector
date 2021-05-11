@@ -56,13 +56,6 @@ jobs:
         uses: leanix/jira-action@master
         with:
           environment: 'prod'
-      
-      - name: LeanIX Jira Release Tracking for Test
-        if: github.ref !='refs/heads/main'
-        uses: leanix/jira-action@master
-        with:
-          environment: 'test'
-
 
       - name: Microservice Intelligence Tracking
         if: github.ref=='refs/heads/main'
