@@ -35,7 +35,6 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-
       - name: 'Resolve Project Dependencies Using Npm'
         shell: bash
         run: |
@@ -44,7 +43,8 @@ jobs:
           npm run build --if-present
           npm run test --if-present
           popd
-      - name: 'Run Azure Functions Action For Test'
+          
+      - name: 'Deploy Azure Function to Test'
         if: github.ref!='refs/heads/main'
         uses: Azure/functions-action@v1
         with:
