@@ -4,7 +4,7 @@
  * 
  */
 const {
-    ContainerClient,
+    BlobServiceClient,
     generateBlobSASQueryParameters,
     SASProtocol,
     StorageSharedKeyCredential,
@@ -21,9 +21,9 @@ const ldifHeader = {
     "description": "Map organisation github repos to LeanIX Fact Sheets"
 }
 
-module.exports = async function (context, {partialResults, teamResults, containerSasUrl, containerName, workspaceId}) {
+module.exports = async function (context, {partialResults, teamResults, containerName, workspaceId}) {
     const contentArray = handleLdifCreation(partialResults, teamResults)
-    const blobName = await uploadToBlob(containerSasUrl, workspaceId, getFinalLdif(contentArray), containerName)
+    const blobName = await uploadToBlob(workspaceId, getFinalLdif(contentArray), containerName)
     return blobName
 };
 
@@ -154,40 +154,51 @@ function getFinalLdif(contentArray) {
     const ldifContent = {
         content: contentArray
     }
-    const finalLdif = {...ldifHeader, ...ldifContent}
-    return finalLdif
+    return {...ldifHeader, ...ldifContent};
 }
 
 
-/**
- *
- * @param {String} containerSasUrl SAS url for the container
- * @param {String} workspaceId LeanIX WS ID related to the organisation
- * @param {Object} finalLdif LDIF object containing repo and lang info
- * @param containerName Container name of the container sas url
- */
-async function uploadToBlob(containerSasUrl, workspaceId, finalLdif, containerName) {
-    const containerClient = new ContainerClient(containerSasUrl);
+function getAzureCredential() {
+    const account = process.env['LX_AZ_STORAGE_ACCOUNT_NAME'];
+    const accountKey = process.env['LX_AZ_STORAGE_ACCOUNT_KEY'];
 
-    const blobName = `${workspaceId}-${Date.now()}.json`;
-    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-    const finalLdifData = JSON.stringify(finalLdif);
-
-    await blockBlobClient.upload(finalLdifData, Buffer.byteLength(finalLdifData))
-
-    return generateSasUrlForBlob(process.env['LX_AZ_STORAGE_ACCOUNT_NAME'], process.env['LX_AZ_STORAGE_ACCOUNT_KEY'], containerName, blobName);
-}
-
-function generateSasUrlForBlob(account, accountKey, containerName, blobName) {
     if (!account || !accountKey) {
         throw new Error("Azure account details are not set");
     }
 
+    const sharedKeyCredential = new StorageSharedKeyCredential(account, accountKey);
+    const azureStorageUrlBase = `https://${account}.blob.core.windows.net`;
+    return {sharedKeyCredential, azureStorageUrlBase};
+}
+
+/**
+ *
+ * @param {String} workspaceId LeanIX WS ID related to the organisation
+ * @param {Object} finalLdif LDIF object containing repo and lang info
+ * @param containerName Container name of the container sas url
+ */
+async function uploadToBlob(workspaceId, finalLdif, containerName) {
+    const {sharedKeyCredential, azureStorageUrlBase} = getAzureCredential();
+    const blobServiceClient = new BlobServiceClient(
+        azureStorageUrlBase,
+        sharedKeyCredential
+    );
+    const azContainerClient = blobServiceClient.getContainerClient(containerName);
+    await azContainerClient.createIfNotExists();
+
+    const blobName = `${workspaceId}-${Date.now()}.json`;
+    const blockBlobClient = azContainerClient.getBlockBlobClient(blobName);
+    const finalLdifData = JSON.stringify(finalLdif);
+    await blockBlobClient.upload(finalLdifData, Buffer.byteLength(finalLdifData))
+
+    return azureStorageUrlBase + generateSasUrlExtensionForBlob(sharedKeyCredential, containerName, blobName);
+}
+
+function generateSasUrlExtensionForBlob(sharedKeyCredential, containerName, blobName) {
     if (!containerName || !blobName) {
         throw new Error("Container name or blob name is not supplied");
     }
 
-    const sharedKeyCredential = new StorageSharedKeyCredential(account, accountKey);
     const {startsOn, expiresOn} = getStartAndExpiresDates();
     const blobSASToken = generateBlobSASQueryParameters({
             containerName,
@@ -200,7 +211,7 @@ function generateSasUrlForBlob(account, accountKey, containerName, blobName) {
         sharedKeyCredential
     ).toString();
 
-    return `https://${account}.blob.core.windows.net/${containerName}/${blobName}?${blobSASToken}`;
+    return `/${containerName}/${blobName}?${blobSASToken}`;
 }
 
 function getStartAndExpiresDates() {
