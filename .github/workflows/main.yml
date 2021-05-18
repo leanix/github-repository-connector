@@ -6,10 +6,12 @@ on:
   push:
     branches:
       - feature/**
+      - main
   workflow_dispatch:
 
 env:
   AZURE_FUNCTIONAPP_NAME: githubrepositoryconnector
+  AZURE_FUNCTIONAPP_NAME_PROD: functions-westeurope-prod-githubrepositoryconnector
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
   NODE_VERSION: '12.x'
 
@@ -31,6 +33,13 @@ jobs:
           node-version: ${{ env.NODE_VERSION }} 
 
       - name: 'Login via Azure CLI'
+        if: github.ref=='refs/heads/main'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
+
+      - name: 'Login to test via Azure CLI'
+        if: github.ref!='refs/heads/main'
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
@@ -49,6 +58,13 @@ jobs:
         uses: Azure/functions-action@v1
         with:
           app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+      
+      - name: 'Deploy Azure Function to prod'
+        if: github.ref=='refs/heads/main'
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
 
       - name: LeanIX Jira Release Tracking
