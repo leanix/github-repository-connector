@@ -1,4 +1,4 @@
-name: Deploy Github Repository Connector To Prod Env
+name: Deploy Github Repository Connector to Test Env
 
 on:
   repository_dispatch:
@@ -6,20 +6,16 @@ on:
   push:
     branches:
       - feature/**
-      - main
   workflow_dispatch:
 
 env:
+  AZURE_FUNCTIONAPP_NAME: githubrepositoryconnector
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
   NODE_VERSION: '12.x'
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        # adding all the prod regions to region matrix below
-        region: [westeurope, germanywestcentral, eastus, canadacentral, australiaeast]
     steps:
       - name: 'Checkout GitHub Action'
         uses: actions/checkout@main
@@ -34,12 +30,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }} 
 
-      - name: 'Login to Prod via Azure CLI'
-        if: github.ref=='refs/heads/main'
+      - name: 'Login to Test Env via Azure CLI'
+        if: github.ref!='refs/heads/main'
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
-
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: 'Resolve Project Dependencies Using Npm'
         shell: bash
@@ -50,23 +45,16 @@ jobs:
           npm run test --if-present
           popd
           
-      - name: 'Deploy Azure Function to Prod'
-        if: github.ref=='refs/heads/main'
+      - name: 'Deploy Azure Function to Test'
+        if: github.ref!='refs/heads/main'
         uses: Azure/functions-action@v1
-        env:
-          # creating an env varibale on the step, each region from the above matrix will be replaced
-          AZURE_FUNCTIONAPP_NAME_PROD: functions-${{ matrix.region }}-prod-githubrepositoryconnector
         with:
-          # using the above created variable as the func app name
-          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME}}
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-
+      
+      # tracking test releases on the related JIRA ticket with env as test
       - name: LeanIX Jira Release Tracking
-        if: github.ref=='refs/heads/main'
+        if: github.ref!='refs/heads/main'
         uses: leanix/jira-action@master
         with:
-          environment: 'prod'
-
-      - name: Microservice Intelligence Tracking
-        if: github.ref=='refs/heads/main'
-        uses: leanix/microservice-intelligence-action@master
+          environment: 'test'
