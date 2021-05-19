@@ -10,6 +10,7 @@
  */
 const {graphql} = require("@octokit/graphql");
 
+// the three types of visibilities present in github
 const REPO_VISIBILITY_PRIVATE = 'private'
 const REPO_VISIBILITY_PUBLIC = 'public'
 const REPO_VISIBILITY_INTERNAL = 'internal'
