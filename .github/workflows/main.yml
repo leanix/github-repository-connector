@@ -18,6 +18,9 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        function-app: [githubrepositoryconnector]
     steps:
       - name: 'Checkout GitHub Action'
         uses: actions/checkout@main
@@ -32,13 +35,13 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }} 
 
-      - name: 'Login via Azure CLI'
+      - name: 'Login to Prod via Azure CLI'
         if: github.ref=='refs/heads/main'
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
 
-      - name: 'Login to test via Azure CLI'
+      - name: 'Login to Test via Azure CLI'
         if: github.ref!='refs/heads/main'
         uses: azure/login@v1
         with:
@@ -57,10 +60,10 @@ jobs:
         if: github.ref!='refs/heads/main'
         uses: Azure/functions-action@v1
         with:
-          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+          app-name: ${{ matrix.function-app }}
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
       
-      - name: 'Deploy Azure Function to prod'
+      - name: 'Deploy Azure Function to Prod'
         if: github.ref=='refs/heads/main'
         uses: Azure/functions-action@v1
         with:
