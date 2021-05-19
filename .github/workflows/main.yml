@@ -10,8 +10,6 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_NAME: githubrepositoryconnector
-  AZURE_FUNCTIONAPP_NAME_PROD: functions-westeurope-prod-githubrepositoryconnector
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
   NODE_VERSION: '12.x'
 
@@ -20,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        function-app: [repository]
+        region: [westeurope, germanywestcentral, eastus, canadacentral, australiaeast]
     steps:
       - name: 'Checkout GitHub Action'
         uses: actions/checkout@main
@@ -60,7 +58,7 @@ jobs:
         if: github.ref!='refs/heads/main'
         uses: Azure/functions-action@v1
         env:
-          AZURE_FUNCTIONAPP_NAME: github${{ matrix.function-app }}connector
+          AZURE_FUNCTIONAPP_NAME_TEST: githubrepositoryconnector
         with:
           app-name: ${{ env.AZURE_FUNCTIONAPP_NAME}}
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
@@ -68,6 +66,8 @@ jobs:
       - name: 'Deploy Azure Function to Prod'
         if: github.ref=='refs/heads/main'
         uses: Azure/functions-action@v1
+        env:
+          AZURE_FUNCTIONAPP_NAME_PROD: functions-${{ matrix.region }}-prod-githubrepositoryconnector
         with:
           app-name: ${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
