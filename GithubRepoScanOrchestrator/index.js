@@ -41,5 +41,12 @@ module.exports = df.orchestrator(function* (context) {
         teamResults = [];
     }
 
-    return yield context.df.callActivity('SaveLdifToStorage', {partialResults, teamResults, workspaceId, containerName});
+    try {
+        var repoVisibilityResult = yield context.df.callActivity('GetReposVisibility', {orgName});
+    } catch (e) {
+        context.log(e);
+        repoVisibilityResult = {};
+    }
+
+    return yield context.df.callActivity('SaveLdifToStorage', {partialResults, teamResults, repoVisibilityResult, workspaceId, containerName});
 });

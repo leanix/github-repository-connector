@@ -114,7 +114,17 @@
               "expr": "${data.description}"
             }
           ]
-        }
+        },
+        {
+					"key": {
+						"expr": "repositoryVisibility"
+					},
+					"values": [
+						{
+							"expr": "${data.repoVisibility}"
+						}
+					]
+				}
       ]
     },
     {

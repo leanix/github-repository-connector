@@ -21,8 +21,8 @@ const ldifHeader = {
     "description": "Map organisation github repos to LeanIX Fact Sheets"
 }
 
-module.exports = async function (context, {partialResults, teamResults, containerName, workspaceId}) {
-    const contentArray = handleLdifCreation(partialResults, teamResults)
+module.exports = async function (context, {partialResults, teamResults, repoVisibilityResult, containerName, workspaceId}) {
+    const contentArray = handleLdifCreation(partialResults, teamResults, repoVisibilityResult)
     const blobName = await uploadToBlob(workspaceId, getFinalLdif(contentArray), containerName)
     return blobName
 };
@@ -32,7 +32,7 @@ module.exports = async function (context, {partialResults, teamResults, containe
  * @param {Array} partialResults contains repository information
  * @param {Array} orgTeamsData contains teams information
  */
-function handleLdifCreation(partialResults, orgTeamsData) {
+function handleLdifCreation(partialResults, orgTeamsData, repoVisibilityMap) {
     const combinedResults = partialResults.flatMap(partial => partial)
     const reposLanguagesMap = {}
     const reposTopicsMap = {}
@@ -51,7 +51,7 @@ function handleLdifCreation(partialResults, orgTeamsData) {
             reposTopicsMap[repoTopic.topic.id] = repoTopic.topic
         }
 
-        contentArray.push(convertToRepositoryContent(repoData))
+        contentArray.push(convertToRepositoryContent(repoData, repoVisibilityMap))
     }
 
     //pushing language content objects into the content array
@@ -73,12 +73,17 @@ function handleLdifCreation(partialResults, orgTeamsData) {
 }
 
 /**
- *
- * @param {Object} repoData contains repository info from github
+ * 
+ * @param {Object} repoData 
+ * @param {Object} repoVisibilityMap contains repository visibility mapping with repo id as key
  */
 
-/* convert Repo Data to object into repository content object for final LDIF */
-function convertToRepositoryContent(repoData) {
+/* 
+    convert Repo Data to object into repository content object for final LDIF
+    Using the repo visibility map to find the visibility with repo id
+*/
+
+function convertToRepositoryContent(repoData, repoVisibilityMap) {
     return {
         type: "Repository",
         id: repoData.id,
@@ -94,7 +99,8 @@ function convertToRepositoryContent(repoData) {
             }),
             topics: repoData.repositoryTopics.nodes.map(({topic}) =>
                 topic.id
-            )
+            ),
+            repoVisibility: repoVisibilityMap[repoData.id] ? repoVisibilityMap[repoData.id] : null
         }
     }
 }
