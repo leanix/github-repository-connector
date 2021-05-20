@@ -165,7 +165,27 @@
               "expr": "${data.url}"
             }
           ]
-        }
+        },
+        {
+					"key": {
+						"expr": "documentType"
+					},
+					"values": [
+						{
+							"expr": "git-repo"
+						}
+					]
+				},
+				{
+					"key": {
+						"expr": "description"
+					},
+					"values": [
+						{
+							"expr": "GitHub repo related to the Microservice FactSheet"
+						}
+					]
+				}
       ]
     },
     {

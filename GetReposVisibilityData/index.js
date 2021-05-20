@@ -10,16 +10,29 @@
  */
 const {graphql} = require("@octokit/graphql");
 
-// the three types of visibilities present in github
-const REPO_VISIBILITY_PRIVATE = 'private'
-const REPO_VISIBILITY_PUBLIC = 'public'
-const REPO_VISIBILITY_INTERNAL = 'internal'
+/**
+ * 
+ * @param {Array} repoNodes 
+ */
 
+function getRepoIdsVisibilityMap(repoNodes, visibilityType) {
+    let repoIdsVisibilityMap = {}
+    for (let node of repoNodes) {
+        repoIdsVisibilityMap[node.id] = visibilityType
+    }
+    return repoIdsVisibilityMap
+}
+
+/**
+ * 
+ * @param {graphql} graphqlClient 
+ * @param {Object} param1 
+ * @param {String} visibilityType 
+ */
 async function getPagedRepoIdsForVisibility(graphqlClient, {searchQuery, cursor}, visibilityType) {
-    // fetching 100 repo ids for every call
     const initialRepoPageSize = 100;
     const data = await graphqlClient({
-        query: `query getOrgRepoVisibilty($searchQuery: String!, $pageCount: Int!, $cursor: String) {
+        query: `query getOrgRepoVisibility($searchQuery: String!, $pageCount: Int!, $cursor: String) {
                     search(query: $searchQuery, type: REPOSITORY, first: $pageCount, after:$cursor) {
                     repositoryCount
                     pageInfo{
@@ -39,53 +52,40 @@ async function getPagedRepoIdsForVisibility(graphqlClient, {searchQuery, cursor}
         cursor
     });
 
-    /*
-        Creating a map with key as repo id and visibility as value
-        sending this map object in result
-    */
-
-    let repoIdsVisibilityMap = {}
-    for (let node of data.search.nodes) {
-        repoIdsVisibilityMap[node.id] = visibilityType
-    }
-
     return {
-        result: repoIdsVisibilityMap,
+        result: getRepoIdsVisibilityMap(data.search.nodes, visibilityType),
         pageInfo: data.search.pageInfo
     };
 }
 
+/**
+ * 
+ * @param {graphql} graphqlClient 
+ * @param {String} orgName 
+ * @param {String} visibilityType 
+ */
 async function getReposForVisibility(graphqlClient, orgName, visibilityType) {
     let repoVisibilityCursor = null;
     let finalResultForVisibility = [];
-    // creating the search string query to be used in the graphql call
-    const searchQuery = "org:" + orgName + " is:" + visibilityType + " fork:true"
+    const searchQuery = `org: ${orgName} is: ${visibilityType} fork:true`
+
     do {
         var {result, pageInfo} = await getPagedRepoIdsForVisibility(graphqlClient, {searchQuery: searchQuery, cursor: repoVisibilityCursor}, visibilityType);
-        // concatenating the map object after every graphql call
         finalResultForVisibility = {...finalResultForVisibility, ...result}
         repoVisibilityCursor = pageInfo.endCursor;
     } while (pageInfo.hasNextPage);
 
-    // returning the final result map object for given visibility type
     return finalResultForVisibility;
 }
 
-module.exports = async function (context, {orgName}) {
+module.exports = async function (context, {orgName, visibilityType}) {
     const graphqlClient = graphql.defaults({
         headers: {
             authorization: `token ${process.env['ghToken']}`,
         },
     });
-    const visibilityTypes = [REPO_VISIBILITY_PRIVATE, REPO_VISIBILITY_PUBLIC, REPO_VISIBILITY_INTERNAL]
-    let finalResult = {}
     let visibilityResult = {}
-    // looping over each visibility type to fetch all related repo ids of that visibility type
-    for(const visibilityType of visibilityTypes) {
-        visibilityResult = await getReposForVisibility(graphqlClient, orgName, visibilityType)
-         // concatenating the map object after fetching all repo ids for particular visibility
-        finalResult = {...finalResult, ...visibilityResult}
-    }
-    // returning final map object
-    context.done(null, finalResult);
+    visibilityResult = await getReposForVisibility(graphqlClient, orgName, visibilityType)
+    
+    context.done(null, visibilityResult);
 };

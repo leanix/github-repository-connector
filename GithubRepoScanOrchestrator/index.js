@@ -6,6 +6,13 @@
 
 const df = require("durable-functions");
 
+// the three types of visibilities present in github
+const REPO_VISIBILITY_TYPES = {
+    PUBLIC : 'public',
+    PRIVATE : 'private',
+    INTERNAL : 'internal'
+}
+
 module.exports = df.orchestrator(function* (context) {
     const {
         orgName,
@@ -41,12 +48,23 @@ module.exports = df.orchestrator(function* (context) {
         teamResults = [];
     }
 
+
+    const repoVisibilityOutput = []
+    for (let visibilityType of Object.values(REPO_VISIBILITY_TYPES)) {
+        repoVisibilityOutput.push(
+            context.df.callActivity('GetReposVisibilityData', {orgName, visibilityType})
+        )
+    }
     try {
-        var repoVisibilityResult = yield context.df.callActivity('GetReposVisibility', {orgName});
+        var repoVisibilityPartialResults = yield context.df.Task.all(repoVisibilityOutput)
+        var repoIdsVisibilityMap = {}
+        for (let visibilityResult of repoVisibilityPartialResults) {
+            repoIdsVisibilityMap = {...repoIdsVisibilityMap, ...visibilityResult}
+        }
     } catch (e) {
         context.log(e);
-        repoVisibilityResult = {};
+        repoIdsVisibilityMap = {};
     }
 
-    return yield context.df.callActivity('SaveLdifToStorage', {partialResults, teamResults, repoVisibilityResult, workspaceId, containerName});
+    return yield context.df.callActivity('SaveLdifToStorage', {partialResults, teamResults, repoIdsVisibilityMap, workspaceId, containerName});
 });
