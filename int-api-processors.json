@@ -182,7 +182,7 @@
 					},
 					"values": [
 						{
-							"expr": "GitHub repo related to the Microservice FactSheet"
+							"expr": "GitHub repository related to the Microservice FactSheet"
 						}
 					]
 				}

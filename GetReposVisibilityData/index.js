@@ -67,7 +67,7 @@ async function getPagedRepoIdsForVisibility(graphqlClient, {searchQuery, cursor}
 async function getReposForVisibility(graphqlClient, orgName, visibilityType) {
     let repoVisibilityCursor = null;
     let finalResultForVisibility = [];
-    const searchQuery = `org: ${orgName} is: ${visibilityType} fork:true`
+    const searchQuery = `org:${orgName} is:${visibilityType} fork:true`
 
     do {
         var {result, pageInfo} = await getPagedRepoIdsForVisibility(graphqlClient, {searchQuery: searchQuery, cursor: repoVisibilityCursor}, visibilityType);

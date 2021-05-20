@@ -70,7 +70,6 @@ function handleLdifCreation(partialResults, orgTeamsData, repoIdsVisibilityMap) 
 /**
  * 
  * @param {Object} repoData 
- * @param {Object} repoVisibilityMap contains repository visibility mapping with repo id as key
  */
 
 /* 
@@ -95,7 +94,7 @@ function convertToRepositoryContent(repoData) {
             topics: repoData.repositoryTopics.nodes.map(({topic}) =>
                 topic.id
             ),
-            visibility: repoData.visibility
+            repoVisibility: repoData.visibility
         }
     }
 }

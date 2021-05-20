@@ -6,13 +6,6 @@
 
 const df = require("durable-functions");
 
-// the three types of visibilities present in github
-const REPO_VISIBILITY_TYPES = {
-    PUBLIC : 'public',
-    PRIVATE : 'private',
-    INTERNAL : 'internal'
-}
-
 module.exports = df.orchestrator(function* (context) {
     const {
         orgName,
@@ -50,7 +43,8 @@ module.exports = df.orchestrator(function* (context) {
 
 
     const repoVisibilityOutput = []
-    for (let visibilityType of Object.values(REPO_VISIBILITY_TYPES)) {
+    const repoVisibilities = ['private','public','internal']
+    for (let visibilityType of repoVisibilities) {
         repoVisibilityOutput.push(
             context.df.callActivity('GetReposVisibilityData', {orgName, visibilityType})
         )
