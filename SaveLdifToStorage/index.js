@@ -21,8 +21,8 @@ const ldifHeader = {
     "description": "Map organisation github repos to LeanIX Fact Sheets"
 }
 
-module.exports = async function (context, {partialResults, teamResults, containerName, workspaceId}) {
-    const contentArray = handleLdifCreation(partialResults, teamResults)
+module.exports = async function (context, {partialResults, teamResults, repoIdsVisibilityMap, containerName, workspaceId}) {
+    const contentArray = handleLdifCreation(partialResults, teamResults, repoIdsVisibilityMap)
     const blobName = await uploadToBlob(workspaceId, getFinalLdif(contentArray), containerName)
     return blobName
 };
@@ -31,40 +31,35 @@ module.exports = async function (context, {partialResults, teamResults, containe
  *
  * @param {Array} partialResults contains repository information
  * @param {Array} orgTeamsData contains teams information
+ * @param {Object} repoIdsVisibilityMap contains repo id and it's visibility map
  */
-function handleLdifCreation(partialResults, orgTeamsData) {
+function handleLdifCreation(partialResults, orgTeamsData, repoIdsVisibilityMap) {
     const combinedResults = partialResults.flatMap(partial => partial)
     const reposLanguagesMap = {}
     const reposTopicsMap = {}
     let contentArray = []
     for (let repoData of combinedResults) {
 
-        //maintaining a map of all languages used in the repositories
-        //we later use this map to create language content items
         for (let language of repoData.languages.edges) {
             reposLanguagesMap[language.node.id] = language.node
         }
 
-        //maintaining a map of all repository topics used in the repositories
-        //we later use this map to create topic content items
         for (let repoTopic of repoData.repositoryTopics.nodes) {
             reposTopicsMap[repoTopic.topic.id] = repoTopic.topic
         }
 
+        repoData.visibility = repoIdsVisibilityMap[repoData.id] ? repoIdsVisibilityMap[repoData.id] : null
         contentArray.push(convertToRepositoryContent(repoData))
     }
 
-    //pushing language content objects into the content array
     for (let langNode of Object.values(reposLanguagesMap)) {
         contentArray.push(convertToLanguageContent(langNode))
     }
 
-    //pushing repo topic content objects into the content array
     for (let repoTopicNode of Object.values(reposTopicsMap)) {
         contentArray.push(convertToRepoTopicContent(repoTopicNode))
     }
 
-    //pushing teams content objects into the content array
     for (let teamNode of orgTeamsData) {
         contentArray.push(convertToTeamContent(teamNode))
     }
@@ -73,11 +68,15 @@ function handleLdifCreation(partialResults, orgTeamsData) {
 }
 
 /**
- *
- * @param {Object} repoData contains repository info from github
+ * 
+ * @param {Object} repoData 
  */
 
-/* convert Repo Data to object into repository content object for final LDIF */
+/* 
+    convert Repo Data to object into repository content object for final LDIF
+    Using the repo visibility map to find the visibility with repo id
+*/
+
 function convertToRepositoryContent(repoData) {
     return {
         type: "Repository",
@@ -94,7 +93,8 @@ function convertToRepositoryContent(repoData) {
             }),
             topics: repoData.repositoryTopics.nodes.map(({topic}) =>
                 topic.id
-            )
+            ),
+            repoVisibility: repoData.visibility
         }
     }
 }

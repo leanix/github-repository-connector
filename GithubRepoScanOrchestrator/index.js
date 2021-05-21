@@ -41,5 +41,24 @@ module.exports = df.orchestrator(function* (context) {
         teamResults = [];
     }
 
-    return yield context.df.callActivity('SaveLdifToStorage', {partialResults, teamResults, workspaceId, containerName});
+
+    const repoVisibilityOutput = []
+    const repoVisibilities = ['private','public','internal']
+    for (let visibilityType of repoVisibilities) {
+        repoVisibilityOutput.push(
+            context.df.callActivity('GetReposVisibilityData', {orgName, visibilityType})
+        )
+    }
+    try {
+        const repoVisibilityPartialResults = yield context.df.Task.all(repoVisibilityOutput)
+        var repoIdsVisibilityMap = {}
+        for (let visibilityResult of repoVisibilityPartialResults) {
+            repoIdsVisibilityMap = {...repoIdsVisibilityMap, ...visibilityResult}
+        }
+    } catch (e) {
+        context.log(e);
+        repoIdsVisibilityMap = {};
+    }
+
+    return yield context.df.callActivity('SaveLdifToStorage', {partialResults, teamResults, repoIdsVisibilityMap, workspaceId, containerName});
 });
