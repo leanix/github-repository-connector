@@ -14,6 +14,11 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
+      - name: Get credentials
+        uses: leanix/secrets-action@master
+        with:
+          secret-store-credentials: ${{ secrets.INJECTED_SECRET_STORE_CREDENTIALS }}
+
       - name: Send CI/CD pipeline success message
         if: ${{ github.event.workflow_run.conclusion == 'success' }}
         uses: archive/github-actions-slack@v1.0.0
