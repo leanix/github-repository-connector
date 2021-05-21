@@ -50,7 +50,7 @@ module.exports = df.orchestrator(function* (context) {
         )
     }
     try {
-        var repoVisibilityPartialResults = yield context.df.Task.all(repoVisibilityOutput)
+        const repoVisibilityPartialResults = yield context.df.Task.all(repoVisibilityOutput)
         var repoIdsVisibilityMap = {}
         for (let visibilityResult of repoVisibilityPartialResults) {
             repoIdsVisibilityMap = {...repoIdsVisibilityMap, ...visibilityResult}
