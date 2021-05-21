@@ -70,12 +70,3 @@ jobs:
       - name: Microservice Intelligence Tracking
         if: github.ref=='refs/heads/main'
         uses: leanix/microservice-intelligence-action@master
-
-      - name: Send main update success message
-        if: github.ref=='refs/heads/main'
-        uses: archive/github-actions-slack@v1.0.0
-        with:
-          slack-bot-user-oauth-access-token: ${{ env.SLACK_TOKEN }}
-          slack-channel: '#mi-connectors-notifications'
-          slack-text: |
-            :beers: ${{ github.repository }} merged to main by ${{ github.actor }} in run <${{ github.server_url }}/leanix/${{env.REPO_NAME}}/actions/runs/${{github.run_id}}|${{github.run_id}}>
