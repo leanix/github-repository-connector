@@ -1,4 +1,4 @@
-name: Deploy Github Repository Connector To Prod Env
+name: deploy-prod
 
 on:
   repository_dispatch:

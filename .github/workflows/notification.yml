@@ -2,8 +2,10 @@ name: notification
 
 on:
   workflow_run:
-    workflows: [ "Deploy Github Repository Connector to Test Env" ]
-    types: [ completed ]
+    workflows:
+      - deploy-prod
+    types:
+      - completed
 
 jobs:
   notify:

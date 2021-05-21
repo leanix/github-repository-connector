@@ -1,4 +1,4 @@
-name: Deploy Github Repository Connector to Test Env
+name: deploy-test
 
 on:
   repository_dispatch:
