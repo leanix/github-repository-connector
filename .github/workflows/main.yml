@@ -11,7 +11,6 @@ on:
 env:
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
   NODE_VERSION: '12.x'
-  REPO_NAME: github-repository-connector
 
 jobs:
   build-and-deploy:
