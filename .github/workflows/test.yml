@@ -58,3 +58,12 @@ jobs:
         uses: leanix/jira-action@master
         with:
           environment: 'test'
+
+      - name: test message
+        uses: archive/github-actions-slack@v1.0.0
+        with:
+          slack-bot-user-oauth-access-token: ${{ env.SLACK_TOKEN }}
+          slack-channel: '#mi-connectors-notifications'
+          slack-text: |
+            :beers: test message
+
