@@ -26,7 +26,7 @@ jobs:
           slack-bot-user-oauth-access-token: ${{ env.SLACK_TOKEN }}
           slack-channel: ${{ env.SLACK-CHANNEL }}
           slack-text: |
-            :beers: ${{ github.repository }} successfully deployed!
+            :beers: ${{ github.repository }} successfully deployed! More information@ ${{ github.event.workflow_run.url }}
 
       - name: Send CI/CD pipeline failure message
         if: ${{ github.event.workflow_run.conclusion == 'failure' }}
@@ -35,4 +35,4 @@ jobs:
           slack-bot-user-oauth-access-token: ${{ env.SLACK_TOKEN }}
           slack-channel: ${{ env.SLACK-CHANNEL }}
           slack-text: |
-            :no_entry_sign: ${{ github.repository }} failed to deploy!
+            :no_entry_sign: ${{ github.repository }} failed to deploy! More information@ ${{ github.event.workflow_run.url }}
