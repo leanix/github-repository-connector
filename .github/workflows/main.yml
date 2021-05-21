@@ -1,15 +1,14 @@
-name: Deploy Github Repository Connector
+name: Deploy Github Repository Connector To Prod Env
 
 on:
   repository_dispatch:
     types: [trigger-workflow]
   push:
     branches:
-      - feature/**
+      - main
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_NAME: githubrepositoryconnector
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
   NODE_VERSION: '12.x'
   REPO_NAME: github-repository-connector
@@ -17,6 +16,10 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # adding all the prod regions to region matrix below
+        region: [westeurope, germanywestcentral, eastus, canadacentral, australiaeast]
     steps:
       - name: 'Checkout GitHub Action'
         uses: actions/checkout@main
@@ -31,10 +34,12 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }} 
 
-      - name: 'Login via Azure CLI'
+      - name: 'Login to Prod via Azure CLI'
+        if: github.ref=='refs/heads/main'
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
+
 
       - name: 'Resolve Project Dependencies Using Npm'
         shell: bash
@@ -45,11 +50,15 @@ jobs:
           npm run test --if-present
           popd
           
-      - name: 'Deploy Azure Function to Test'
-        if: github.ref!='refs/heads/main'
+      - name: 'Deploy Azure Function to Prod'
+        if: github.ref=='refs/heads/main'
         uses: Azure/functions-action@v1
+        env:
+          # creating an env varibale on the step, each region from the above matrix will be replaced
+          AZURE_FUNCTIONAPP_NAME_PROD: functions-${{ matrix.region }}-prod-githubrepositoryconnector
         with:
-          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+          # using the above created variable as the func app name
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME_PROD }}
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
 
       - name: LeanIX Jira Release Tracking
