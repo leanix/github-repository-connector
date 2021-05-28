@@ -9,6 +9,7 @@
   "dependencies": {
     "@azure/storage-blob": "^12.5.0",
     "@octokit/graphql": "^4.6.1",
+    "crypto-js": "^4.0.0",
     "durable-functions": "^1.4.6"
   },
   "devDependencies": {}

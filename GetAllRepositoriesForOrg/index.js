@@ -1,9 +1,4 @@
-﻿/*
- * This function is not intended to be invoked directly. Instead it will be
- * triggered by an orchestrator function.
- * 
- */
-const {graphql} = require("@octokit/graphql");
+﻿const {graphql} = require("@octokit/graphql");
 
 async function getRepositoriesIds(graphqlClient, {queryString, pageCount, cursor}) {
     const data = await graphqlClient({

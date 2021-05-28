@@ -5,6 +5,7 @@
  */
 
 const df = require("durable-functions");
+const {decryptGHToken} = require("./helper");
 
 module.exports = df.orchestrator(function* (context) {
     const {
@@ -16,7 +17,7 @@ module.exports = df.orchestrator(function* (context) {
     const scannerCapacity = 100;
 
     // storing ghToken in env so that the token is not logged or stored during activity function calls
-    process.env['ghToken'] = ghToken;
+    process.env['ghToken'] = decryptGHToken(ghToken);
 
     const repositoriesIds = yield context.df.callActivity("GetAllRepositoriesForOrg", {orgName});
 
