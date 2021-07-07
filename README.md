@@ -10,9 +10,14 @@ Parameter | Mandatory | Format |
 orgName | ✅ | Plain
 ghToken | ✅ | Encrypted
 
+## Integration Hub Support
+#### Connector Template 
+- github-repository-connector 
+
+
 ## Setting up Azure Durable FunctionApp
 
-- Create new Integration Hub connector template with the name **github-repository-connector**
+- Create new Integration Hub connector template
 - Set following application parameters in `functionapp > settings > configuration`
     - ~~From Azure storage resource (Access Keys), name to 'LX_AZ_STORAGE_ACCOUNT_NAME'~~
     - ~~From Azure storage resource (Access Keys), account key to 'LX_AZ_STORAGE_ACCOUNT_KEY'~~
