@@ -24,3 +24,7 @@ ghToken | ✅ | Encrypted
     - Openssl encrypted GitHub token to 'LX_ENCRYPTION_PASSPHRASE'
 - ~~For Camunda workflow, Create a new host key (functionapp > app keys) as 'camunda_key'. This key is used to register the
   functionapp to Camunda workflow~~ **Responsibility taken over by Integration Hub**
+
+## More information 
+
+https://leanix.atlassian.net/l/c/0o8XHJoc
