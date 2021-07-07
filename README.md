@@ -7,7 +7,7 @@ Integration Hub.
 
 Parameter | Mandatory | Format |
 --- | --- | --- | 
-orgName | ✅ | Plain
+orgName | ✅ | Plain Text
 ghToken | ✅ | Encrypted
 
 ## Integration Hub Support
