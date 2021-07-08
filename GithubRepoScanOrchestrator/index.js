@@ -88,6 +88,7 @@ module.exports = df.orchestrator(function* (context) {
 
     try {
         yield* processForLdif(context)
+        yield context.df.callActivityWithRetry("UpdateProgressToIHub", retryOptions, {progressCallbackUrl, status: iHubStatus.FINISHED});
     } catch (e) {
         context.log(e)
         yield context.df.callActivityWithRetry("UpdateProgressToIHub", retryOptions, {
@@ -96,5 +97,4 @@ module.exports = df.orchestrator(function* (context) {
             message: e.message
         });
     }
-    yield context.df.callActivityWithRetry("UpdateProgressToIHub", retryOptions, {progressCallbackUrl, status: iHubStatus.FINISHED});
 });

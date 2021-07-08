@@ -12,7 +12,7 @@ ghToken | ✅ | Encrypted
 
 ## Integration Hub Support
 #### Connector Template 
-- github-repository-connector 
+- mi-github-repository-connector 
 
 
 ## Setting up Azure Durable FunctionApp
