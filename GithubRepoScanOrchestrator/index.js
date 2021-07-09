@@ -85,6 +85,7 @@ module.exports = df.orchestrator(function* (context) {
 
     const retryOptions =
         new df.RetryOptions(5000, 3);
+    retryOptions.maxRetryIntervalInMilliseconds = 5000
 
     try {
         yield* processForLdif(context)
