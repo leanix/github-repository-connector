@@ -1,15 +1,7 @@
 ﻿/*
- * This function is not intended to be invoked directly. Instead it will be
- * triggered by an orchestrator function.
- * 
+ * Handles LDIF storage
  */
-const {
-    BlobServiceClient,
-    generateBlobSASQueryParameters,
-    SASProtocol,
-    StorageSharedKeyCredential,
-    BlobSASPermissions
-} = require("@azure/storage-blob");
+const {BlobClient, AnonymousCredential} = require("@azure/storage-blob");
 
 const ldifHeader = {
     "connectorId": "github-connector",
@@ -21,10 +13,9 @@ const ldifHeader = {
     "description": "Map organisation github repos to LeanIX Fact Sheets"
 }
 
-module.exports = async function (context, {partialResults, teamResults, repoIdsVisibilityMap, containerName, workspaceId}) {
+module.exports = async function (context, {partialResults, teamResults, repoIdsVisibilityMap, blobStorageSasUrl}) {
     const contentArray = handleLdifCreation(partialResults, teamResults, repoIdsVisibilityMap)
-    const blobName = await uploadToBlob(workspaceId, getFinalLdif(contentArray), containerName)
-    return blobName
+    return await uploadToBlob(getFinalLdif(contentArray), blobStorageSasUrl)
 };
 
 /**
@@ -68,8 +59,8 @@ function handleLdifCreation(partialResults, orgTeamsData, repoIdsVisibilityMap) 
 }
 
 /**
- * 
- * @param {Object} repoData 
+ *
+ * @param {Object} repoData
  */
 
 /* 
@@ -157,68 +148,13 @@ function getFinalLdif(contentArray) {
     return {...ldifHeader, ...ldifContent};
 }
 
-
-function getAzureCredential() {
-    const account = process.env['LX_AZ_STORAGE_ACCOUNT_NAME'];
-    const accountKey = process.env['LX_AZ_STORAGE_ACCOUNT_KEY'];
-
-    if (!account || !accountKey) {
-        throw new Error("Azure account details are not set");
-    }
-
-    const sharedKeyCredential = new StorageSharedKeyCredential(account, accountKey);
-    const azureStorageUrlBase = `https://${account}.blob.core.windows.net`;
-    return {sharedKeyCredential, azureStorageUrlBase};
-}
-
 /**
  *
- * @param {String} workspaceId LeanIX WS ID related to the organisation
  * @param {Object} finalLdif LDIF object containing repo and lang info
- * @param containerName Container name of the container sas url
+ * @param {String} blobStorageSasUrl SAS Url generated and received from Integration Hub
  */
-async function uploadToBlob(workspaceId, finalLdif, containerName) {
-    const {sharedKeyCredential, azureStorageUrlBase} = getAzureCredential();
-    const blobServiceClient = new BlobServiceClient(
-        azureStorageUrlBase,
-        sharedKeyCredential
-    );
-    const azContainerClient = blobServiceClient.getContainerClient(containerName);
-    await azContainerClient.createIfNotExists();
-
-    const blobName = `${workspaceId}-${Date.now()}.json`;
-    const blockBlobClient = azContainerClient.getBlockBlobClient(blobName);
+async function uploadToBlob(finalLdif, blobStorageSasUrl) {
+    const blockBlobClient = new BlobClient(blobStorageSasUrl, new AnonymousCredential()).getBlockBlobClient();
     const finalLdifData = JSON.stringify(finalLdif);
     await blockBlobClient.upload(finalLdifData, Buffer.byteLength(finalLdifData))
-
-    return azureStorageUrlBase + generateSasUrlExtensionForBlob(sharedKeyCredential, containerName, blobName);
-}
-
-function generateSasUrlExtensionForBlob(sharedKeyCredential, containerName, blobName) {
-    if (!containerName || !blobName) {
-        throw new Error("Container name or blob name is not supplied");
-    }
-
-    const {startsOn, expiresOn} = getStartAndExpiresDates();
-    const blobSASToken = generateBlobSASQueryParameters({
-            containerName,
-            blobName,
-            permissions: BlobSASPermissions.parse("r"),
-            startsOn: startsOn,
-            expiresOn: expiresOn,
-            protocol: SASProtocol.Https,
-        },
-        sharedKeyCredential
-    ).toString();
-
-    return `/${containerName}/${blobName}?${blobSASToken}`;
-}
-
-function getStartAndExpiresDates() {
-    const now = new Date();
-    const addHours = (date, h) => new Date(date.valueOf() + (h * 60 * 60 * 1000));
-    return {
-        startsOn: now,
-        expiresOn: addHours(now, 2)
-    }
 }

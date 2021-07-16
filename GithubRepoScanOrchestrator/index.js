@@ -5,14 +5,16 @@
  */
 
 const df = require("durable-functions");
-const {decryptGHToken} = require("./helper");
+const {decryptGHToken, iHubStatus} = require("./helper");
 
-module.exports = df.orchestrator(function* (context) {
+function* processForLdif(context) {
     const {
-        orgName,
-        ghToken,
-        workspaceId,
-        containerName,
+        connectorConfiguration: {
+            orgName,
+            ghToken,
+        },
+        ldifResultUrl,
+        progressCallbackUrl
     } = context.bindingData.input;
     const scannerCapacity = 100;
 
@@ -35,6 +37,7 @@ module.exports = df.orchestrator(function* (context) {
     }
 
     const partialResults = yield context.df.Task.all(output)
+
     try {
         var teamResults = yield context.df.callActivity('GetOrgTeamsData', {orgName});
     } catch (e) {
@@ -44,7 +47,7 @@ module.exports = df.orchestrator(function* (context) {
 
 
     const repoVisibilityOutput = []
-    const repoVisibilities = ['private','public','internal']
+    const repoVisibilities = ['private', 'public', 'internal']
     for (let visibilityType of repoVisibilities) {
         repoVisibilityOutput.push(
             context.df.callActivity('GetReposVisibilityData', {orgName, visibilityType})
@@ -61,5 +64,38 @@ module.exports = df.orchestrator(function* (context) {
         repoIdsVisibilityMap = {};
     }
 
-    return yield context.df.callActivity('SaveLdifToStorage', {partialResults, teamResults, repoIdsVisibilityMap, workspaceId, containerName});
+    yield context.df.callActivity("UpdateProgressToIHub", {
+        progressCallbackUrl,
+        status: iHubStatus.IN_PROGRESS,
+        message: "Successfully requested the data from GitHub"
+    });
+
+    yield context.df.callActivity('SaveLdifToStorage', {
+        partialResults,
+        teamResults,
+        repoIdsVisibilityMap,
+        blobStorageSasUrl: ldifResultUrl
+    });
+}
+
+module.exports = df.orchestrator(function* (context) {
+    const {
+        progressCallbackUrl
+    } = context.bindingData.input;
+
+    const retryOptions =
+        new df.RetryOptions(5000, 3);
+    retryOptions.maxRetryIntervalInMilliseconds = 5000
+
+    try {
+        yield* processForLdif(context)
+        yield context.df.callActivityWithRetry("UpdateProgressToIHub", retryOptions, {progressCallbackUrl, status: iHubStatus.FINISHED});
+    } catch (e) {
+        context.log(e)
+        yield context.df.callActivityWithRetry("UpdateProgressToIHub", retryOptions, {
+            progressCallbackUrl,
+            status: iHubStatus.FAILED,
+            message: e.message
+        });
+    }
 });

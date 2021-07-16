@@ -1,14 +1,30 @@
-# Github Repository Connector
+# GitHub Repository Connector
 
-Implemented in azure durable functions
+MI Connector fetches data from GitHub updates to LeanIX workspace using Integration API. Co-ordination and trigger managed by
+Integration Hub.
+
+## Inputs
+
+Parameter | Mandatory | Format |
+--- | --- | --- | 
+orgName | ✅ | Plain Text
+ghToken | ✅ | Encrypted
+
+## Integration Hub Support
+#### Connector Template 
+- mi-github-repository-connector 
 
 
-#  Setting up Azure Durable FunctionApp
+## Setting up Azure Durable FunctionApp
 
-- From Azure storage resource (Access Keys)
-    - Extract function app name to 'LX_AZ_STORAGE_ACCOUNT_NAME' 
-    - Extract function app account key to 'LX_AZ_STORAGE_ACCOUNT_KEY'
-    - Add them in functionapp > settings > configuration
-- GitHub token is encrypted using openssl. Passphrase or key for decryption is configured in 'LX_ENCRYPTION_PASSPHRASE'
-- For Camunda workflow, Create a new host key (functionapp > app keys) as 'camunda_key'.
-  This key is used to register the functionapp to Camunda workflow
+- Create new Integration Hub connector template
+- Set following application parameters in `functionapp > settings > configuration`
+    - ~~From Azure storage resource (Access Keys), name to 'LX_AZ_STORAGE_ACCOUNT_NAME'~~
+    - ~~From Azure storage resource (Access Keys), account key to 'LX_AZ_STORAGE_ACCOUNT_KEY'~~
+    - Openssl encrypted GitHub token to 'LX_ENCRYPTION_PASSPHRASE'
+- ~~For Camunda workflow, Create a new host key (functionapp > app keys) as 'camunda_key'. This key is used to register the
+  functionapp to Camunda workflow~~ **Responsibility taken over by Integration Hub**
+
+## More information 
+
+https://leanix.atlassian.net/l/c/0o8XHJoc

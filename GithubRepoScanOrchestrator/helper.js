@@ -9,5 +9,10 @@ module.exports = {
         } catch (e) {
             throw new Error("Failed to correctly decrypt github token");
         }
+    },
+    iHubStatus: {
+        IN_PROGRESS: 'IN_PROGRESS',
+        FINISHED: 'FINISHED',
+        FAILED: 'FAILED'
     }
 }
