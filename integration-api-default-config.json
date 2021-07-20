@@ -1,8 +1,8 @@
 {
-  "externalId": "cider-github-repo-connector",
+  "externalId": "cider-github-repository-connector",
   "config": {
-    "connectorType": "github-connector",
-    "connectorId": "github-connector",
+    "connectorType": "leanix-github-repository-connector",
+    "connectorId": "leanix-github-repository-connector",
     "connectorVersion": "1.0.0",
     "processingDirection": "inbound",
     "processingMode": "full",
@@ -372,7 +372,7 @@
   "visibleIf": [
     {
       "featureFlags": [
-        "integration.k8s.showInList"
+        ""
       ]
     }
   ],
@@ -382,7 +382,7 @@
   {
     "featureFlags": [
       "integration.integrationapi",
-      "integration.k8s.showInList"
+      "integration.githubrepository"
     ]
   }
 ]
