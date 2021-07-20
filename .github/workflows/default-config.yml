@@ -5,7 +5,7 @@ on:
     types: [trigger-workflow]
   push:
     branches:
-      - feature2/**
+      - feature/**
       - main
     path:
       - 'integration-api-default-config.json'
