@@ -1,4 +1,11 @@
 {
+  "externalId": "cider-github-repo-connector",
+  "config": {
+    "connectorType": "github-connector",
+    "connectorId": "github-connector",
+    "connectorVersion": "1.0.0",
+    "processingDirection": "inbound",
+    "processingMode": "full",
   "processors": [
     {
       "processorType": "variableProcessor",
@@ -361,5 +368,22 @@
   "variables": {},
   "dataProvider": {
     "url": "${header.customFields.resultUrl}"
+  },
+  "visibleIf": [
+    {
+      "featureFlags": [
+        "integration.k8s.showInList"
+      ]
+    }
+  ],
+  "readOnly": true
+},
+"availableIf": [
+  {
+    "featureFlags": [
+      "integration.integrationapi",
+      "integration.k8s.showInList"
+    ]
   }
+]
 }
