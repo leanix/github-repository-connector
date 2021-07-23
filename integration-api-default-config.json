@@ -10,7 +10,7 @@
     {
       "processorType": "variableProcessor",
       "processorName": "repository-topics-map",
-      "processorDescription": "This variable processor creates a map of each repository against its topic ids ",
+      "processorDescription": "This variable processor creates a map of each repository against its topic ids",
       "filter": {
         "exactType": "Repository"
       },
@@ -26,7 +26,7 @@
     {
       "processorType": "inboundTag",
       "processorName": "repository-topic-tags-creation",
-      "processorDescription": "This inboundTag processor creates a tag group and adds tags in it. Also assigns tags to FS fetching from variable",
+      "processorDescription": "This inboundTag processor creates a tag group and adds tags in it. Also assigns tags to FS fetching from the variable",
       "filter": {
         "advanced": "${content.type == 'Topic'}"
       },
