@@ -1,4 +1,4 @@
-name: Default Config Deploy
+name: Deploy default inbound integration api connector
 
 on:
   repository_dispatch:
