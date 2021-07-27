@@ -1,0 +1,35 @@
+name: Deploy default inbound integration api connector
+
+on:
+  repository_dispatch:
+    types: [trigger-workflow]
+  push:
+    branches:
+      - feature/**
+      - main
+    path:
+      - 'integration-api-default-config.json'
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 'Checkout GitHub Action'
+      uses: actions/checkout@main
+    
+    - name: Get credentials
+      uses: leanix/secrets-action@master
+      with:
+        secret-store-credentials: ${{ secrets.INJECTED_SECRET_STORE_CREDENTIALS }}
+
+    - name: Provision default config to Test
+      if: github.ref!='refs/heads/main'
+      uses: leanix/integration-api-default-config-action@main
+      with:
+        environment: 'test'  
+    
+    - name: Provision default config to Prod
+      if: github.ref=='refs/heads/main'
+      uses: leanix/integration-api-default-config-action@main
+      with:
+        environment: 'prod'  

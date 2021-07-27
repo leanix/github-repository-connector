@@ -1,9 +1,16 @@
 {
+  "externalId": "cider-github-repository-connector",
+  "config": {
+    "connectorType": "leanix-mi-connector",
+    "connectorId": "leanix-github-repository-connector",
+    "connectorVersion": "1.0.0",
+    "processingDirection": "inbound",
+    "processingMode": "full",
   "processors": [
     {
       "processorType": "variableProcessor",
       "processorName": "repository-topics-map",
-      "processorDescription": "This variable processor creates a map of each repository against its topic ids ",
+      "processorDescription": "This variable processor creates a map of each repository against its topic ids",
       "filter": {
         "exactType": "Repository"
       },
@@ -19,7 +26,7 @@
     {
       "processorType": "inboundTag",
       "processorName": "repository-topic-tags-creation",
-      "processorDescription": "This inboundTag processor creates a tag group and adds tags in it. Also assigns tags to FS fetching from variable",
+      "processorDescription": "This inboundTag processor creates a tag group and adds tags in it. Also assigns tags to FS fetching from the variable",
       "filter": {
         "advanced": "${content.type == 'Topic'}"
       },
@@ -361,5 +368,22 @@
   "variables": {},
   "dataProvider": {
     "url": "${header.customFields.resultUrl}"
+  },
+  "visibleIf": [
+    {
+      "featureFlags": [
+        ""
+      ]
+    }
+  ],
+  "readOnly": true
+},
+"availableIf": [
+  {
+    "featureFlags": [
+      "integration.integrationapi",
+      "integration.githubrepository"
+    ]
   }
+]
 }
