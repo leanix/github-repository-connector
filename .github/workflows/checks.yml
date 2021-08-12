@@ -1,0 +1,27 @@
+name: Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+
+env:
+  NODE_VERSION: '14.x'
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@main
+
+      - name: Setup Node ${{ env.NODE_VERSION }} Environment
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dev dependencies
+        run: npm ci
+
+      - name: Run Format Checking
+        run: npm run check-format
