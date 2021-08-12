@@ -7,7 +7,7 @@ on:
     branches:
       - feature/**
       - main
-    path:
+    paths:
       - 'integration-api-default-config.json'
 
 jobs:
