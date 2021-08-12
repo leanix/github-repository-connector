@@ -1,8 +1,8 @@
 module.exports = {
-  checkRegexBlacklist: function (regexBlacklist) {
-    if (regexBlacklist) {
-      let regexBlacklistArray = regexBlacklist.split(",");
-      return regexBlacklistArray.map((regexString) => new RegExp(regexString));
+  checkRegexExcludeList: function (regexExcludeList) {
+    if (regexExcludeList) {
+      let regexExcludeListArray = regexExcludeList.split(",");
+      return regexExcludeListArray.map((regexString) => new RegExp(regexString));
     }
     return [];
   },

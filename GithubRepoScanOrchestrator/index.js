@@ -9,7 +9,7 @@ const { decryptGHToken, iHubStatus } = require("./helper");
 
 function* processForLdif(context) {
   const {
-    connectorConfiguration: { orgName, ghToken, repoNamesBlacklist },
+    connectorConfiguration: { orgName, ghToken, repoNamesExcludeList },
     ldifResultUrl,
     progressCallbackUrl,
   } = context.bindingData.input;
@@ -20,7 +20,7 @@ function* processForLdif(context) {
 
   const repositoriesIds = yield context.df.callActivity(
     "GetAllRepositoriesForOrg",
-    { orgName, repoNamesBlacklist }
+    { orgName, repoNamesExcludeList }
   );
 
   const workPerScanner = [];

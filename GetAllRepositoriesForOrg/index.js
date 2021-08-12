@@ -1,14 +1,14 @@
 ﻿const { graphql } = require("@octokit/graphql");
-const { checkRegexBlacklist } = require("./helper");
+const { checkRegexExcludeList } = require("./helper");
 
-function excludeBlacklistedRepositoriesIDsList(
+function excludeListedRepositoriesIDsList(
   repositoriesData,
-  regexBlacklistArray
+  regexExcludeListArray
 ) {
   let remainingRepoIdsArray = repositoriesData
     .filter((repoData) => {
       let noMatch = true;
-      regexBlacklistArray.forEach((regex) => {
+      regexExcludeListArray.forEach((regex) => {
         if (repoData.name.match(regex)) {
           noMatch = false;
         }
@@ -22,7 +22,7 @@ function excludeBlacklistedRepositoriesIDsList(
 async function getRepositoriesIds(
   graphqlClient,
   { orgName, pageCount, cursor },
-  regexBlacklistArray
+  regexExcludeListArray
 ) {
   const data = await graphqlClient({
     query: `
@@ -46,9 +46,9 @@ async function getRepositoriesIds(
     cursor,
   });
 
-  const idList = excludeBlacklistedRepositoriesIDsList(
+  const idList = excludeListedRepositoriesIDsList(
     data.organization.repositories.nodes,
-    regexBlacklistArray
+    regexExcludeListArray
   );
 
   return {
@@ -60,7 +60,7 @@ async function getRepositoriesIds(
 async function getAllRepositoryIds(
   graphqlClient,
   orgName,
-  regexBlacklistArray
+  regexExcludeListArray
 ) {
   let cursor = null;
   let finalResult = [];
@@ -73,7 +73,7 @@ async function getAllRepositoryIds(
         pageCount: 100,
         cursor,
       },
-      regexBlacklistArray
+      regexExcludeListArray
     );
     finalResult = finalResult.concat(ids);
     cursor = pageInfo.endCursor;
@@ -81,8 +81,8 @@ async function getAllRepositoryIds(
   return finalResult;
 }
 
-module.exports = async function (context, { orgName, repoNamesBlacklist }) {
-  let regexBlacklistArray = checkRegexBlacklist(repoNamesBlacklist);
+module.exports = async function (context, { orgName, repoNamesExcludeList }) {
+  let regexExcludeListArray = checkRegexExcludeList(repoNamesExcludeList);
 
   const graphqlClient = graphql.defaults({
     headers: {
@@ -93,7 +93,7 @@ module.exports = async function (context, { orgName, repoNamesBlacklist }) {
   const finalResult = await getAllRepositoryIds(
     graphqlClient,
     orgName,
-    regexBlacklistArray
+    regexExcludeListArray
   );
   context.done(null, finalResult);
 };
