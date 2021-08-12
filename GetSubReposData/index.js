@@ -1,4 +1,5 @@
 ﻿const {graphql} = require("@octokit/graphql");
+const {getISODateStringOnFromToday} = require('../GithubRepoScanOrchestrator/helper')
 
 module.exports = async function (context, repoIds) {
     const graphqlClient = graphql.defaults({
@@ -13,7 +14,7 @@ async function getReposData(graphqlClient, repoIds) {
     const initialLanguagePageSize = 10;
     const data = await graphqlClient({
         query: `
-            query getReposData($repoIds:[ID!]!, $languagePageCount: Int!){
+            query getReposData($repoIds:[ID!]!, $languagePageCount: Int!, $contributorHistorySince: GitTimestamp!){
                 nodes(ids: $repoIds){
                     id
                     ... on Repository {
@@ -41,12 +42,33 @@ async function getReposData(graphqlClient, repoIds) {
                                     }
                                 }
                             }
+                        defaultBranchRef {
+                            name
+                            target {
+                                ... on Commit {
+                                    id
+                                    history(since: $contributorHistorySince) {
+                                        edges {
+                                            node {
+                                               committer {
+                                               user {
+                                                  name
+                                               }
+                                               email
+                                               }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                          }    
                         }
                     }
                 }
         `,
         repoIds,
-        languagePageCount: initialLanguagePageSize
+        languagePageCount: initialLanguagePageSize,
+        contributorHistorySince: getISODateStringOnFromToday()
     });
 
     let repoInfos = data.nodes;
