@@ -6,11 +6,42 @@
 		"connectorVersion": "1.0.0",
 		"processingDirection": "inbound",
 		"processingMode": "full",
+
+		"deletionScope": {
+			"tags": [
+				{
+					"tagScopes": [
+						{
+							"group": "Data Quality",
+							"tag": "EXCLUDED"
+						}
+					],
+					"scope": {
+						"ids": [],
+						"facetFilters": [
+							{
+								"keys": ["Microservice"],
+								"facetKey": "FactSheetTypes",
+								"operator": "AND"
+							},
+							{
+								"keys": ["${integration.tags.getTagId('Data Quality','EXCLUDED')}"],
+								"facetKey": "${integration.tags.getTagGroupId('Data Quality')}",
+								"operator": "AND"
+							}
+						]
+					}
+				}
+			],
+			"maximumDeletionRatio": {
+				"factSheets": 60
+			}
+		},
 		"processors": [
 			{
 				"processorType": "variableProcessor",
 				"processorName": "repository-topics-map",
-				"processorDescription": "This variable processor creates a map of each repository against its topic ids",
+				"processorDescription": "This variable processor creates a map of each repository against its topic ids ",
 				"filter": {
 					"exactType": "Repository"
 				},
@@ -26,7 +57,7 @@
 			{
 				"processorType": "inboundTag",
 				"processorName": "repository-topic-tags-creation",
-				"processorDescription": "This inboundTag processor creates a tag group and adds tags in it. Also assigns tags to FS fetching from the variable",
+				"processorDescription": "This inboundTag processor creates a tag group and adds tags in it. Also assigns tags to FS fetching from variable",
 				"filter": {
 					"advanced": "${content.type == 'Topic'}"
 				},
@@ -363,19 +394,184 @@
 					}
 				},
 				"run": 2
+			},
+			{
+				"processorType": "variableProcessor",
+				"processorName": "Store all repository ids",
+				"processorDescription": "Store all repository ids from the provided LDIF",
+				"filter": {
+					"exactType": "Repository"
+				},
+				"run": 2,
+				"enabled": true,
+				"variables": [
+					{
+						"key": "github_project_ids",
+						"value": "${content.id}"
+					}
+				]
+			},
+			{
+				"processorType": "inboundFactSheet",
+				"processorName": "Find excluded fact sheets",
+				"processorDescription": "Find the fact sheets that were created by a former github-connector run but are now excluded/not existing",
+				"type": "Microservice",
+				"filter": {
+					"advanced": "${integration.contentIndex == 0}"
+				},
+				"identifier": {
+					"search": {
+						"scope": {
+							"ids": [],
+							"facetFilters": [
+								{
+									"keys": ["Microservice"],
+									"facetKey": "FactSheetTypes",
+									"operator": "OR"
+								},
+								{
+									"keys": ["${integration.tags.getTagId('Data Source','Github repository')}"],
+									"facetKey": "${integration.tags.getTagGroupId('Data Source')}",
+									"operator": "OR"
+								}
+							]
+						},
+						"filter": "${!variables['github_project_ids'].contains(lx.factsheet.githubId)}",
+						"multipleMatchesAllowed": true
+					}
+				},
+				"run": 3,
+				"updates": [],
+				"variables": [
+					{
+						"key": "fs_to_be_tagged",
+						"value": "${lx.factsheet.githubId}"
+					}
+				],
+				"read": {
+					"fields": ["name", "githubId"]
+				}
+			},
+			{
+				"processorType": "inboundTag",
+				"processorName": "add 'excluded' tag",
+				"processorDescription": "adds 'excluded' tag to the microservice that was created by github-connector but not included in the scan anymore",
+				"factSheets": {
+					"external": {
+						"ids": "${integration.valueOfForEach}",
+						"type": {
+							"expr": "githubId"
+						}
+					}
+				},
+				"run": 6,
+				"updates": [
+					{
+						"key": {
+							"expr": "name"
+						},
+						"values": [
+							{
+								"expr": "EXCLUDED"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "group.name"
+						},
+						"values": [
+							{
+								"expr": "Data Quality"
+							}
+						]
+					}
+				],
+				"forEach": "${integration.processing.distinct(variables['fs_to_be_tagged'])}"
+			},
+			{
+				"processorType": "inboundTag",
+				"processorName": "Add 'Github repository' tag on Microservice Factsheets",
+				"processorDescription": "Adds 'Github repository' tag on violation type FS for data source tracking",
+				"filter": {
+					"exactType": "Repository"
+				},
+				"factSheets": {
+					"external": {
+						"ids": "${content.id}",
+						"type": {
+							"expr": "githubId"
+						}
+					}
+				},
+				"run": 3,
+				"updates": [
+					{
+						"key": {
+							"expr": "name"
+						},
+						"values": [
+							{
+								"expr": "Github repository"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "group.name"
+						},
+						"values": [
+							{
+								"expr": "Data Source"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "group.mode"
+						},
+						"values": [
+							{
+								"expr": "SINGLE"
+							}
+						]
+					}
+				]
+			},
+			{
+				"processorType": "inboundTag",
+				"processorName": "remove excluded tag from microservice",
+				"processorDescription": "Removes EXCLUDED tag from microservice FS",
+				"filter": {
+					"advanced": "${integration.contentIndex == 0}"
+				},
+				"factSheets": {
+					"external": {
+						"ids": "MDEwOlJlcG9zaXRvcnkzOTUwMzU1NA==",
+						"type": {
+							"expr": "githubId"
+						}
+					}
+				},
+				"run": 7,
+				"updates": []
 			}
 		],
 		"variables": {},
 		"dataProvider": {
 			"url": "${header.customFields.resultUrl}"
-		},
-		"visibleIf": [
-			{
-				"featureFlags": [""]
-			}
-		],
-		"readOnly": true
+		}
 	},
+	"variables": {},
+	"dataProvider": {
+		"url": "${header.customFields.resultUrl}"
+	},
+	"visibleIf": [
+		{
+			"featureFlags": [""]
+		}
+	],
+	"readOnly": true,
 	"availableIf": [
 		{
 			"featureFlags": ["integration.integrationapi", "integration.githubrepository"]
