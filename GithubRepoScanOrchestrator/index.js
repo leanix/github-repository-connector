@@ -5,11 +5,11 @@
  */
 
 const df = require('durable-functions');
-const { decryptGHToken, iHubStatus } = require('./helper');
+const { decryptGHToken, iHubStatus, checkRegexExcludeListGetArray } = require('./helper');
 
 function* processForLdif(context) {
 	const {
-		connectorConfiguration: { orgName, ghToken },
+		connectorConfiguration: { orgName, ghToken, repoNamesExcludeList },
 		ldifResultUrl,
 		progressCallbackUrl
 	} = context.bindingData.input;
@@ -18,7 +18,9 @@ function* processForLdif(context) {
 	// storing ghToken in env so that the token is not logged or stored during activity function calls
 	process.env['ghToken'] = decryptGHToken(ghToken);
 
-	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', { orgName });
+	const excludeListStringArray = checkRegexExcludeListGetArray(repoNamesExcludeList);
+
+	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', { orgName, excludeListStringArray });
 
 	const workPerScanner = [];
 	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
@@ -34,7 +36,9 @@ function* processForLdif(context) {
 	const partialResults = yield context.df.Task.all(output);
 
 	try {
-		var teamResults = yield context.df.callActivity('GetOrgTeamsData', { orgName });
+		var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
+			orgName
+		});
 	} catch (e) {
 		context.log(e);
 		teamResults = [];
@@ -43,7 +47,12 @@ function* processForLdif(context) {
 	const repoVisibilityOutput = [];
 	const repoVisibilities = ['private', 'public', 'internal'];
 	for (let visibilityType of repoVisibilities) {
-		repoVisibilityOutput.push(context.df.callActivity('GetReposVisibilityData', { orgName, visibilityType }));
+		repoVisibilityOutput.push(
+			context.df.callActivity('GetReposVisibilityData', {
+				orgName,
+				visibilityType
+			})
+		);
 	}
 	try {
 		const repoVisibilityPartialResults = yield context.df.Task.all(repoVisibilityOutput);

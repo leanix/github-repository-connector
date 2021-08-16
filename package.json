@@ -5,8 +5,8 @@
 	"scripts": {
 		"start": "func start",
 		"test": "echo \"No tests yet...\"",
-		"check-format": "prettier --config .prettierrc.json '.' --check",
-		"format": "prettier --config .prettierrc.json '.' --write"
+		"check-format": "prettier --config .prettierrc.json \".\" --check",
+		"format": "prettier --config .prettierrc.json \".\" --write"
 	},
 	"dependencies": {
 		"@azure/storage-blob": "^12.5.0",
