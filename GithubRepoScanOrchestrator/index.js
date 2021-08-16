@@ -5,7 +5,7 @@
  */
 
 const df = require("durable-functions");
-const { decryptGHToken, iHubStatus } = require("./helper");
+const { decryptGHToken, iHubStatus, checkRegexExcludeListGetArray } = require("./helper");
 
 function* processForLdif(context) {
   const {
@@ -18,9 +18,11 @@ function* processForLdif(context) {
   // storing ghToken in env so that the token is not logged or stored during activity function calls
   process.env["ghToken"] = decryptGHToken(ghToken);
 
+  const excludeListStringArray = checkRegexExcludeListGetArray(repoNamesExcludeList);
+
   const repositoriesIds = yield context.df.callActivity(
     "GetAllRepositoriesForOrg",
-    { orgName, repoNamesExcludeList }
+    { orgName, excludeListStringArray }
   );
 
   const workPerScanner = [];

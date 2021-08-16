@@ -6,14 +6,13 @@
 		"connectorVersion": "1.0.0",
 		"processingDirection": "inbound",
 		"processingMode": "full",
-
 		"deletionScope": {
 			"tags": [
 				{
 					"tagScopes": [
 						{
 							"group": "Data Quality",
-							"tag": "EXCLUDED"
+							"tag": "github-tracking-disabled"
 						}
 					],
 					"scope": {
@@ -25,8 +24,13 @@
 								"operator": "AND"
 							},
 							{
-								"keys": ["${integration.tags.getTagId('Data Quality','EXCLUDED')}"],
+								"keys": ["${integration.tags.getTagId('Data Quality','github-tracking-disabled')}"],
 								"facetKey": "${integration.tags.getTagGroupId('Data Quality')}",
+								"operator": "AND"
+							},
+							{
+								"keys": ["${integration.tags.getTagId('Data Source','Github repository')}"],
+								"facetKey": "${integration.tags.getTagGroupId('Data Source')}",
 								"operator": "AND"
 							}
 						]
@@ -409,7 +413,8 @@
 						"key": "github_project_ids",
 						"value": "${content.id}"
 					}
-				]
+				],
+				"logLevel": "debug"
 			},
 			{
 				"processorType": "inboundFactSheet",
@@ -448,14 +453,15 @@
 						"value": "${lx.factsheet.githubId}"
 					}
 				],
+				"logLevel": "debug",
 				"read": {
 					"fields": ["name", "githubId"]
 				}
 			},
 			{
 				"processorType": "inboundTag",
-				"processorName": "add 'excluded' tag",
-				"processorDescription": "adds 'excluded' tag to the microservice that was created by github-connector but not included in the scan anymore",
+				"processorName": "add 'github-tracking-disabled' tag",
+				"processorDescription": "adds 'github-tracking-disabled' tag to the microservice that was created by github-connector but not included in the scan anymore",
 				"factSheets": {
 					"external": {
 						"ids": "${integration.valueOfForEach}",
@@ -463,6 +469,9 @@
 							"expr": "githubId"
 						}
 					}
+				},
+				"filter": {
+					"advanced": "${integration.contentIndex == 0}"
 				},
 				"run": 6,
 				"updates": [
@@ -472,7 +481,7 @@
 						},
 						"values": [
 							{
-								"expr": "EXCLUDED"
+								"expr": "github-tracking-disabled"
 							}
 						]
 					},
@@ -537,30 +546,8 @@
 						]
 					}
 				]
-			},
-			{
-				"processorType": "inboundTag",
-				"processorName": "remove excluded tag from microservice",
-				"processorDescription": "Removes EXCLUDED tag from microservice FS",
-				"filter": {
-					"advanced": "${integration.contentIndex == 0}"
-				},
-				"factSheets": {
-					"external": {
-						"ids": "MDEwOlJlcG9zaXRvcnkzOTUwMzU1NA==",
-						"type": {
-							"expr": "githubId"
-						}
-					}
-				},
-				"run": 7,
-				"updates": []
 			}
-		],
-		"variables": {},
-		"dataProvider": {
-			"url": "${header.customFields.resultUrl}"
-		}
+		]
 	},
 	"variables": {},
 	"dataProvider": {
