@@ -5,7 +5,7 @@
 	"scripts": {
 		"start": "func start",
 		"test": "echo \"No tests yet...\"",
-		"check-format": "prettier --config .prettierrc.json '.' --check",
+		"check-format": "prettier --config .prettierrc.json \".\" --check",
 		"format": "prettier --config .prettierrc.json \".\" --write"
 	},
 	"dependencies": {
