@@ -14,8 +14,8 @@ module.exports = {
 		if (regexExcludeList) {
 			let regexExcludeListArray = regexExcludeList.split(',');
 			try {
-		     // checking the provided regurlar expressions for errors
-			regexExcludeListArray.map((regexString) => new RegExp(regexString));
+				// checking the provided regurlar expressions for errors
+				regexExcludeListArray.map((regexString) => new RegExp(regexString));
 			} catch (error) {
 				throw new Error('A regular expression provided in the input field repoNamesExcludeList is invalid. Please check your input!');
 			}

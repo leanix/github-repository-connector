@@ -1,7 +1,7 @@
 ﻿const { graphql } = require('@octokit/graphql');
 
 function excludeListedRepositoriesIDsList(repositoriesData, excludeListStringArray) {
-  const regexExcludeListArray = excludeListStringArray.map((regexString) => new RegExp(regexString));
+	const regexExcludeListArray = excludeListStringArray.map((regexString) => new RegExp(regexString));
 	let remainingRepoIdsArray = repositoriesData
 		.filter((repoData) => !regexExcludeListArray.find((regex) => repoData.name.match(regex)))
 		.map((repoData) => repoData.id);
@@ -60,7 +60,6 @@ async function getAllRepositoryIds(graphqlClient, orgName, excludeListStringArra
 }
 
 module.exports = async function (context, { orgName, excludeListStringArray }) {
-
 	const graphqlClient = graphql.defaults({
 		headers: {
 			authorization: `token ${process.env['ghToken']}`

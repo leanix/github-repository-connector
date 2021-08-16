@@ -5,13 +5,11 @@ Integration Hub.
 
 ## Inputs
 
-
-| Parameter          | Mandatory | Format               | Description                                                                                                                                                                       |
-| ------------------ | --------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| orgName            | ✅        | Plain Text           | Name of the github organization to be scanned                                                                                                                                     |
-| ghToken            | ✅        | Encrypted            | Github token for repository access                                                                                                                                                |
+| Parameter            | Mandatory | Format               | Description                                                                                                                                                                       |
+| -------------------- | --------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| orgName              | ✅        | Plain Text           | Name of the github organization to be scanned                                                                                                                                     |
+| ghToken              | ✅        | Encrypted            | Github token for repository access                                                                                                                                                |
 | repoNamesExcludeList | ❌        | Comma seperated list | List of regex expressions to identify repositories, that should not be included in the scanning result, by their names (eg.: "allThatIncludeThisSubstring,^start-with,end-with$") |
-
 
 ## Integration Hub Support
 
