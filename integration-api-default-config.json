@@ -500,8 +500,8 @@
 			},
 			{
 				"processorType": "inboundTag",
-				"processorName": "Add 'Github repository' tag on Microservice Factsheets",
-				"processorDescription": "Adds 'Github repository' tag on violation type FS for data source tracking",
+				"processorName": "Add 'Github repository' Data Source tag on Microservice Factsheets",
+				"processorDescription": "Adds 'Github repository' Data Source tag on violation type FS for data source tracking",
 				"filter": {
 					"exactType": "Repository"
 				},
