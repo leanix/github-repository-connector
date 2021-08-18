@@ -20,7 +20,6 @@ function* processForLdif(context) {
 
 	const excludeListStringArray = checkRegexExcludeListGetArray(repoNamesExcludeList);
 	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', { orgName, excludeListStringArray });
-	context.log(`Excluded repos name ${excludeListStringArray} ${repoNamesExcludeList} ${repositoriesIds}`);
 
 	const workPerScanner = [];
 	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
