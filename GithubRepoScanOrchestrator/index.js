@@ -19,6 +19,7 @@ function* processForLdif(context) {
 	process.env['ghToken'] = decryptGHToken(ghToken);
 
 	const excludeListStringArray = checkRegexExcludeListGetArray(repoNamesExcludeList);
+
 	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', { orgName, excludeListStringArray });
 
 	const workPerScanner = [];
