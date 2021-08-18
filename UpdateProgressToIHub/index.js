@@ -9,7 +9,7 @@ module.exports = async function (context, { progressCallbackUrl, status, message
 		const response = await axios.post(progressCallbackUrl, {
 			status,
 			message,
-			'progressOrigin': iHubProgressOrigin.CONNECTOR
+			progressOrigin: iHubProgressOrigin.CONNECTOR
 		});
 		context.log(`Updated ${status} status to Integration Hub`, response.status);
 	} catch (e) {
