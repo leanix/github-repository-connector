@@ -13,7 +13,7 @@
 		"@octokit/graphql": "^4.6.1",
 		"axios": "^0.21.1",
 		"crypto-js": "^4.0.0",
-		"durable-functions": "^1.4.6"
+		"durable-functions": "^1.5.2"
 	},
 	"devDependencies": {
 		"prettier": "2.3.2"
