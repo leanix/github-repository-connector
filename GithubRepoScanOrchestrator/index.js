@@ -5,18 +5,19 @@
  */
 
 const df = require('durable-functions');
-const { decryptGHToken, iHubStatus, checkRegexExcludeListGetArray } = require('./helper');
+const { iHubStatus, checkRegexExcludeListGetArray } = require('./helper');
 
 function* processForLdif(context) {
 	const {
-		connectorConfiguration: { orgName, ghToken, repoNamesExcludeList },
+		connectorConfiguration: { orgName, repoNamesExcludeList },
+		secretsConfiguration: { ghToken },
 		ldifResultUrl,
 		progressCallbackUrl
 	} = context.bindingData.input;
 	const scannerCapacity = 100;
 
 	// storing ghToken in env so that the token is not logged or stored during activity function calls
-	process.env['ghToken'] = decryptGHToken(ghToken);
+	process.env['ghToken'] = ghToken;
 
 	const excludeListStringArray = checkRegexExcludeListGetArray(repoNamesExcludeList);
 
