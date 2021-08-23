@@ -5,7 +5,7 @@
  */
 
 const df = require('durable-functions');
-const { iHubStatus, checkRegexExcludeListGetArray } = require('./helper');
+const { iHubStatus, checkRegexExcludeList } = require('./helper');
 
 function* processForLdif(context) {
 	const {
@@ -19,9 +19,9 @@ function* processForLdif(context) {
 	// storing ghToken in env so that the token is not logged or stored during activity function calls
 	process.env['ghToken'] = ghToken;
 
-	const excludeListStringArray = checkRegexExcludeListGetArray(repoNamesExcludeList);
+	const repoNamesExcludeListChecked = checkRegexExcludeList(repoNamesExcludeList);
 
-	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', { orgName, excludeListStringArray });
+	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', { orgName, repoNamesExcludeListChecked });
 
 	const workPerScanner = [];
 	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {

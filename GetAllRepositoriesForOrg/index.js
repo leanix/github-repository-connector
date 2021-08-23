@@ -1,14 +1,14 @@
 ﻿const { graphql } = require('@octokit/graphql');
 
-function excludeListedRepositoriesIDsList(repositoriesData, excludeListStringArray) {
-	const regexExcludeListArray = excludeListStringArray.map((regexString) => new RegExp(regexString));
+function excludeListedRepositoriesIDsList(repositoriesData, repoNamesExcludeListChecked) {
+	const regexExcludeListArray = repoNamesExcludeListChecked.map((regexString) => new RegExp(regexString));
 	let remainingRepoIdsArray = repositoriesData
 		.filter((repoData) => !regexExcludeListArray.find((regex) => repoData.name.match(regex)))
 		.map((repoData) => repoData.id);
 	return remainingRepoIdsArray;
 }
 
-async function getRepositoriesIds(graphqlClient, { orgName, pageCount, cursor }, excludeListStringArray) {
+async function getRepositoriesIds(graphqlClient, { orgName, pageCount, cursor }, repoNamesExcludeListChecked) {
 	const data = await graphqlClient({
 		query: `
             query getOrgRepositories($orgName: String!, $pageCount: Int!, $cursor: String) {
@@ -31,7 +31,7 @@ async function getRepositoriesIds(graphqlClient, { orgName, pageCount, cursor },
 		cursor
 	});
 
-	const idList = excludeListedRepositoriesIDsList(data.organization.repositories.nodes, excludeListStringArray);
+	const idList = excludeListedRepositoriesIDsList(data.organization.repositories.nodes, repoNamesExcludeListChecked);
 
 	return {
 		ids: idList,
@@ -39,7 +39,7 @@ async function getRepositoriesIds(graphqlClient, { orgName, pageCount, cursor },
 	};
 }
 
-async function getAllRepositoryIds(graphqlClient, orgName, excludeListStringArray) {
+async function getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListChecked) {
 	let cursor = null;
 	let finalResult = [];
 
@@ -51,7 +51,7 @@ async function getAllRepositoryIds(graphqlClient, orgName, excludeListStringArra
 				pageCount: 100,
 				cursor
 			},
-			excludeListStringArray
+			repoNamesExcludeListChecked
 		);
 		finalResult = finalResult.concat(ids);
 		cursor = pageInfo.endCursor;
@@ -59,13 +59,13 @@ async function getAllRepositoryIds(graphqlClient, orgName, excludeListStringArra
 	return finalResult;
 }
 
-module.exports = async function (context, { orgName, excludeListStringArray }) {
+module.exports = async function (context, { orgName, repoNamesExcludeListChecked }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
 			authorization: `token ${process.env['ghToken']}`
 		}
 	});
 
-	const finalResult = await getAllRepositoryIds(graphqlClient, orgName, excludeListStringArray);
+	const finalResult = await getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListChecked);
 	context.done(null, finalResult);
 };
