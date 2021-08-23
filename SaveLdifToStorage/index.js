@@ -4,8 +4,8 @@
 const { BlobClient, AnonymousCredential } = require('@azure/storage-blob');
 
 const ldifHeader = {
-	connectorId: 'github-connector',
-	connectorType: 'github-connector',
+	connectorId: 'leanix-mi-connector',
+	connectorType: 'leanix-github-repository-connector',
 	connectorVersion: '1.0.0',
 	processingDirection: 'inbound',
 	processingMode: 'full',
