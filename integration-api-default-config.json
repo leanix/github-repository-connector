@@ -1,8 +1,8 @@
 {
 	"externalId": "cider-github-repository-connector",
 	"config": {
-		"connectorType": "leanix-mi-connector",
 		"connectorId": "leanix-github-repository-connector",
+		"connectorType": "leanix-mi-connector",
 		"connectorVersion": "1.0.0",
 		"processingDirection": "inbound",
 		"processingMode": "full",
