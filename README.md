@@ -8,8 +8,8 @@ Integration Hub.
 | Parameter            | Mandatory | Format               | Description                                                                                                                                                                       |
 | -------------------- | --------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | orgName              | ✅        | Plain Text           | Name of the github organization to be scanned                                                                                                                                     |
-| ghToken              | ✅        | Encrypted            | Github token for repository access                                                                                                                                                |
-| repoNamesExcludeList | ❌        | Comma seperated list | List of regex expressions to identify repositories, that should not be included in the scanning result, by their names (eg.: "allThatIncludeThisSubstring,^start-with,end-with$") |
+| ghToken              | ✅        | Plain Text           | Github token for repository access, given in the "secretsConfiguration" section. It will be hidden in the integrationHub UI.                                                                                                                                                |
+| repoNamesExcludeList | ❌        | Array of strings     | Array of regex expressions to identify repositories, that should not be included in the scanning result, by their names (eg.: ["allThatIncludeThisSubstring", "^start-with", "end-with$"]) |
 
 ## Integration Hub Support
 
