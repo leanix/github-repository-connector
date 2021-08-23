@@ -5,11 +5,11 @@ Integration Hub.
 
 ## Inputs
 
-| Parameter            | Mandatory | Format               | Description                                                                                                                                                                       |
-| -------------------- | --------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| orgName              | ✅        | Plain Text           | Name of the github organization to be scanned                                                                                                                                     |
-| ghToken              | ✅        | Plain Text           | Github token for repository access, given in the "secretsConfiguration" section. It will be hidden in the integrationHub UI.                                                                                                                                                |
-| repoNamesExcludeList | ❌        | Array of strings     | Array of regex expressions to identify repositories, that should not be included in the scanning result, by their names (eg.: ["allThatIncludeThisSubstring", "^start-with", "end-with$"]) |
+| Parameter            | Mandatory | Format           | Description                                                                                                                                                                                |
+| -------------------- | --------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| orgName              | ✅        | Plain Text       | Name of the github organization to be scanned                                                                                                                                              |
+| ghToken              | ✅        | Plain Text       | Github token for repository access, given in the "secretsConfiguration" section. It will be hidden in the integrationHub UI.                                                               |
+| repoNamesExcludeList | ❌        | Array of strings | Array of regex expressions to identify repositories, that should not be included in the scanning result, by their names (eg.: ["allThatIncludeThisSubstring", "^start-with", "end-with$"]) |
 
 ## Integration Hub Support
 
