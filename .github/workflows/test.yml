@@ -2,10 +2,13 @@ name: deploy-test
 
 on:
   repository_dispatch:
-    types: [trigger-workflow]
+    types: [ trigger-workflow ]
   push:
     branches:
       - feature/**
+    paths-ignore:
+      - 'integration-api-default-config.json'
+      - 'README.md'
   workflow_dispatch:
 
 env:
@@ -28,7 +31,7 @@ jobs:
       - name: Setup Node ${{ env.NODE_VERSION }} Environment
         uses: actions/setup-node@v1
         with:
-          node-version: ${{ env.NODE_VERSION }} 
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: 'Login to Test Env via Azure CLI'
         if: github.ref!='refs/heads/main'
@@ -44,14 +47,14 @@ jobs:
           npm run build --if-present
           npm run test --if-present
           popd
-          
+
       - name: 'Deploy Azure Function to Test'
         if: github.ref!='refs/heads/main'
         uses: Azure/functions-action@v1
         with:
           app-name: ${{ env.AZURE_FUNCTIONAPP_NAME}}
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-      
+
       # tracking test releases on the related JIRA ticket with env as test
       - name: LeanIX Jira Release Tracking
         if: github.ref!='refs/heads/main'
