@@ -547,18 +547,18 @@
 					}
 				]
 			}
-		]
+		],
+		"variables": {},
+		"dataProvider": {
+			"url": "${header.customFields.resultUrl}"
+		},
+		"visibleIf": [
+			{
+				"featureFlags": [""]
+			}
+		],
+		"readOnly": true
 	},
-	"variables": {},
-	"dataProvider": {
-		"url": "${header.customFields.resultUrl}"
-	},
-	"visibleIf": [
-		{
-			"featureFlags": [""]
-		}
-	],
-	"readOnly": true,
 	"availableIf": [
 		{
 			"featureFlags": ["integration.integrationapi", "integration.githubrepository"]
