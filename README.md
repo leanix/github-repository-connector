@@ -5,26 +5,28 @@ Integration Hub.
 
 ## Inputs
 
-Parameter | Mandatory | Format |
---- | --- | --- | 
-orgName | ✅ | Plain Text
-ghToken | ✅ | Encrypted
+| Parameter            | Mandatory | Section in input object | Format           | Description                                                                                                                                                                                |
+| -------------------- | --------- | ----------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| orgName              | ✅        | connectorConfiguration  | Plain Text       | Name of the github organization to be scanned                                                                                                                                              |
+| repoNamesExcludeList | ❌        | connectorConfiguration  | Array of strings | Array of regex expressions to identify repositories, that should not be included in the scanning result, by their names (eg.: ["allThatIncludeThisSubstring", "^start-with", "end-with$"]) |
+| ghToken              | ✅        | secretsConfiguration    | Plain Text       | Github token for repository access. It will be hidden in the integrationHub UI. The minimum scope of the token that needs to be set is "admin:org"-"read:org".                             |
 
 ## Integration Hub Support
-#### Connector Template 
-- mi-github-repository-connector 
 
+#### Connector Template
+
+- mi-github-repository-connector
 
 ## Setting up Azure Durable FunctionApp
 
 - Create new Integration Hub connector template
 - Set following application parameters in `functionapp > settings > configuration`
-    - ~~From Azure storage resource (Access Keys), name to 'LX_AZ_STORAGE_ACCOUNT_NAME'~~
-    - ~~From Azure storage resource (Access Keys), account key to 'LX_AZ_STORAGE_ACCOUNT_KEY'~~
-    - Openssl encrypted GitHub token to 'LX_ENCRYPTION_PASSPHRASE'
+  - ~~From Azure storage resource (Access Keys), name to 'LX_AZ_STORAGE_ACCOUNT_NAME'~~
+  - ~~From Azure storage resource (Access Keys), account key to 'LX_AZ_STORAGE_ACCOUNT_KEY'~~
+  - Openssl encrypted GitHub token to 'LX_ENCRYPTION_PASSPHRASE'
 - ~~For Camunda workflow, Create a new host key (functionapp > app keys) as 'camunda_key'. This key is used to register the
   functionapp to Camunda workflow~~ **Responsibility taken over by Integration Hub**
 
-## More information 
+## More information
 
 https://leanix.atlassian.net/l/c/0o8XHJoc
