@@ -37,6 +37,22 @@
 					}
 				}
 			],
+			"subscriptions": [{
+				"subscriptionScopes": [{
+					"type": "RESPONSIBLE",
+					"roles": ["Contributor"]
+				}],
+				"scope": {
+					"ids": [],
+					"facetFilters": [{
+						"keys": [
+							"Microservice"
+						],
+						"facetKey": "FactSheetTypes",
+						"operator": "OR"
+					}]
+				}
+			}],
 			"maximumDeletionRatio": {
 				"factSheets": 60
 			}
@@ -542,6 +558,88 @@
 						"values": [
 							{
 								"expr": "SINGLE"
+							}
+						]
+					}
+				]
+			},
+			{
+				"processorType": "inboundSubscription",
+				"processorName": "create-user-subscriptions-from-user-subscriptions",
+				"processorDescription": "Creates repo contributors as MS subscriptions",
+				"run": 2,
+				"type": "Microservice",
+				"filter": {
+					"exactType": "Repository"
+				},
+				"identifier": {
+					"external": {
+						"id": {
+							"expr": "${content.id}"
+						},
+						"type": {
+							"expr": "githubId"
+						}
+					}
+				},
+				"forEach": "${data.contributors}",
+				"updates": [
+					{
+						"key": {
+							"expr": "user"
+						},
+						"values": [
+							{
+								"expr": "${integration.valueOfForEach}"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "subscriptionType"
+						},
+						"values": [
+							{
+								"expr": "RESPONSIBLE"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "addSubscriptionRoles"
+						},
+						"values": [
+							{
+								"map": [
+									{
+										"key": "roleName",
+										"value": "Contributor"
+									},
+									{
+										"key": "comment",
+										"value": "Managed by GitHub repository connector"
+									}
+								]
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "newUser.userName"
+						},
+						"values": [
+							{
+								"expr": "${integration.valueOfForEach}"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "newUser.email"
+						},
+						"values": [
+							{
+								"expr": "${integration.valueOfForEach}"
 							}
 						]
 					}

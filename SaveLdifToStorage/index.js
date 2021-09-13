@@ -90,6 +90,9 @@ function convertToRepositoryContent(repoData) {
 
 function getTopContributorsFromCommitHistory(topCount = 3) {
     return function process(defaultBranchRef) {
+				if(!defaultBranchRef) {
+					return []
+				}
         const isHuman = committerNode => committerNode.node.committer.user ? committerNode.node.committer.user.name !== null : false
         const history = defaultBranchRef.target.history.edges;
         const freqMap = history
@@ -108,7 +111,7 @@ function getTopContributorsFromCommitHistory(topCount = 3) {
         return Object.values(freqMap)
             .sort((a,b) => b.freq - a.freq) // high to low
             .slice(0, topCount)
-            .map(committerNode => ({name: committerNode.committer.user.name, email: committerNode.committer.email}))
+            .map(committerNode => committerNode.committer.email)
     }
 }
 

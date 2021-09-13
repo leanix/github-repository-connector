@@ -1,19 +1,19 @@
-const { graphql } = require('@octokit/graphql');
-const {getISODateStringOnFromToday} = require('../GithubRepoScanOrchestrator/helper')
+const { graphql } = require("@octokit/graphql");
+const { getISODateStringOnFromToday } = require("../GithubRepoScanOrchestrator/helper");
 
-module.exports = async function (context, repoIds) {
-	const graphqlClient = graphql.defaults({
-		headers: {
-			authorization: `token ${process.env['ghToken']}`
-		}
-	});
-	return await getReposData(graphqlClient, repoIds);
+module.exports = async function(context, repoIds) {
+  const graphqlClient = graphql.defaults({
+    headers: {
+      authorization: `token ${process.env["ghToken"]}`
+    }
+  });
+  return await getReposData(graphqlClient, repoIds);
 };
 
 async function getReposData(graphqlClient, repoIds) {
-	const initialLanguagePageSize = 10;
-	const data = await graphqlClient({
-		query: `
+  const initialLanguagePageSize = 10;
+  const data = await graphqlClient({
+    query: `
             query getReposData($repoIds:[ID!]!, $languagePageCount: Int!, $contributorHistorySince: GitTimestamp!){
                 nodes(ids: $repoIds){
                     id
@@ -66,38 +66,38 @@ async function getReposData(graphqlClient, repoIds) {
                     }
                 }
         `,
-		repoIds,
-		languagePageCount: initialLanguagePageSize,
-        contributorHistorySince: getISODateStringOnFromToday()
-    });
+    repoIds,
+    languagePageCount: initialLanguagePageSize,
+    contributorHistorySince: getISODateStringOnFromToday()
+  });
 
-	let repoInfos = data.nodes;
-	for (let repoInfo of repoInfos) {
-		if (repoInfo.languages.pageInfo.hasNextPage) {
-			repoInfo.languages.nodes = await getAllLanguagesForRepo(graphqlClient, repoInfo);
-		}
-	}
+  let repoInfos = data.nodes;
+  for (let repoInfo of repoInfos) {
+    if (repoInfo.languages.pageInfo.hasNextPage) {
+      repoInfo.languages.nodes = await getAllLanguagesForRepo(graphqlClient, repoInfo);
+    }
+  }
 
-	return repoInfos;
+  return repoInfos;
 }
 
 async function getAllLanguagesForRepo(graphqlClient, repoInfo) {
-	let languageCursor = null;
-	let finalResult = [];
+  let languageCursor = null;
+  let finalResult = [];
 
-	do {
-		var { languages, pageInfo } = await getPagedLanguages(graphqlClient, { repoId: repoInfo.id, cursor: languageCursor });
-		finalResult = finalResult.concat(languages);
-		languageCursor = pageInfo.endCursor;
-	} while (pageInfo.hasNextPage);
+  do {
+    var { languages, pageInfo } = await getPagedLanguages(graphqlClient, { repoId: repoInfo.id, cursor: languageCursor });
+    finalResult = finalResult.concat(languages);
+    languageCursor = pageInfo.endCursor;
+  } while (pageInfo.hasNextPage);
 
-	return finalResult;
+  return finalResult;
 }
 
 async function getPagedLanguages(graphqlClient, { repoId, cursor }) {
-	const languagePageSize = 100;
-	const data = await graphqlClient({
-		query: `
+  const languagePageSize = 100;
+  const data = await graphqlClient({
+    query: `
             query getLanguagesForRepo($repoId: ID!, $pageCount: Int!, $cursor: String) {
                 node(id: $repoId) {
                     id
@@ -119,12 +119,12 @@ async function getPagedLanguages(graphqlClient, { repoId, cursor }) {
                 }
             }
         `,
-		repoId,
-		cursor,
-		pageCount: languagePageSize
-	});
-	return {
-		languages: data.node.languages.nodes,
-		pageInfo: data.node.languages.pageInfo
-	};
+    repoId,
+    cursor,
+    pageCount: languagePageSize
+  });
+  return {
+    languages: data.node.languages.nodes,
+    pageInfo: data.node.languages.pageInfo
+  };
 }
