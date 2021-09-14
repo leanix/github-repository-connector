@@ -569,7 +569,7 @@
 			},
 			{
 				"processorType": "inboundSubscription",
-				"processorName": "create-user-subscriptions-from-user-subscriptions",
+				"processorName": "create-user-subscriptions-from-repo-contributors",
 				"processorDescription": "Creates repo contributors as MS subscriptions",
 				"run": 2,
 				"type": "Microservice",
