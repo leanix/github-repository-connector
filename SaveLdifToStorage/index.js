@@ -83,36 +83,34 @@ function convertToRepositoryContent(repoData) {
 			}),
 			topics: repoData.repositoryTopics.nodes.map(({ topic }) => topic.id),
 			repoVisibility: repoData.visibility,
-            contributors: getTopContributorsFromCommitHistory()(repoData.defaultBranchRef)
-        }
-    };
+			contributors: getTopContributorsFromCommitHistory()(repoData.defaultBranchRef)
+		}
+	};
 }
 
 function getTopContributorsFromCommitHistory(topCount = 3) {
-    return function process(defaultBranchRef) {
-				if(!defaultBranchRef) {
-					return []
-				}
-        const isHuman = committerNode => committerNode.node.committer.user ? committerNode.node.committer.user.name !== null : false
-        const history = defaultBranchRef.target.history.edges;
-        const freqMap = history
-            .filter(isHuman)
-            .reduce((committerFreqMap, committerNode) => {
-                const email = committerNode.node.committer.email;
-                if(!committerFreqMap[email]) {
-                    committerFreqMap[email] = {
-                        ...committerNode.node,
-                        freq: 0
-                    }
-                }
-                committerFreqMap[email].freq += 1
-                return committerFreqMap;
-            }, {});
-        return Object.values(freqMap)
-            .sort((a,b) => b.freq - a.freq) // high to low
-            .slice(0, topCount)
-            .map(committerNode => committerNode.committer.email)
-    }
+	return function process(defaultBranchRef) {
+		if (!defaultBranchRef) {
+			return [];
+		}
+		const isHuman = (committerNode) => (committerNode.node.committer.user ? committerNode.node.committer.user.name !== null : false);
+		const history = defaultBranchRef.target.history.edges;
+		const freqMap = history.filter(isHuman).reduce((committerFreqMap, committerNode) => {
+			const email = committerNode.node.committer.email;
+			if (!committerFreqMap[email]) {
+				committerFreqMap[email] = {
+					...committerNode.node,
+					freq: 0
+				};
+			}
+			committerFreqMap[email].freq += 1;
+			return committerFreqMap;
+		}, {});
+		return Object.values(freqMap)
+			.sort((a, b) => b.freq - a.freq) // high to low
+			.slice(0, topCount)
+			.map((committerNode) => committerNode.committer.email);
+	};
 }
 
 /**

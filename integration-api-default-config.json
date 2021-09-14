@@ -37,22 +37,26 @@
 					}
 				}
 			],
-			"subscriptions": [{
-				"subscriptionScopes": [{
-					"type": "RESPONSIBLE",
-					"roles": ["Contributor"]
-				}],
-				"scope": {
-					"ids": [],
-					"facetFilters": [{
-						"keys": [
-							"Microservice"
-						],
-						"facetKey": "FactSheetTypes",
-						"operator": "OR"
-					}]
+			"subscriptions": [
+				{
+					"subscriptionScopes": [
+						{
+							"type": "RESPONSIBLE",
+							"roles": ["Contributor"]
+						}
+					],
+					"scope": {
+						"ids": [],
+						"facetFilters": [
+							{
+								"keys": ["Microservice"],
+								"facetKey": "FactSheetTypes",
+								"operator": "OR"
+							}
+						]
+					}
 				}
-			}],
+			],
 			"maximumDeletionRatio": {
 				"factSheets": 60
 			}
