@@ -12,7 +12,7 @@ module.exports = async function (context, repoIds) {
 
 async function getReposCommitHistoryData(context, graphqlClient, repoIds) {
 	try {
-		return await graphqlClient({
+		let data = await graphqlClient({
 			query: `
 							query getReposData($repoIds:[ID!]!, $contributorHistorySince: GitTimestamp!){
 									nodes(ids: $repoIds){
@@ -45,6 +45,7 @@ async function getReposCommitHistoryData(context, graphqlClient, repoIds) {
 			repoIds,
 			contributorHistorySince: getISODateStringOnFromToday()
 		});
+		return data;
 	} catch (e) {
 		context.log(`Failed to get repository commit history data, falling back to empty list. Error - ${e.message}`);
 		return [];
