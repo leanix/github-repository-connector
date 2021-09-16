@@ -45,7 +45,7 @@ async function getReposCommitHistoryData(context, graphqlClient, repoIds) {
 			repoIds,
 			contributorHistorySince: getISODateStringOnFromToday()
 		});
-		return data;
+		return data.nodes;
 	} catch (e) {
 		context.log(`Failed to get repository commit history data, falling back to empty list. Error - ${e.message}`);
 		return [];
