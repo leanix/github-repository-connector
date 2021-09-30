@@ -73,10 +73,10 @@ async function getReposForVisibility(graphqlClient, orgName, visibilityType) {
 	return finalResultForVisibility;
 }
 
-module.exports = async function (context, { orgName, visibilityType }) {
+module.exports = async function (context, { orgName, visibilityType, ghToken }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
-			authorization: `token ${process.env['ghToken']}`
+			authorization: `token ${ghToken}`
 		}
 	});
 	const visibilityResult = await getReposForVisibility(graphqlClient, orgName, visibilityType);

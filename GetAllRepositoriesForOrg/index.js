@@ -59,10 +59,10 @@ async function getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListC
 	return finalResult;
 }
 
-module.exports = async function (context, { orgName, repoNamesExcludeListChecked }) {
+module.exports = async function (context, { orgName, repoNamesExcludeListChecked, ghToken }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
-			authorization: `token ${process.env['ghToken']}`
+			authorization: `token ${ghToken}`
 		}
 	});
 
