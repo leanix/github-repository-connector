@@ -113,10 +113,10 @@ async function getAllTeamsWithRepos(graphqlClient, orgName) {
 	return finalResult;
 }
 
-module.exports = async function (context, { orgName }) {
+module.exports = async function (context, { orgName, ghToken }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
-			authorization: `token ${process.env['ghToken']}`
+			authorization: `token ${ghToken}`
 		}
 	});
 
