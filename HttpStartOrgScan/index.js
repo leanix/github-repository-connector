@@ -5,13 +5,11 @@ module.exports = async function (context, req) {
 	const client = df.getClient(context);
 	const input = req.body;
 
-	return buildResponseBody({ runId: input.runId, status: iHubStatus.FAILED, message: 'Temporarily unavailable' });
+	const instanceId = await client.startNew('GithubRepoScanOrchestrator', undefined, input);
 
-	// const instanceId = await client.startNew('GithubRepoScanOrchestrator', undefined, input);
+	context.log(`Started orchestration with ID = '${instanceId}'.`);
 
-	// context.log(`Started orchestration with ID = '${instanceId}'.`);
-
-	// return buildResponseBody({ runId: input.runId, status: iHubStatus.IN_PROGRESS });
+	return buildResponseBody({ runId: input.runId, status: iHubStatus.IN_PROGRESS });
 };
 
 function buildResponseBody(data) {
