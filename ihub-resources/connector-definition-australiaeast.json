@@ -4,7 +4,7 @@
     "connectorUrl": "https://functions-australiaeast-prod-githubrepositoryconnector.azurewebsites.net/api/orchestrators/",
     "connectorConfiguration": {
         "orgName": "leanix",
-        "repoNamesExclude": []
+        "repoNamesExcludeList": []
     },
     "secretsConfiguration": {
         "ghToken": ""
