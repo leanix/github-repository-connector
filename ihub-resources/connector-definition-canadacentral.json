@@ -11,7 +11,7 @@
     },
     "bindingKey": {
         "connectorType": "leanix-vsm-connector",
-        "connectorId": "leanic-github-connector",
+        "connectorId": "leanix-github-connector",
         "connectorVersion": "1.0.0",
         "processingDirection": "inbound",
         "processingMode": "full"
