@@ -1,4 +1,4 @@
-name: iHub Connector Deploy
+name: Deploy iHub Connector template
 
 on:
   repository_dispatch:
