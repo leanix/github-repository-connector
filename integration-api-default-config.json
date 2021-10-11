@@ -75,7 +75,7 @@
             {
                 "processorType": "variableProcessor",
                 "processorName": "repository-topics-map",
-                "processorDescription": "This variable processor creates a map of each repository against its topic ids ",
+                "processorDescription": "This variable processor creates a map of each repository against its topic ids.",
                 "filter": {
                     "exactType": "Repository"
                 },
