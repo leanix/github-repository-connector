@@ -12,9 +12,31 @@ on:
       - 'ihub-resources/connector-definition-**.json'
 
 jobs:
-  register-ihub-connector-template:
+  register-ihub-connector-template-test:
+    name: register connector template on test
+    runs-on: ubuntu-latest
+    if: github.ref!='refs/heads/main'
+    steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+  
+        - name: Get credentials
+          uses: leanix/secrets-action@master
+          with:
+            secret-store-credentials: ${{ secrets.INJECTED_SECRET_STORE_CREDENTIALS }}
+  
+        - name: Register GitHub Connector on test
+          if: github.ref!='refs/heads/main'
+          uses: leanix/integration-hub-connector-register-action@main
+          with:
+            environment: 'test'
+            connector_definition_file: 'ihub-resources/connector-definition-test.json'
+            connector_icon: 'ihub-resources/connector-github-icon.png'
+
+  register-ihub-connector-template-prod:
     name: register connector template to all regions
     runs-on: ubuntu-latest
+    if: github.ref=='refs/heads/main'
     strategy:
         matrix:
           # adding all the prod regions to region matrix below
@@ -27,14 +49,6 @@ jobs:
         uses: leanix/secrets-action@master
         with:
           secret-store-credentials: ${{ secrets.INJECTED_SECRET_STORE_CREDENTIALS }}
-
-      - name: Register GitHub Connector on test
-        if: github.ref!='refs/heads/main'
-        uses: leanix/integration-hub-connector-register-action@main
-        with:
-          environment: 'test'
-          connector_definition_file: 'ihub-resources/connector-definition-test.json'
-          connector_icon: 'ihub-resources/connector-github-icon.png'
 
       - name: Register GitHub Connector on all regions prod
         if: github.ref=='refs/heads/main'

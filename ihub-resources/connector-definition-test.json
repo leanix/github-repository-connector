@@ -17,7 +17,7 @@
     "featureFlags": [
         {
             "featureFlags": [
-                "integration.vsm.github"
+                "integration.vsm.githubrepository"
             ]
         }
     ]
