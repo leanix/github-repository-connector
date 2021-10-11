@@ -17,12 +17,9 @@ function* processForLdif(context) {
 	} = context.bindingData.input;
 	const scannerCapacity = 100;
 
-	// storing ghToken in env so that the token is not logged or stored during activity function calls
-	process.env['ghToken'] = ghToken;
-
 	const repoNamesExcludeListChecked = checkRegexExcludeList(repoNamesExcludeList);
 
-	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', { orgName, repoNamesExcludeListChecked });
+	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', { orgName, repoNamesExcludeListChecked, ghToken });
 
 	const workPerScanner = [];
 	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
@@ -32,14 +29,15 @@ function* processForLdif(context) {
 	const output = [];
 	for (let i = 0; i < workPerScanner.length; i++) {
 		// This will starts Activity Functions in parallel
-		output.push(context.df.callActivity('GetSubReposData', workPerScanner[i]));
+		output.push(context.df.callActivity('GetSubReposData', { repoIds: workPerScanner[i], ghToken }));
 	}
 
 	const partialResults = yield context.df.Task.all(output);
 
 	try {
 		var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
-			orgName
+			orgName,
+			ghToken
 		});
 	} catch (e) {
 		context.log(e);
@@ -52,7 +50,8 @@ function* processForLdif(context) {
 		repoVisibilityOutput.push(
 			context.df.callActivity('GetReposVisibilityData', {
 				orgName,
-				visibilityType
+				visibilityType,
+				ghToken
 			})
 		);
 	}

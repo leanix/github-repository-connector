@@ -1,9 +1,9 @@
 ﻿const { graphql } = require('@octokit/graphql');
 
-module.exports = async function (context, repoIds) {
+module.exports = async function (context, { repoIds, ghToken }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
-			authorization: `token ${process.env['ghToken']}`
+			authorization: `token ${ghToken}`
 		}
 	});
 	return await getReposData(graphqlClient, repoIds);
