@@ -1,0 +1,24 @@
+{
+    "name": "vsm-github-connector",
+    "description": "",
+    "connectorUrl": "https://functions-australiaeast-prod-githubrepositoryconnector.azurewebsites.net/api/orchestrators/",
+    "connectorConfiguration": {
+        "orgName": "leanix",
+        "repoNamesExclude": ""
+    },
+    "secretsConfiguration": {},
+    "bindingKey": {
+        "connectorType": "leanix-vsm-connector",
+        "connectorId": "leanic-github-connector",
+        "connectorVersion": "1.0.0",
+        "processingDirection": "inbound",
+        "processingMode": "full"
+    },
+    "featureFlags": [
+        {
+            "featureFlags": [
+                "integration.vsm.github"
+            ]
+        }
+    ]
+}

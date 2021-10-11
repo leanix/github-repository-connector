@@ -4,18 +4,12 @@
 const { BlobClient, AnonymousCredential } = require('@azure/storage-blob');
 
 const ldifHeader = {
-	connectorType: 'leanix-mi-connector',
-	connectorId: 'leanix-github-repository-connector',
-	connectorVersion: '1.0.0',
-	processingDirection: 'inbound',
-	processingMode: 'full',
-	lxVersion: '1.0.0',
 	description: 'Map organisation github repos to LeanIX Fact Sheets'
 };
 
-module.exports = async function (context, { partialResults, teamResults, repoIdsVisibilityMap, blobStorageSasUrl }) {
+module.exports = async function (context, { partialResults, teamResults, repoIdsVisibilityMap, blobStorageSasUrl, bindingKey }) {
 	const contentArray = handleLdifCreation(partialResults, teamResults, repoIdsVisibilityMap);
-	return await uploadToBlob(getFinalLdif(contentArray), blobStorageSasUrl);
+	return await uploadToBlob(getFinalLdif(contentArray, bindingKey), blobStorageSasUrl);
 };
 
 /**
@@ -136,7 +130,13 @@ function convertToTeamContent(teamData) {
  * @param {Array} contentArray array containing respository info
  *
  */
-function getFinalLdif(contentArray) {
+function getFinalLdif(contentArray, bindingKey) {
+	ldifHeader.connectorType = bindingKey.connectorType;
+	ldifHeader.connectorId = bindingKey.connectorId;
+	ldifHeader.connectorVersion = bindingKey.connectorVersion;
+	ldifHeader.processingDirection = bindingKey.processingDirection;
+	ldifHeader.processingMode = bindingKey.processingMode;
+	ldifHeader.lxVersion = bindingKey.lxVersion;
 	const ldifContent = {
 		content: contentArray
 	};
