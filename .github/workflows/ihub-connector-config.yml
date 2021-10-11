@@ -12,8 +12,6 @@ on:
       - 'ihub-resources/connector-definition-**.json'
 
 jobs:
-  deployment:
-    runs-on: ubuntu-latest
   register-ihub-connector-template:
     name: register connector template to all regions
     runs-on: ubuntu-latest
