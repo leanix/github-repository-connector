@@ -6,7 +6,9 @@
         "orgName": "leanix",
         "repoNamesExclude": ""
     },
-    "secretsConfiguration": {},
+    "secretsConfiguration": {
+        "ghToken": ""
+    },
     "bindingKey": {
         "connectorType": "leanix-vsm-connector",
         "connectorId": "leanic-github-connector",
