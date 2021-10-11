@@ -4,7 +4,7 @@
     "connectorUrl": "https://functions-westeurope-prod-githubrepositoryconnector.azurewebsites.net/api/orchestrators/",
     "connectorConfiguration": {
         "orgName": "leanix",
-        "repoNamesExclude": ""
+        "repoNamesExclude": []
     },
     "secretsConfiguration": {
         "ghToken": ""
