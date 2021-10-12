@@ -8,7 +8,7 @@ on:
       - feature/**
       - main
     paths:
-      - 'integration-api-default-config.json'
+      - 'integration-api-default-config**.json'
   workflow_dispatch:
 
 jobs:
@@ -28,9 +28,23 @@ jobs:
       uses: leanix/integration-api-default-config-action@main
       with:
         environment: 'test'  
+
+    - name: Provision default config of MI to Test
+      if: github.ref!='refs/heads/main'
+      uses: leanix/integration-api-default-config-action@main
+      with:
+        environment: 'test'
+        default_config_file: 'integration-api-default-config-mi.json'
     
     - name: Provision default config to Prod
       if: github.ref=='refs/heads/main'
       uses: leanix/integration-api-default-config-action@main
       with:
         environment: 'prod'  
+        
+    - name: Provision default config of MI to Prod
+      if: github.ref=='refs/heads/main'
+      uses: leanix/integration-api-default-config-action@main
+      with:
+        environment: 'prod'
+        default_config_file: 'integration-api-default-config-mi.json'
