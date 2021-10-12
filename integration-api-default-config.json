@@ -37,26 +37,6 @@
 					}
 				}
 			],
-			"subscriptions": [
-				{
-					"subscriptionScopes": [
-						{
-							"type": "RESPONSIBLE",
-							"roles": ["Contributor"]
-						}
-					],
-					"scope": {
-						"ids": [],
-						"facetFilters": [
-							{
-								"keys": ["Microservice"],
-								"facetKey": "FactSheetTypes",
-								"operator": "OR"
-							}
-						]
-					}
-				}
-			],
 			"maximumDeletionRatio": {
 				"factSheets": 60
 			}
@@ -586,87 +566,6 @@
 						]
 					}
 				]
-			},
-			{
-				"processorType": "inboundSubscription",
-				"processorName": "create-user-subscriptions-from-repo-contributors",
-				"processorDescription": "Creates repo contributors as MS subscriptions",
-				"filter": {
-					"exactType": "Repository"
-				},
-				"identifier": {
-					"external": {
-						"id": {
-							"expr": "${content.id}"
-						},
-						"type": {
-							"expr": "githubId"
-						}
-					}
-				},
-				"run": 2,
-				"updates": [
-					{
-						"key": {
-							"expr": "user"
-						},
-						"values": [
-							{
-								"expr": "${integration.valueOfForEach}"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "subscriptionType"
-						},
-						"values": [
-							{
-								"expr": "RESPONSIBLE"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "addSubscriptionRoles"
-						},
-						"values": [
-							{
-								"map": [
-									{
-										"key": "roleName",
-										"value": "Contributor"
-									},
-									{
-										"key": "comment",
-										"value": "Managed by GitHub repository connector"
-									}
-								]
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "newUser.userName"
-						},
-						"values": [
-							{
-								"expr": "${integration.valueOfForEach}"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "newUser.email"
-						},
-						"values": [
-							{
-								"expr": "${integration.valueOfForEach}"
-							}
-						]
-					}
-				],
-				"forEach": "${data.contributors}"
 			}
 		],
 		"variables": {},
