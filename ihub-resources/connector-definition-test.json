@@ -1,0 +1,24 @@
+{
+	"name": "vsm-github-connector",
+	"description": "",
+	"connectorUrl": "https://githubrepositoryconnector.azurewebsites.net/api/orchestrators/",
+	"connectorConfiguration": {
+		"orgName": "leanix",
+		"repoNamesExcludeList": []
+	},
+	"secretsConfiguration": {
+		"ghToken": ""
+	},
+	"bindingKey": {
+		"connectorType": "leanix-vsm-connector",
+		"connectorId": "leanix-github-repository-connector",
+		"connectorVersion": "1.0.0",
+		"processingDirection": "inbound",
+		"processingMode": "full"
+	},
+	"featureFlags": [
+		{
+			"featureFlags": ["integration.vsm.githubrepository"]
+		}
+	]
+}

@@ -1,7 +1,7 @@
 {
-	"externalId": "cider-vsm-github-repository-connector",
+	"externalId": "cider-github-repository-connector",
 	"config": {
-		"connectorType": "leanix-vsm-connector",
+		"connectorType": "leanix-mi-connector",
 		"connectorId": "leanix-github-repository-connector",
 		"connectorVersion": "1.0.0",
 		"processingDirection": "inbound",
@@ -45,7 +45,7 @@
 			{
 				"processorType": "variableProcessor",
 				"processorName": "repository-topics-map",
-				"processorDescription": "This variable processor creates a map of each repository against its topic ids.",
+				"processorDescription": "This variable processor creates a map of each repository against its topic ids ",
 				"filter": {
 					"exactType": "Repository"
 				},
@@ -166,16 +166,6 @@
 								"expr": "${data.repoVisibility}"
 							}
 						]
-					},
-					{
-						"key": {
-							"expr": "category"
-						},
-						"values": [
-							{
-								"expr": "microservice"
-							}
-						]
 					}
 				]
 			},
@@ -267,16 +257,6 @@
 						"values": [
 							{
 								"expr": "${data.name}"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "category"
-						},
-						"values": [
-							{
-								"expr": "language"
 							}
 						]
 					}
@@ -482,9 +462,6 @@
 				"processorType": "inboundTag",
 				"processorName": "add 'github-tracking-disabled' tag",
 				"processorDescription": "adds 'github-tracking-disabled' tag to the microservice that was created by github-connector but not included in the scan anymore",
-				"filter": {
-					"advanced": "${integration.contentIndex == 0}"
-				},
 				"factSheets": {
 					"external": {
 						"ids": "${integration.valueOfForEach}",
@@ -492,6 +469,9 @@
 							"expr": "githubId"
 						}
 					}
+				},
+				"filter": {
+					"advanced": "${integration.contentIndex == 0}"
 				},
 				"run": 6,
 				"updates": [
@@ -561,7 +541,7 @@
 						},
 						"values": [
 							{
-								"expr": "MULTIPLE"
+								"expr": "SINGLE"
 							}
 						]
 					}
@@ -581,7 +561,7 @@
 	},
 	"availableIf": [
 		{
-			"featureFlags": ["integration.integrationapi", "integration.vsm.githubrepository"]
+			"featureFlags": ["integration.integrationapi", "integration.githubrepository"]
 		}
 	]
 }

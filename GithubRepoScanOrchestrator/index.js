@@ -12,7 +12,8 @@ function* processForLdif(context) {
 		connectorConfiguration: { orgName, repoNamesExcludeList },
 		secretsConfiguration: { ghToken },
 		ldifResultUrl,
-		progressCallbackUrl
+		progressCallbackUrl,
+		bindingKey
 	} = context.bindingData.input;
 	const scannerCapacity = 100;
 
@@ -75,7 +76,8 @@ function* processForLdif(context) {
 		partialResults,
 		teamResults,
 		repoIdsVisibilityMap,
-		blobStorageSasUrl: ldifResultUrl
+		blobStorageSasUrl: ldifResultUrl,
+		bindingKey
 	});
 }
 
