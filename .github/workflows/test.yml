@@ -7,7 +7,7 @@ on:
     branches:
       - feature/**
     paths-ignore:
-      - 'integration-api-default-config.json'
+      - 'ihub-resources/**'
       - 'README.md'
   workflow_dispatch:
 

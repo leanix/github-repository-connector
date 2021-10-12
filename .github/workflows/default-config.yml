@@ -9,6 +9,7 @@ on:
       - main
     paths:
       - 'integration-api-default-config.json'
+  workflow_dispatch:
 
 jobs:
   deployment:
