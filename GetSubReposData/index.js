@@ -1,4 +1,5 @@
-﻿const { graphql } = require('@octokit/graphql');
+const { graphql } = require('@octokit/graphql');
+const { getISODateStringOnFromToday } = require('../GithubRepoScanOrchestrator/helper');
 
 module.exports = async function (context, { repoIds, ghToken }) {
 	const graphqlClient = graphql.defaults({
@@ -6,10 +7,61 @@ module.exports = async function (context, { repoIds, ghToken }) {
 			authorization: `token ${ghToken}`
 		}
 	});
-	return await getReposData(graphqlClient, repoIds);
+	return await getReposData(context, repoIds, graphqlClient);
 };
 
-async function getReposData(graphqlClient, repoIds) {
+async function getReposCommitHistoryData(context, graphqlClient, repoIds) {
+	try {
+		let data = await graphqlClient({
+			query: `
+							query getReposData($repoIds:[ID!]!, $contributorHistorySince: GitTimestamp!){
+									nodes(ids: $repoIds){
+											id
+											... on Repository {
+													defaultBranchRef {
+															name
+															target {
+																	... on Commit {
+																			id
+																			history(since: $contributorHistorySince) {
+																					edges {
+																							node {
+																								 committer {
+																								 user {
+																										name
+																								 }
+																								 email
+																								 }
+																							}
+																					}
+																			}
+																	}
+															}
+														}    
+													}
+											}
+									}
+					`,
+			repoIds,
+			contributorHistorySince: getISODateStringOnFromToday()
+		});
+		return data.nodes;
+	} catch (e) {
+		context.log(`Failed to get repository commit history data, falling back to empty list. Error - ${e.message}`);
+		return [];
+	}
+}
+
+function mapRepoInfoToCommitHistory(repoInfos, reposCommitHistory) {
+	for (const repoInfo of repoInfos) {
+		let history = reposCommitHistory.find((history) => history.id === repoInfo.id);
+		repoInfo.defaultBranchRef = history ? history.defaultBranchRef : null;
+	}
+
+	return repoInfos;
+}
+
+async function getReposData(context, repoIds, graphqlClient) {
 	const initialLanguagePageSize = 10;
 	const data = await graphqlClient({
 		query: `
@@ -55,6 +107,9 @@ async function getReposData(graphqlClient, repoIds) {
 			repoInfo.languages.nodes = await getAllLanguagesForRepo(graphqlClient, repoInfo);
 		}
 	}
+
+	const reposCommitHistoryData = await getReposCommitHistoryData(context, graphqlClient, repoIds);
+	repoInfos = mapRepoInfoToCommitHistory(repoInfos, reposCommitHistoryData);
 
 	return repoInfos;
 }

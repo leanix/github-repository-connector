@@ -11,6 +11,10 @@ module.exports = {
 		}
 		return [];
 	},
+	getISODateStringOnFromToday(daysBack = 30) {
+		const today = new Date();
+		return new Date(today.setDate(today.getDate() - daysBack)).toISOString();
+	},
 	iHubStatus: {
 		IN_PROGRESS: 'IN_PROGRESS',
 		FINISHED: 'FINISHED',
