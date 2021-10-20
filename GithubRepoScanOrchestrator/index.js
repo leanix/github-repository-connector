@@ -13,9 +13,12 @@ function* processForLdif(context) {
 		secretsConfiguration: { ghToken },
 		ldifResultUrl,
 		progressCallbackUrl,
+		connectorLoggingUrl,
 		bindingKey
 	} = context.bindingData.input;
 	const scannerCapacity = 100;
+
+	context.log('Connector logging URL ', connectorLoggingUrl);
 
 	const repoNamesExcludeListChecked = checkRegexExcludeList(repoNamesExcludeList);
 

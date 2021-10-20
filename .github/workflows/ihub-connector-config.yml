@@ -29,7 +29,7 @@ jobs:
           uses: leanix/integration-hub-connector-register-action@main
           with:
             environment: 'test'
-            connector_definition_file: 'ihub-resources/connector-definition-test.json'
+            connector_definition_file: 'ihub-resources/connector-definition-test2.json'
             connector_icon: 'ihub-resources/connector-github-icon.png'
 
   register-ihub-connector-template-prod:
