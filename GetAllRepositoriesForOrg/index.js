@@ -70,6 +70,6 @@ module.exports = async function (context, { orgName, repoNamesExcludeListChecked
 	const finalResult = await getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListChecked);
 	const appendBlobClient = new BlobClient(connectorLoggingUrl, new AnonymousCredential()).getAppendBlobClient();
 	var msg = 'Collected all Repository Ids';
-	await appendBlobClient.upload(msg, Buffer.byteLength(msg));
+	await appendBlobClient.appendBlock(msg, Buffer.byteLength(msg));
 	context.done(null, finalResult);
 };
