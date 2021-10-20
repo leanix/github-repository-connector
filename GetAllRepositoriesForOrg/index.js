@@ -1,4 +1,5 @@
 ﻿const { graphql } = require('@octokit/graphql');
+const { BlobClient, AnonymousCredential } = require('@azure/storage-blob');
 
 function excludeListedRepositoriesIDsList(repositoriesData, repoNamesExcludeListChecked) {
 	const regexExcludeListArray = repoNamesExcludeListChecked.map((regexString) => new RegExp(regexString));
@@ -59,7 +60,7 @@ async function getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListC
 	return finalResult;
 }
 
-module.exports = async function (context, { orgName, repoNamesExcludeListChecked, ghToken }) {
+module.exports = async function (context, { orgName, repoNamesExcludeListChecked, ghToken, connectorLoggingUrl }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
 			authorization: `token ${ghToken}`
@@ -67,5 +68,8 @@ module.exports = async function (context, { orgName, repoNamesExcludeListChecked
 	});
 
 	const finalResult = await getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListChecked);
+	const appendBlobClient = new BlobClient(connectorLoggingUrl, new AnonymousCredential()).getAppendBlobClient();
+	var msg = 'Collected all Repository Ids';
+	await appendBlobClient.upload(msg, Buffer.byteLength(msg));
 	context.done(null, finalResult);
 };

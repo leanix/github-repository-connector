@@ -22,7 +22,12 @@ function* processForLdif(context) {
 
 	const repoNamesExcludeListChecked = checkRegexExcludeList(repoNamesExcludeList);
 
-	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', { orgName, repoNamesExcludeListChecked, ghToken });
+	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', {
+		orgName,
+		repoNamesExcludeListChecked,
+		ghToken,
+		connectorLoggingUrl
+	});
 
 	const workPerScanner = [];
 	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
