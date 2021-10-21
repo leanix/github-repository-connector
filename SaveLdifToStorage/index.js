@@ -163,6 +163,7 @@ function getFinalLdif(contentArray, bindingKey) {
 	ldifHeader.processingDirection = bindingKey.processingDirection;
 	ldifHeader.processingMode = bindingKey.processingMode;
 	ldifHeader.lxVersion = bindingKey.lxVersion;
+	ldifHeader.lxVersion = bindingKey.lxWorkspace;
 	const ldifContent = {
 		content: contentArray
 	};
