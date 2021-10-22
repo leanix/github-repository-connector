@@ -679,7 +679,8 @@
 				"featureFlags": [""]
 			}
 		],
-		"readOnly": true
+		"readOnly": true,
+		"executionGroups": ["vsmGitHubInbound"]
 	},
 	"availableIf": [
 		{

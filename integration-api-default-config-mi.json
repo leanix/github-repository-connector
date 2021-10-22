@@ -557,7 +557,8 @@
 				"featureFlags": [""]
 			}
 		],
-		"readOnly": true
+		"readOnly": true,
+		"executionGroups": ["miGitHubInbound"]
 	},
 	"availableIf": [
 		{
