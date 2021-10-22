@@ -6,7 +6,7 @@
 
 const df = require('durable-functions');
 const { iHubStatus, checkRegexExcludeList } = require('./helper');
-
+const { ConnectorLogger } = require('./connectorLogger')
 function* processForLdif(context) {
 	const {
 		connectorConfiguration: { orgName, repoNamesExcludeList },
@@ -18,9 +18,11 @@ function* processForLdif(context) {
 	} = context.bindingData.input;
 	const scannerCapacity = 100;
 
-	context.log('Connector logging URL ', connectorLoggingUrl);
+	const logger = new ConnectorLogger(connectorLoggingUrl)
 
-	const repoNamesExcludeListChecked = checkRegexExcludeList(repoNamesExcludeList);
+	logger.log()
+
+	const repoNamesExcludeListChecked = checkRegexExcludeList(logger, repoNamesExcludeList);
 
 	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', {
 		orgName,

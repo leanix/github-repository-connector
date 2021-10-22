@@ -1,5 +1,5 @@
 ﻿const { graphql } = require('@octokit/graphql');
-const { BlobClient, AnonymousCredential } = require('@azure/storage-blob');
+
 
 function excludeListedRepositoriesIDsList(repositoriesData, repoNamesExcludeListChecked) {
 	const regexExcludeListArray = repoNamesExcludeListChecked.map((regexString) => new RegExp(regexString));
