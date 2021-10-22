@@ -680,9 +680,7 @@
 			}
 		],
 		"readOnly": true,
-		"executionGroups": [
-			"vsmGitHubInbound"
-		]
+		"executionGroups": ["vsmGitHubInbound"]
 	},
 	"availableIf": [
 		{

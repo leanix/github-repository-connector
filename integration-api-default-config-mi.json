@@ -558,9 +558,7 @@
 			}
 		],
 		"readOnly": true,
-		"executionGroups": [
-			"miGitHubInbound"
-		]
+		"executionGroups": ["miGitHubInbound"]
 	},
 	"availableIf": [
 		{
