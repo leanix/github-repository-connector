@@ -1,26 +1,28 @@
 const { BlobClient, AnonymousCredential } = require('@azure/storage-blob');
-export class ConnectorLogger {
+module.exports = { ConnectorLogger: class{
 
     blockBlobClient = null;
-
-    constructor(loggingUrl) {
+    context = null;
+    date = new Date()
+    constructor(loggingUrl, context) {
         if (loggingUrl !== undefined) {
             this.blockBlobClient = new BlobClient(loggingUrl, new AnonymousCredential()).getAppendBlobClient();
-            console.log(`*** logging to URL: ${loggingUrl} ***`);
+            this.context = context
         }
     }
 
-    async log(message) {
+    async * log(message) {
 
-        console.log(message)
+        this.context.log(message)
 
         if (this.blockBlobClient != null) {
             this.blockBlobClient.createIfNotExists()
-                .then(res => {
+                .then(async res => {
                     var messageStr = (typeof message === "string") ? message : JSON.stringify(message, undefined, 2);
                     messageStr += '\n';
-                    this.blockBlobClient.appendBlock(messageStr, messageStr.length);
+                    await this.blockBlobClient.appendBlock(this.date.toISOString() + messageStr, messageStr.length);
                 })
         }
     }
+}
 }

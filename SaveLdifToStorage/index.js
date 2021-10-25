@@ -2,14 +2,17 @@
  * Handles LDIF storage
  */
 const { BlobClient, AnonymousCredential } = require('@azure/storage-blob');
+const { ConnectorLogger } = require('../GithubRepoScanOrchestrator/connectorLogger')
 
 const ldifHeader = {
 	description: 'Map organisation github repos to LeanIX Fact Sheets'
 };
 
-module.exports = async function (context, { partialResults, teamResults, repoIdsVisibilityMap, blobStorageSasUrl, bindingKey }) {
+module.exports = async function (context, { partialResults, teamResults, repoIdsVisibilityMap, blobStorageSasUrl, bindingKey, connectorLoggingUrl}) {
+	const logger = new ConnectorLogger(connectorLoggingUrl, context)
 	const contentArray = handleLdifCreation(partialResults, teamResults, repoIdsVisibilityMap);
-	return await uploadToBlob(getFinalLdif(contentArray, bindingKey), blobStorageSasUrl);
+	logger.log("Started Uploading to Blob")
+	return await uploadToBlob(getFinalLdif(contentArray, bindingKey), blobStorageSasUrl, logger);
 };
 
 /**
@@ -174,8 +177,9 @@ function getFinalLdif(contentArray, bindingKey) {
  * @param {Object} finalLdif LDIF object containing repo and lang info
  * @param {String} blobStorageSasUrl SAS Url generated and received from Integration Hub
  */
-async function uploadToBlob(finalLdif, blobStorageSasUrl) {
+async function uploadToBlob(finalLdif, blobStorageSasUrl, logger) {
 	const blockBlobClient = new BlobClient(blobStorageSasUrl, new AnonymousCredential()).getBlockBlobClient();
 	const finalLdifData = JSON.stringify(finalLdif);
 	await blockBlobClient.upload(finalLdifData, Buffer.byteLength(finalLdifData));
+	logger.log("Completed Uploading to Blob Storage")
 }

@@ -1,6 +1,5 @@
 ﻿const { graphql } = require('@octokit/graphql');
 
-
 function excludeListedRepositoriesIDsList(repositoriesData, repoNamesExcludeListChecked) {
 	const regexExcludeListArray = repoNamesExcludeListChecked.map((regexString) => new RegExp(regexString));
 	let remainingRepoIdsArray = repositoriesData
@@ -60,7 +59,7 @@ async function getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListC
 	return finalResult;
 }
 
-module.exports = async function (context, { orgName, repoNamesExcludeListChecked, ghToken, connectorLoggingUrl }) {
+module.exports = async function (context, { orgName, repoNamesExcludeListChecked, ghToken }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
 			authorization: `token ${ghToken}`
@@ -68,9 +67,5 @@ module.exports = async function (context, { orgName, repoNamesExcludeListChecked
 	});
 
 	const finalResult = await getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListChecked);
-	const blockBlobClient = new BlobClient(connectorLoggingUrl, new AnonymousCredential()).getBlockBlobClient();
-	var msg = 'fetched all repo ids from org';
-	context.log('LINE 74 fetched all repo ids from org');
-	await blockBlobClient.upload(msg, Buffer.byteLength(msg));
 	context.done(null, finalResult);
 };
