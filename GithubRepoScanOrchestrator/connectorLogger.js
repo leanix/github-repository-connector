@@ -19,9 +19,9 @@ module.exports = {
 			if (this.blockBlobClient != null) {
 				this.blockBlobClient.createIfNotExists().then(async (res) => {
 					var messageStr = typeof message === 'string' ? message : JSON.stringify(message, undefined, 2);
-					messageStr += '\n';
+					messageStr += + '[ IHub Run ID: ' + this.runId.toString() + ']\n';
 					await this.blockBlobClient.appendBlock(
-						this.date.toISOString() + ' ' + logStatus.toString() + ':' + messageStr + ' [ IHub Run ID: ' + this.runId.toString() + ' ]',
+						this.date.toISOString() + ' ' + logStatus.toString() + ':' + messageStr,
 						messageStr.length
 					);
 				});
