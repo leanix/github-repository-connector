@@ -1,5 +1,5 @@
 ﻿const { graphql } = require('@octokit/graphql');
-
+const {ConnectorLogger, LogStatus} = require('../GithubRepoScanOrchestrator/connectorLogger')
 function hasMoreRepos(team) {
 	return team.repositories.pageInfo.hasNextPage;
 }
@@ -113,13 +113,16 @@ async function getAllTeamsWithRepos(graphqlClient, orgName) {
 	return finalResult;
 }
 
-module.exports = async function (context, { orgName, ghToken }) {
+module.exports = async function (context, { orgName, ghToken, connectorLoggingUrl }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
 			authorization: `token ${ghToken}`
 		}
 	});
-
+	const logger = new ConnectorLogger(connectorLoggingUrl, context)
+	await logger.log(LogStatus.INFO,"Completed fetching complete repo data for repo ids")
+	await logger.log(LogStatus.INFO,"Started fetching org teams data")
 	const finalResult = await getAllTeamsWithRepos(graphqlClient, orgName);
+	await logger.log(LogStatus.INFO,"Completed fetching org teams data")
 	context.done(null, finalResult);
 };

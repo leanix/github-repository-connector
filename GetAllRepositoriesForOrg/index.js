@@ -1,5 +1,5 @@
 ﻿const { graphql } = require('@octokit/graphql');
-
+const { ConnectorLogger, LogStatus } = require('../GithubRepoScanOrchestrator/connectorLogger')
 function excludeListedRepositoriesIDsList(repositoriesData, repoNamesExcludeListChecked) {
 	const regexExcludeListArray = repoNamesExcludeListChecked.map((regexString) => new RegExp(regexString));
 	let remainingRepoIdsArray = repositoriesData
@@ -59,13 +59,15 @@ async function getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListC
 	return finalResult;
 }
 
-module.exports = async function (context, { orgName, repoNamesExcludeListChecked, ghToken }) {
+module.exports = async function (context, { orgName, repoNamesExcludeListChecked, ghToken, connectorLoggingUrl }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
 			authorization: `token ${ghToken}`
 		}
 	});
-
+	const logger = new ConnectorLogger(connectorLoggingUrl, context)
+	await logger.log(LogStatus.INFO, "Started fetching org repo ids")
 	const finalResult = await getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListChecked);
+	await logger.log(LogStatus.INFO, "Completed fetching org repo ids")
 	context.done(null, finalResult);
 };

@@ -11,7 +11,7 @@ module.exports = { ConnectorLogger: class{
         }
     }
 
-    async * log(message) {
+    async log(logStatus, message) {
 
         this.context.log(message)
 
@@ -20,9 +20,14 @@ module.exports = { ConnectorLogger: class{
                 .then(async res => {
                     var messageStr = (typeof message === "string") ? message : JSON.stringify(message, undefined, 2);
                     messageStr += '\n';
-                    await this.blockBlobClient.appendBlock(this.date.toISOString() + messageStr, messageStr.length);
+                    await this.blockBlobClient.appendBlock(this.date.toISOString() +" "+logStatus.toString()+":"+ messageStr, messageStr.length);
                 })
         }
     }
-}
+},
+LogStatus: {
+    INFO: 'INFO',
+    WARNING: 'WARNING',
+    ERROR: 'ERROR'
+},
 }
