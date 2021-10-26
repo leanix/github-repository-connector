@@ -6,8 +6,9 @@
 
 const df = require('durable-functions');
 const { iHubStatus, checkRegexExcludeList } = require('./helper');
-const { ConnectorLogger } = require('./connectorLogger')
-function* processForLdif(logger, context) {
+const { ConnectorLogger } = require('./connectorLogger');
+const { createLogger, log } = require('./connectorLoggerFunc');
+function* processForLdif(context, logClient) {
 	const {
 		connectorConfiguration: { orgName, repoNamesExcludeList },
 		secretsConfiguration: { ghToken },
@@ -20,16 +21,22 @@ function* processForLdif(logger, context) {
 
 	const repoNamesExcludeListChecked = checkRegexExcludeList(repoNamesExcludeList);
 
-	yield* logger.log("Created list of repos to be excluded with length: "+repoNamesExcludeListChecked.length.toString())
+	log(logClient, 'INFO', 'Created list of repos to be excluded with length: ' + repoNamesExcludeListChecked.length.toString(), context);
 
 	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', {
 		orgName,
 		repoNamesExcludeListChecked,
 		ghToken
 	});
-	
-	yield* logger.log("Fetched "+repositoriesIds.length.toString() +" repository Ids belonging to org: "+orgName.toString()+" ")
-	yield* logger.log("Initializing workers to fetch complete repository data for each repo Id")
+
+	log(
+		logClient,
+		'INFO',
+		'Fetched ' + repositoriesIds.length.toString() + ' repository Ids belonging to org: ' + orgName.toString() + ' ',
+		context
+	);
+
+	log(logClient, 'INFO', 'Initializing workers to fetch complete repository data for each repo Id', context);
 	const workPerScanner = [];
 	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
 		workPerScanner.push(repositoriesIds.slice(i, i + scannerCapacity));
@@ -42,18 +49,19 @@ function* processForLdif(logger, context) {
 	}
 
 	const partialResults = yield context.df.Task.all(output);
-	yield* logger.log("Fetching of repository data is now complete. Fetching teams data present in org")
+	log(logClient, 'INFO', 'Fetching of repository data is now complete. Fetching teams data present in org', context);
+
 	try {
 		var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
 			orgName,
 			ghToken
 		});
 	} catch (e) {
-		logger.log(e);
+		log(logClient, 'ERROR', e.toString(), context);
 		teamResults = [];
 	}
-	yield logger.log("Fetching of org team data is now complete.")
-	yield logger.log("Initializing workers to fetch visibility status for repos")
+	log(logClient, 'ERROR', 'Fetching of org team data is now complete.', context);
+	log(logClient, 'ERROR', 'Initializing workers to fetch visibility status for repos', context);
 	const repoVisibilityOutput = [];
 	const repoVisibilities = ['private', 'public', 'internal'];
 	for (let visibilityType of repoVisibilities) {
@@ -71,18 +79,18 @@ function* processForLdif(logger, context) {
 		for (let visibilityResult of repoVisibilityPartialResults) {
 			repoIdsVisibilityMap = { ...repoIdsVisibilityMap, ...visibilityResult };
 		}
-		logger.log("Successfully fetched repo visibility status for all repos")
+		log(logClient, 'ERROR', 'Successfully fetched repo visibility status for all repos', context);
 	} catch (e) {
-		logger.log(e);
+		log(logClient, 'ERROR', e.toString(), context);
 		repoIdsVisibilityMap = {};
 	}
-	yield logger.log("Sending IN_PROGRESS status to IHub")
+	log(logClient, 'ERROR', 'Sending IN_PROGRESS status to IHub', context);
 	yield context.df.callActivity('UpdateProgressToIHub', {
 		progressCallbackUrl,
 		status: iHubStatus.IN_PROGRESS,
 		message: 'Successfully requested the data from GitHub'
 	});
-	logger.log("Initializing LDIF creation...")
+	log(logClient, 'ERROR', 'Initializing LDIF creation...', context);
 	yield context.df.callActivity('SaveLdifToStorage', {
 		partialResults,
 		teamResults,
@@ -99,16 +107,16 @@ module.exports = df.orchestrator(function* (context) {
 	const retryOptions = new df.RetryOptions(5000, 3);
 	retryOptions.maxRetryIntervalInMilliseconds = 5000;
 
-	const logger = new ConnectorLogger(connectorLoggingUrl, context)
+	const logClient = createLogger(connectorLoggingUrl);
 
 	try {
-		yield* logger.log("Started process for LDIF creation")
-		yield* processForLdif(logger, context);
-		yield logger.log("Sending FINISHED Status to IHub")
+		log(logClient, 'INFO', 'Started process for LDIF creation', context);
+		yield* processForLdif(context, logClient);
+		log(logClient, 'INFO', 'Sending FINISHED Status to IHub', context);
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, { progressCallbackUrl, status: iHubStatus.FINISHED });
 	} catch (e) {
-		logger.log(e.toString())
-		logger.log("Sending FAILED Status to IHub")
+		log(logClient, 'INFO', e.toString(), context);
+		log(logClient, 'INFO', 'Sending FAILED Status to IHub', context);
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, {
 			progressCallbackUrl,
 			status: iHubStatus.FAILED,

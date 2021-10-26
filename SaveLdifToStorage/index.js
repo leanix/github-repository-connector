@@ -2,17 +2,22 @@
  * Handles LDIF storage
  */
 const { BlobClient, AnonymousCredential } = require('@azure/storage-blob');
-const { ConnectorLogger } = require('../GithubRepoScanOrchestrator/connectorLogger')
+const { ConnectorLogger } = require('../GithubRepoScanOrchestrator/connectorLogger');
+const { createLogger, log } = require('../GithubRepoScanOrchestrator/connectorLoggerFunc');
 
 const ldifHeader = {
 	description: 'Map organisation github repos to LeanIX Fact Sheets'
 };
 
-module.exports = async function (context, { partialResults, teamResults, repoIdsVisibilityMap, blobStorageSasUrl, bindingKey, connectorLoggingUrl}) {
-	const logger = new ConnectorLogger(connectorLoggingUrl, context)
+module.exports = async function (
+	context,
+	{ partialResults, teamResults, repoIdsVisibilityMap, blobStorageSasUrl, bindingKey, connectorLoggingUrl }
+) {
+	const logClient = createLogger(connectorLoggingUrl);
+
 	const contentArray = handleLdifCreation(partialResults, teamResults, repoIdsVisibilityMap);
-	logger.log("Started Uploading to Blob")
-	return await uploadToBlob(getFinalLdif(contentArray, bindingKey), blobStorageSasUrl, logger);
+	log(logClient, 'INFO', 'Starting Upload to Storage URL', context);
+	return await uploadToBlob(getFinalLdif(contentArray, bindingKey), blobStorageSasUrl, logClient, context);
 };
 
 /**
@@ -177,9 +182,9 @@ function getFinalLdif(contentArray, bindingKey) {
  * @param {Object} finalLdif LDIF object containing repo and lang info
  * @param {String} blobStorageSasUrl SAS Url generated and received from Integration Hub
  */
-async function uploadToBlob(finalLdif, blobStorageSasUrl, logger) {
+async function uploadToBlob(finalLdif, blobStorageSasUrl, logClient, context) {
 	const blockBlobClient = new BlobClient(blobStorageSasUrl, new AnonymousCredential()).getBlockBlobClient();
 	const finalLdifData = JSON.stringify(finalLdif);
 	await blockBlobClient.upload(finalLdifData, Buffer.byteLength(finalLdifData));
-	logger.log("Completed Uploading to Blob Storage")
+	log(logClient, 'INFO', 'Upload to Storage finished. Upload an LDIF of size ' + Buffer.byteLength(finalLdifData), context);
 }
