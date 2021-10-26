@@ -59,13 +59,13 @@ async function getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListC
 	return finalResult;
 }
 
-module.exports = async function (context, { orgName, repoNamesExcludeListChecked, ghToken, connectorLoggingUrl }) {
+module.exports = async function (context, { orgName, repoNamesExcludeListChecked, ghToken, connectorLoggingUrl, runId }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
 			authorization: `token ${ghToken}`
 		}
 	});
-	const logger = new ConnectorLogger(connectorLoggingUrl, context);
+	const logger = new ConnectorLogger(connectorLoggingUrl, context, runId);
 	await logger.log(LogStatus.INFO, 'Started fetching org repo ids');
 	const finalResult = await getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListChecked);
 	await logger.log(LogStatus.INFO, 'Completed fetching org repo ids');

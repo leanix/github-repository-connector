@@ -10,9 +10,9 @@ const ldifHeader = {
 
 module.exports = async function (
 	context,
-	{ partialResults, teamResults, repoIdsVisibilityMap, blobStorageSasUrl, bindingKey, connectorLoggingUrl }
+	{ partialResults, teamResults, repoIdsVisibilityMap, blobStorageSasUrl, bindingKey, connectorLoggingUrl, runId }
 ) {
-	const logger = new ConnectorLogger(connectorLoggingUrl, context);
+	const logger = new ConnectorLogger(connectorLoggingUrl, context, runId);
 	const contentArray = handleLdifCreation(partialResults, teamResults, repoIdsVisibilityMap);
 	logger.log(LogStatus.INFO, 'Started Uploading to Blob');
 	return await uploadToBlob(getFinalLdif(contentArray, bindingKey), blobStorageSasUrl, logger);

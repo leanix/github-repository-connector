@@ -14,7 +14,8 @@ function* processForLdif(logger, context) {
 		ldifResultUrl,
 		progressCallbackUrl,
 		connectorLoggingUrl,
-		bindingKey
+		bindingKey,
+		runId
 	} = context.bindingData.input;
 	const scannerCapacity = 100;
 
@@ -24,7 +25,8 @@ function* processForLdif(logger, context) {
 		orgName,
 		repoNamesExcludeListChecked,
 		ghToken,
-		connectorLoggingUrl
+		connectorLoggingUrl,
+		runId
 	});
 
 	const workPerScanner = [];
@@ -35,7 +37,7 @@ function* processForLdif(logger, context) {
 	const output = [];
 	for (let i = 0; i < workPerScanner.length; i++) {
 		// This will starts Activity Functions in parallel
-		output.push(context.df.callActivity('GetSubReposData', { repoIds: workPerScanner[i], ghToken, connectorLoggingUrl }));
+		output.push(context.df.callActivity('GetSubReposData', { repoIds: workPerScanner[i], ghToken, connectorLoggingUrl, runId }));
 	}
 
 	const partialResults = yield context.df.Task.all(output);
@@ -43,7 +45,8 @@ function* processForLdif(logger, context) {
 		var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
 			orgName,
 			ghToken,
-			connectorLoggingUrl
+			connectorLoggingUrl,
+			runId
 		});
 	} catch (e) {
 		logger.log(LogStatus.ERROR, e.toString());
@@ -57,7 +60,8 @@ function* processForLdif(logger, context) {
 				orgName,
 				visibilityType,
 				ghToken,
-				connectorLoggingUrl
+				connectorLoggingUrl,
+				runId
 			})
 		);
 	}
@@ -82,7 +86,8 @@ function* processForLdif(logger, context) {
 		repoIdsVisibilityMap,
 		blobStorageSasUrl: ldifResultUrl,
 		bindingKey,
-		connectorLoggingUrl
+		connectorLoggingUrl,
+		runId
 	});
 }
 

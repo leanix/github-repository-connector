@@ -113,13 +113,13 @@ async function getAllTeamsWithRepos(graphqlClient, orgName) {
 	return finalResult;
 }
 
-module.exports = async function (context, { orgName, ghToken, connectorLoggingUrl }) {
+module.exports = async function (context, { orgName, ghToken, connectorLoggingUrl, runId }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
 			authorization: `token ${ghToken}`
 		}
 	});
-	const logger = new ConnectorLogger(connectorLoggingUrl, context);
+	const logger = new ConnectorLogger(connectorLoggingUrl, context, runId);
 	await logger.log(LogStatus.INFO, 'Completed fetching complete repo data for repo ids');
 	await logger.log(LogStatus.INFO, 'Started fetching org teams data');
 	const finalResult = await getAllTeamsWithRepos(graphqlClient, orgName);

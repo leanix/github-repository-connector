@@ -73,13 +73,13 @@ async function getReposForVisibility(graphqlClient, orgName, visibilityType) {
 	return finalResultForVisibility;
 }
 
-module.exports = async function (context, { orgName, visibilityType, ghToken, connectorLoggingUrl }) {
+module.exports = async function (context, { orgName, visibilityType, ghToken, connectorLoggingUrl, runId }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
 			authorization: `token ${ghToken}`
 		}
 	});
-	const logger = new ConnectorLogger(connectorLoggingUrl, context);
+	const logger = new ConnectorLogger(connectorLoggingUrl, context, runId);
 	await logger.log(LogStatus.INFO, 'Started fetching repo visibility data for subset of repo ids');
 	const visibilityResult = await getReposForVisibility(graphqlClient, orgName, visibilityType);
 	await logger.log(LogStatus.INFO, 'Completed fetching repo visibility data for subset of repo ids');
