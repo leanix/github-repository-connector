@@ -2,7 +2,7 @@
  * Handles LDIF storage
  */
 const { BlobClient, AnonymousCredential } = require('@azure/storage-blob');
-const { ConnectorLogger } = require('../GithubRepoScanOrchestrator/connectorLogger');
+const { ConnectorLogger, LogStatus } = require('../GithubRepoScanOrchestrator/connectorLogger');
 
 const ldifHeader = {
 	description: 'Map organisation github repos to LeanIX Fact Sheets'
@@ -14,7 +14,7 @@ module.exports = async function (
 ) {
 	const logger = new ConnectorLogger(connectorLoggingUrl, context);
 	const contentArray = handleLdifCreation(partialResults, teamResults, repoIdsVisibilityMap);
-	logger.log('Started Uploading to Blob');
+	logger.log(LogStatus.INFO, 'Started Uploading to Blob');
 	return await uploadToBlob(getFinalLdif(contentArray, bindingKey), blobStorageSasUrl, logger);
 };
 
@@ -184,5 +184,10 @@ async function uploadToBlob(finalLdif, blobStorageSasUrl, logger) {
 	const blockBlobClient = new BlobClient(blobStorageSasUrl, new AnonymousCredential()).getBlockBlobClient();
 	const finalLdifData = JSON.stringify(finalLdif);
 	await blockBlobClient.upload(finalLdifData, Buffer.byteLength(finalLdifData));
-	logger.log('Completed Uploading to Blob Storage');
+	logger.log(
+		LogStatus.INFO,
+		'Completed Uploading to Blob Storage. Uploaded an LDIF of size ' +
+			(Buffer.byteLength(finalLdifData) / 1024).toString() +
+			' kB to Storage.'
+	);
 }
