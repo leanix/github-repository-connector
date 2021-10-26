@@ -1,5 +1,5 @@
 const { graphql } = require('@octokit/graphql');
-const {ConnectorLogger, LogStatus} = require('../GithubRepoScanOrchestrator/connectorLogger')
+const { ConnectorLogger, LogStatus } = require('../GithubRepoScanOrchestrator/connectorLogger');
 /**
  *
  * @param {Array} repoNodes
@@ -79,9 +79,9 @@ module.exports = async function (context, { orgName, visibilityType, ghToken, co
 			authorization: `token ${ghToken}`
 		}
 	});
-	const logger = new ConnectorLogger(connectorLoggingUrl, context)
-	await logger.log(LogStatus.INFO,"Started fetching repo visibility data for subset of repo ids")
+	const logger = new ConnectorLogger(connectorLoggingUrl, context);
+	await logger.log(LogStatus.INFO, 'Started fetching repo visibility data for subset of repo ids');
 	const visibilityResult = await getReposForVisibility(graphqlClient, orgName, visibilityType);
-	await logger.log(LogStatus.INFO,"Completed fetching repo visibility data for subset of repo ids")
+	await logger.log(LogStatus.INFO, 'Completed fetching repo visibility data for subset of repo ids');
 	context.done(null, visibilityResult);
 };

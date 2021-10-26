@@ -6,7 +6,7 @@
 
 const df = require('durable-functions');
 const { iHubStatus, checkRegexExcludeList } = require('./helper');
-const { ConnectorLogger, LogStatus } = require('./connectorLogger')
+const { ConnectorLogger, LogStatus } = require('./connectorLogger');
 function* processForLdif(logger, context) {
 	const {
 		connectorConfiguration: { orgName, repoNamesExcludeList },
@@ -26,7 +26,7 @@ function* processForLdif(logger, context) {
 		ghToken,
 		connectorLoggingUrl
 	});
-	
+
 	const workPerScanner = [];
 	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
 		workPerScanner.push(repositoriesIds.slice(i, i + scannerCapacity));
@@ -46,7 +46,7 @@ function* processForLdif(logger, context) {
 			connectorLoggingUrl
 		});
 	} catch (e) {
-		logger.log(LogStatus.ERROR,e.toString());
+		logger.log(LogStatus.ERROR, e.toString());
 		teamResults = [];
 	}
 	const repoVisibilityOutput = [];
@@ -92,14 +92,14 @@ module.exports = df.orchestrator(function* (context) {
 	const retryOptions = new df.RetryOptions(5000, 3);
 	retryOptions.maxRetryIntervalInMilliseconds = 5000;
 
-	const logger = new ConnectorLogger(connectorLoggingUrl, context)
+	const logger = new ConnectorLogger(connectorLoggingUrl, context);
 
 	try {
 		yield* processForLdif(logger, context);
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, { progressCallbackUrl, status: iHubStatus.FINISHED });
 	} catch (e) {
-		logger.log(LogStatus.ERROR,e.toString())
-		logger.log(LogStatus.ERROR, "Sending FAILED Status to IHub")
+		logger.log(LogStatus.ERROR, e.toString());
+		logger.log(LogStatus.ERROR, 'Sending FAILED Status to IHub');
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, {
 			progressCallbackUrl,
 			status: iHubStatus.FAILED,

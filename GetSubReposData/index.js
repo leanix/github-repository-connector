@@ -1,6 +1,6 @@
 const { graphql } = require('@octokit/graphql');
 const { getISODateStringOnFromToday } = require('../GithubRepoScanOrchestrator/helper');
-const { ConnectorLogger, LogStatus } = require('../GithubRepoScanOrchestrator/connectorLogger')
+const { ConnectorLogger, LogStatus } = require('../GithubRepoScanOrchestrator/connectorLogger');
 
 module.exports = async function (context, { repoIds, ghToken, connectorLoggingUrl }) {
 	const graphqlClient = graphql.defaults({
@@ -8,8 +8,8 @@ module.exports = async function (context, { repoIds, ghToken, connectorLoggingUr
 			authorization: `token ${ghToken}`
 		}
 	});
-	const logger = new ConnectorLogger(connectorLoggingUrl, context)
-	await logger.log(LogStatus.INFO,"Started fetching complete repo data for subset of repos")
+	const logger = new ConnectorLogger(connectorLoggingUrl, context);
+	await logger.log(LogStatus.INFO, 'Started fetching complete repo data for subset of repos');
 	return await getReposData(context, repoIds, graphqlClient);
 };
 
