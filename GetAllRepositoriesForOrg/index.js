@@ -39,10 +39,10 @@ async function getRepositoriesIds(graphqlClient, { orgName, pageCount, cursor },
 	};
 }
 
-async function getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListChecked) {
+async function getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListChecked, logger) {
 	let cursor = null;
 	let finalResult = [];
-
+	var sendDate = (new Date()).getTime();
 	do {
 		var { ids, pageInfo } = await getRepositoriesIds(
 			graphqlClient,
@@ -56,6 +56,9 @@ async function getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListC
 		finalResult = finalResult.concat(ids);
 		cursor = pageInfo.endCursor;
 	} while (pageInfo.hasNextPage);
+	var receiveDate = (new Date()).getTime();
+	var responseTimeMs = receiveDate - sendDate;
+	await logger.log(LogStatus.INFO, 'Completed fetching org repo ids in '+responseTimeMs.toString()+' milliseconds');
 	return finalResult;
 }
 
@@ -67,7 +70,6 @@ module.exports = async function (context, { orgName, repoNamesExcludeListChecked
 	});
 	const logger = new ConnectorLogger(connectorLoggingUrl, context, runId);
 	await logger.log(LogStatus.INFO, 'Started fetching org repo ids');
-	const finalResult = await getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListChecked);
-	await logger.log(LogStatus.INFO, 'Completed fetching org repo ids');
+	const finalResult = await getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListChecked, logger);
 	context.done(null, finalResult);
 };

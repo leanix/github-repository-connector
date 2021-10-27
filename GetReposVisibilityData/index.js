@@ -55,11 +55,11 @@ async function getPagedRepoIdsForVisibility(graphqlClient, { searchQuery, cursor
  * @param {String} orgName
  * @param {String} visibilityType
  */
-async function getReposForVisibility(graphqlClient, orgName, visibilityType) {
+async function getReposForVisibility(graphqlClient, orgName, visibilityType, logger) {
 	let repoVisibilityCursor = null;
 	let finalResultForVisibility = [];
 	const searchQuery = `org:${orgName} is:${visibilityType} fork:true`;
-
+	var sendDate = (new Date()).getTime();
 	do {
 		var { result, pageInfo } = await getPagedRepoIdsForVisibility(
 			graphqlClient,
@@ -69,7 +69,9 @@ async function getReposForVisibility(graphqlClient, orgName, visibilityType) {
 		finalResultForVisibility = { ...finalResultForVisibility, ...result };
 		repoVisibilityCursor = pageInfo.endCursor;
 	} while (pageInfo.hasNextPage);
-
+	var receiveDate = (new Date()).getTime();
+	var responseTimeMs = receiveDate - sendDate;
+	await logger.log(LogStatus.INFO, 'Completed fetching repo visibility data for subset of repo ids '+responseTimeMs.toString()+' milliseconds');
 	return finalResultForVisibility;
 }
 
@@ -81,7 +83,6 @@ module.exports = async function (context, { orgName, visibilityType, ghToken, co
 	});
 	const logger = new ConnectorLogger(connectorLoggingUrl, context, runId);
 	await logger.log(LogStatus.INFO, 'Started fetching repo visibility data for subset of repo ids');
-	const visibilityResult = await getReposForVisibility(graphqlClient, orgName, visibilityType);
-	await logger.log(LogStatus.INFO, 'Completed fetching repo visibility data for subset of repo ids');
+	const visibilityResult = await getReposForVisibility(graphqlClient, orgName, visibilityType, logger);
 	context.done(null, visibilityResult);
 };

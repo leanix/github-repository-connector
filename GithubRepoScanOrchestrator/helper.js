@@ -1,3 +1,5 @@
+const { graphql } = require('@octokit/graphql');
+
 module.exports = {
 	checkRegexExcludeList: function (regexExcludeList) {
 		if (regexExcludeList) {

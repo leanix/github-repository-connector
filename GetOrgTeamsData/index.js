@@ -100,16 +100,19 @@ async function getPagedTeamsData(graphqlClient, { orgName, pageCount, cursor }) 
 	};
 }
 
-async function getAllTeamsWithRepos(graphqlClient, orgName) {
+async function getAllTeamsWithRepos(graphqlClient, orgName, logger) {
 	let teamCursor = null;
 	let finalResult = [];
 	const teamPageSize = 25;
-
+	var sendDate = (new Date()).getTime();
 	do {
 		var { teams, pageInfo } = await getPagedTeamsData(graphqlClient, { orgName, pageCount: teamPageSize, cursor: teamCursor });
 		finalResult = finalResult.concat(teams);
 		teamCursor = pageInfo.endCursor;
 	} while (pageInfo.hasNextPage);
+	var receiveDate = (new Date()).getTime();
+	var responseTimeMs = receiveDate - sendDate;
+	await logger.log(LogStatus.INFO, 'Completed fetching org teams data '+responseTimeMs.toString()+' milliseconds');
 	return finalResult;
 }
 
@@ -120,9 +123,7 @@ module.exports = async function (context, { orgName, ghToken, connectorLoggingUr
 		}
 	});
 	const logger = new ConnectorLogger(connectorLoggingUrl, context, runId);
-	await logger.log(LogStatus.INFO, 'Completed fetching complete repo data for repo ids');
 	await logger.log(LogStatus.INFO, 'Started fetching org teams data');
-	const finalResult = await getAllTeamsWithRepos(graphqlClient, orgName);
-	await logger.log(LogStatus.INFO, 'Completed fetching org teams data');
+	const finalResult = await getAllTeamsWithRepos(graphqlClient, orgName, logger);
 	context.done(null, finalResult);
 };

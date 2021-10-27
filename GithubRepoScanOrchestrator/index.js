@@ -5,7 +5,7 @@
  */
 
 const df = require('durable-functions');
-const { iHubStatus, checkRegexExcludeList } = require('./helper');
+const { iHubStatus, checkRegexExcludeList, checkGithubStatus } = require('./helper');
 const { ConnectorLogger, LogStatus } = require('./connectorLogger');
 function* processForLdif(logger, context) {
 	const {
@@ -15,11 +15,34 @@ function* processForLdif(logger, context) {
 		progressCallbackUrl,
 		connectorLoggingUrl,
 		bindingKey,
-		runId
+		runId,
+		testConnector
 	} = context.bindingData.input;
 	const scannerCapacity = 100;
 
 	const repoNamesExcludeListChecked = checkRegexExcludeList(repoNamesExcludeList);
+
+
+	const connectionAlive = yield context.df.callActivity('CheckGitHubConnection', {
+		ghToken, connectorLoggingUrl, runId
+	});
+
+	if(testConnector) {
+		if(connectionAlive){
+			yield context.df.callActivity('UpdateProgressToIHub', {
+				progressCallbackUrl,
+				status: 200,
+				message: 'Successfully able to connect to GitHub'
+			});
+		}
+		else{
+			yield context.df.callActivity('UpdateProgressToIHub', {
+				progressCallbackUrl,
+				status: 404,
+				message: 'Failed to connect to GitHub'
+			});
+		}
+	}
 
 	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', {
 		orgName,
@@ -92,13 +115,12 @@ function* processForLdif(logger, context) {
 }
 
 module.exports = df.orchestrator(function* (context) {
-	const { progressCallbackUrl, connectorLoggingUrl } = context.bindingData.input;
+	const { progressCallbackUrl, connectorLoggingUrl, runId } = context.bindingData.input;
 
 	const retryOptions = new df.RetryOptions(5000, 3);
 	retryOptions.maxRetryIntervalInMilliseconds = 5000;
 
-	const logger = new ConnectorLogger(connectorLoggingUrl, context);
-
+	const logger = new ConnectorLogger(connectorLoggingUrl, context, runId);
 	try {
 		yield* processForLdif(logger, context);
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, { progressCallbackUrl, status: iHubStatus.FINISHED });
