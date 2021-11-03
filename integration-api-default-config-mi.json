@@ -501,9 +501,9 @@
 			{
 				"processorType": "inboundTag",
 				"processorName": "Add 'Github repository' Data Source tag on Microservice Factsheets",
-				"processorDescription": "Adds 'Github repository' Data Source tag on violation type FS for data source tracking",
+				"processorDescription": "Adds 'Github repository' Data Source tag on Software Artifact type FS for data source tracking",
 				"filter": {
-					"exactType": "Repository"
+					"advanced": "${content.type == 'Repository' || content.type == 'Language' || content.type == 'Team'}"
 				},
 				"factSheets": {
 					"external": {
