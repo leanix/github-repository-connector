@@ -67,5 +67,10 @@ module.exports = async function (context, { orgName, repoNamesExcludeListChecked
 	});
 
 	const finalResult = await getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListChecked);
+
+	if(!finalResult || !finalResult.length) {
+		throw new Error(`Zero repositories found in ${orgName} GitHub organisation.`)
+	}
+
 	context.done(null, finalResult);
 };

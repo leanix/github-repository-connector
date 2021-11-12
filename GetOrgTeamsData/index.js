@@ -106,7 +106,7 @@ class GetOrgTeamsDataHandler {
 		};
 	}
 
-	async getAllTeamsWithRepos(graphqlClient, orgName) {
+	async getAllTeamsWithRepos(graphqlClient, orgName, repositoriesIds) {
 		let teamCursor = null;
 		let finalResult = [];
 		const teamPageSize = 25;
@@ -116,12 +116,21 @@ class GetOrgTeamsDataHandler {
 			finalResult = finalResult.concat(teams);
 			teamCursor = pageInfo.endCursor;
 		} while (pageInfo.hasNextPage);
+
+		for (const team of finalResult) {
+			team.repositories.nodes = this.filterNonOrgReposFromTeam(team.repositories.nodes, repositoriesIds)
+		}
+
 		return finalResult;
+	}
+
+	filterNonOrgReposFromTeam(teamRepositories, orgRepositoriesIds) {
+		return teamRepositories.filter(repo => orgRepositoriesIds.find(id => id === repo.id));
 	}
 
 }
 
-module.exports = async function (context, { orgName, ghToken }) {
+module.exports = async function (context, { orgName, ghToken, orgRepositoriesIds }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
 			authorization: `token ${ghToken}`
@@ -129,6 +138,6 @@ module.exports = async function (context, { orgName, ghToken }) {
 	});
 
 	let handler = new GetOrgTeamsDataHandler(context);
-	const finalResult = await handler.getAllTeamsWithRepos(graphqlClient, orgName);
+	const finalResult = await handler.getAllTeamsWithRepos(graphqlClient, orgName, orgRepositoriesIds);
 	context.done(null, finalResult);
 };
