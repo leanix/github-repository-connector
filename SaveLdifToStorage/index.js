@@ -194,10 +194,13 @@ class SaveLdifToStorageHandler {
 		this.context.log(`Successfully saved LDIF to ${blobStorageSasUrl}`);
 	}
 
+	/**
+	 *
+	 * @param {Object} repoData
+	 *
+	 * OrgName and repo name are sanitised(no spaces) at source (GitHub)
+	 */
 	getExternalIdForRepo(repoData) {
-		const sanitise = (val) => val.toLowerCase().replace(/\s+/g, '-');
-		const sanitisedRepoName = sanitise(repoData.name);
-		const sanitisedOrgName = sanitise(this.orgName);
-		return `${sanitisedOrgName}/${sanitisedRepoName}`;
+		return `${this.orgName}/${repoData.name}`;
 	}
 }
