@@ -1,13 +1,19 @@
 ﻿const { graphql } = require('@octokit/graphql');
 
-function hasMoreRepos(team) {
-	return team.repositories.pageInfo.hasNextPage;
-}
+class GetOrgTeamsDataHandler {
 
-async function getPagedRepos(graphqlClient, { teamId, cursor }) {
-	const reposPageSize = 100;
-	const data = await graphqlClient({
-		query: `
+	constructor(context) {
+		this.context = context;
+	}
+
+	static hasMoreRepos(team) {
+		return team.repositories.pageInfo.hasNextPage;
+	}
+
+	async getPagedRepos(graphqlClient, { teamId, cursor }) {
+		const reposPageSize = 100;
+		const data = await graphqlClient({
+			query: `
             query getReposForTeam($teamId: ID!, $pageCount: Int!, $cursor: String) {
               node(id: $teamId) {
                 id
@@ -25,34 +31,34 @@ async function getPagedRepos(graphqlClient, { teamId, cursor }) {
               }
             }
         `,
-		teamId,
-		cursor,
-		pageCount: reposPageSize
-	});
+			teamId,
+			cursor,
+			pageCount: reposPageSize
+		});
 
-	return {
-		repos: data.node.repositories.nodes,
-		pageInfo: data.node.repositories.pageInfo
-	};
-}
+		return {
+			repos: data.node.repositories.nodes,
+			pageInfo: data.node.repositories.pageInfo
+		};
+	}
 
-async function getAllReposForTeam(graphqlClient, team) {
-	let repoCursor = null;
-	let finalResult = [];
+	async getAllReposForTeam(graphqlClient, team) {
+		let repoCursor = null;
+		let finalResult = [];
 
-	do {
-		var { repos, pageInfo } = await getPagedRepos(graphqlClient, { teamId: team.id, cursor: repoCursor });
-		finalResult = finalResult.concat(repos);
-		repoCursor = pageInfo.endCursor;
-	} while (pageInfo.hasNextPage);
+		do {
+			var { repos, pageInfo } = await this.getPagedRepos(graphqlClient, { teamId: team.id, cursor: repoCursor });
+			finalResult = finalResult.concat(repos);
+			repoCursor = pageInfo.endCursor;
+		} while (pageInfo.hasNextPage);
 
-	return finalResult;
-}
+		return finalResult;
+	}
 
-async function getPagedTeamsData(graphqlClient, { orgName, pageCount, cursor }) {
-	const initialRepoPageSize = 50;
-	const data = await graphqlClient({
-		query: `
+	async getPagedTeamsData(graphqlClient, { orgName, pageCount, cursor }) {
+		const initialRepoPageSize = 50;
+		const data = await graphqlClient({
+			query: `
             query getOrgTeams($queryString: String!, $pageCount: Int!, $cursor: String, $reposPageCount: Int!) {
               organization(login: $queryString) {
                 teams(first: $pageCount, after: $cursor) {
@@ -81,36 +87,38 @@ async function getPagedTeamsData(graphqlClient, { orgName, pageCount, cursor }) 
         }
 
         `,
-		queryString: orgName,
-		pageCount,
-		cursor,
-		reposPageCount: initialRepoPageSize
-	});
-	let teams = data.organization.teams.nodes;
+			queryString: orgName,
+			pageCount,
+			cursor,
+			reposPageCount: initialRepoPageSize
+		});
+		let teams = data.organization.teams.nodes;
 
-	for (let team of teams) {
-		if (hasMoreRepos(team)) {
-			team.repositories.nodes = await getAllReposForTeam(graphqlClient, team);
+		for (let team of teams) {
+			if (GetOrgTeamsDataHandler.hasMoreRepos(team)) {
+				team.repositories.nodes = await this.getAllReposForTeam(graphqlClient, team);
+			}
 		}
+
+		return {
+			teams,
+			pageInfo: data.organization.teams.pageInfo
+		};
 	}
 
-	return {
-		teams,
-		pageInfo: data.organization.teams.pageInfo
-	};
-}
+	async getAllTeamsWithRepos(graphqlClient, orgName) {
+		let teamCursor = null;
+		let finalResult = [];
+		const teamPageSize = 25;
 
-async function getAllTeamsWithRepos(graphqlClient, orgName) {
-	let teamCursor = null;
-	let finalResult = [];
-	const teamPageSize = 25;
+		do {
+			var { teams, pageInfo } = await this.getPagedTeamsData(graphqlClient, { orgName, pageCount: teamPageSize, cursor: teamCursor });
+			finalResult = finalResult.concat(teams);
+			teamCursor = pageInfo.endCursor;
+		} while (pageInfo.hasNextPage);
+		return finalResult;
+	}
 
-	do {
-		var { teams, pageInfo } = await getPagedTeamsData(graphqlClient, { orgName, pageCount: teamPageSize, cursor: teamCursor });
-		finalResult = finalResult.concat(teams);
-		teamCursor = pageInfo.endCursor;
-	} while (pageInfo.hasNextPage);
-	return finalResult;
 }
 
 module.exports = async function (context, { orgName, ghToken }) {
@@ -120,6 +128,7 @@ module.exports = async function (context, { orgName, ghToken }) {
 		}
 	});
 
-	const finalResult = await getAllTeamsWithRepos(graphqlClient, orgName);
+	let handler = new GetOrgTeamsDataHandler(context);
+	const finalResult = await handler.getAllTeamsWithRepos(graphqlClient, orgName);
 	context.done(null, finalResult);
 };
