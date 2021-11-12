@@ -7,16 +7,19 @@ const ldifHeader = {
 	description: 'Map organisation github repos to LeanIX Fact Sheets'
 };
 
-module.exports = async function (context, { partialResults, teamResults, repoIdsVisibilityMap, blobStorageSasUrl, bindingKey }) {
-	let handler = new SaveLdifToStorageHandler(context);
+module.exports = async function (
+	context,
+	{ partialResults, teamResults, repoIdsVisibilityMap, blobStorageSasUrl, metadata: { bindingKey, orgName } }
+) {
+	let handler = new SaveLdifToStorageHandler(context, orgName);
 	const contentArray = handler.handleLdifCreation(partialResults, teamResults, repoIdsVisibilityMap);
 	return await handler.uploadToBlob(handler.getFinalLdif(contentArray, bindingKey), blobStorageSasUrl);
 };
 
 class SaveLdifToStorageHandler {
-
-	constructor(context) {
+	constructor(context, orgName) {
 		this.context = context;
+		this.orgName = orgName;
 	}
 
 	/**
@@ -71,10 +74,11 @@ class SaveLdifToStorageHandler {
 	convertToRepositoryContent(repoData) {
 		return {
 			type: 'Repository',
-			id: repoData.id,
+			id: this.getExternalIdForRepo(repoData),
 			data: {
 				name: repoData.name,
 				url: repoData.url,
+				gitHubRepoId: repoData.id,
 				description: repoData.description,
 				languages: repoData.languages.edges.map(({ size, node }) => {
 					return {
@@ -187,7 +191,13 @@ class SaveLdifToStorageHandler {
 		const blockBlobClient = new BlobClient(blobStorageSasUrl, new AnonymousCredential()).getBlockBlobClient();
 		const finalLdifData = JSON.stringify(finalLdif);
 		await blockBlobClient.upload(finalLdifData, Buffer.byteLength(finalLdifData));
-		this.context.log(`Successfully saved LDIF to ${blobStorageSasUrl}`)
+		this.context.log(`Successfully saved LDIF to ${blobStorageSasUrl}`);
+	}
+
+	getExternalIdForRepo(repoData) {
+		const sanitise = (val) => val.toLowerCase().replace(/\s+/g, '-');
+		const sanitisedRepoName = sanitise(repoData.name);
+		const sanitisedOrgName = sanitise(this.orgName);
+		return `${sanitisedOrgName}/${sanitisedRepoName}`;
 	}
 }
-
