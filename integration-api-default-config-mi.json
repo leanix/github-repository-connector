@@ -43,13 +43,55 @@
 		},
 		"processors": [
 			{
+				"processorType": "inboundFactSheet",
+				"processorName": "migrate github repo external to readable external id",
+				"processorDescription": "CID-382 migrates the old external to new external id",
+				"type": "Microservice",
+				"filter": {
+					"exactType": "Repository"
+				},
+				"identifier": {
+					"external": {
+						"id": {
+							"expr": "${data.gitHubRepoId}"
+						},
+						"type": {
+							"expr": "githubId"
+						}
+					}
+				},
+				"run": 1,
+				"updates": [
+					{
+						"key": {
+							"expr": "githubId.externalId"
+						},
+						"values": [
+							{
+								"expr": "${content.id}"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "name"
+						},
+						"values": [
+							{
+								"expr": "${data.name}"
+							}
+						]
+					}
+				]
+			},
+			{
 				"processorType": "variableProcessor",
 				"processorName": "repository-topics-map",
 				"processorDescription": "This variable processor creates a map of each repository against its topic ids ",
 				"filter": {
 					"exactType": "Repository"
 				},
-				"run": 1,
+				"run": 2,
 				"forEach": "${data.topics}",
 				"variables": [
 					{
@@ -73,7 +115,7 @@
 						}
 					}
 				},
-				"run": 2,
+				"run": 3,
 				"updates": [
 					{
 						"key": {
@@ -135,7 +177,7 @@
 						}
 					}
 				},
-				"run": 1,
+				"run": 2,
 				"updates": [
 					{
 						"key": {
@@ -186,7 +228,7 @@
 				"filter": {
 					"exactType": "Repository"
 				},
-				"run": 2,
+				"run": 3,
 				"updates": [
 					{
 						"key": {
@@ -248,7 +290,7 @@
 						}
 					}
 				},
-				"run": 1,
+				"run": 2,
 				"updates": [
 					{
 						"key": {
@@ -280,7 +322,7 @@
 						}
 					}
 				},
-				"run": 1,
+				"run": 2,
 				"updates": [
 					{
 						"key": {
@@ -322,7 +364,7 @@
 						}
 					}
 				},
-				"run": 2,
+				"run": 3,
 				"updates": [
 					{
 						"key": {
@@ -365,7 +407,7 @@
 						}
 					}
 				},
-				"run": 2,
+				"run": 3,
 				"updates": [],
 				"forEach": "${data.repositories}"
 			},
@@ -397,7 +439,7 @@
 						}
 					}
 				},
-				"run": 2
+				"run": 3
 			},
 			{
 				"processorType": "variableProcessor",
@@ -406,7 +448,7 @@
 				"filter": {
 					"exactType": "Repository"
 				},
-				"run": 2,
+				"run": 3,
 				"enabled": true,
 				"variables": [
 					{
@@ -445,7 +487,7 @@
 						"multipleMatchesAllowed": true
 					}
 				},
-				"run": 3,
+				"run": 4,
 				"updates": [],
 				"variables": [
 					{
@@ -473,7 +515,7 @@
 				"filter": {
 					"advanced": "${integration.contentIndex == 0}"
 				},
-				"run": 6,
+				"run": 7,
 				"updates": [
 					{
 						"key": {
@@ -513,7 +555,7 @@
 						}
 					}
 				},
-				"run": 3,
+				"run": 4,
 				"updates": [
 					{
 						"key": {
