@@ -118,14 +118,20 @@ class GetOrgTeamsDataHandler {
 		} while (pageInfo.hasNextPage);
 
 		for (const team of finalResult) {
-			team.repositories.nodes = this.filterNonOrgReposFromTeam(team.repositories.nodes, repositoriesIds)
+			team.repositories.nodes = this.filterNonOrgReposFromTeam(repositoriesIds)(team.repositories.nodes)
 		}
 
 		return finalResult;
 	}
 
-	filterNonOrgReposFromTeam(teamRepositories, orgRepositoriesIds) {
-		return teamRepositories.filter(repo => orgRepositoriesIds.find(id => id === repo.id));
+	filterNonOrgReposFromTeam(orgRepositoriesIds) {
+		function containsInOrgRepos(repoId) {
+			return orgRepositoriesIds.find(id => id === repoId);
+		}
+
+		return function(teamRepositories) {
+			return teamRepositories.filter(repo => containsInOrgRepos(repo.id));
+		}
 	}
 
 }
