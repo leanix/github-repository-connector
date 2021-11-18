@@ -44,16 +44,17 @@
 		"processors": [
 			{
 				"processorType": "inboundFactSheet",
-				"processorName": "migrate github repo external to readable external id",
-				"processorDescription": "CID-382 migrates the old external to new external id",
+				"processorName": "migrate Repository github repo external to readable external id",
+				"processorDescription": "CID-382 migrates Repository the old external to new external id",
 				"type": "Microservice",
 				"filter": {
-					"exactType": "Repository"
+					"exactType": "Repository",
+					"onRead": "${lx.factsheet.githubId != null && !lx.factsheet.githubId.startsWith(customFields.orgName)}"
 				},
 				"identifier": {
 					"external": {
 						"id": {
-							"expr": "${data.gitHubRepoId}"
+							"expr": "${data.gitHubHashId}"
 						},
 						"type": {
 							"expr": "githubId"
@@ -82,7 +83,102 @@
 							}
 						]
 					}
-				]
+				],
+				"read": {
+					"fields": ["githubId.externalId"]
+				}
+			},
+			{
+				"processorType": "inboundFactSheet",
+				"processorName": "migrate Team github repo external to readable external id",
+				"processorDescription": "CID-382 migrates Team the old external to new external id",
+				"type": "Team",
+				"filter": {
+					"exactType": "Team",
+					"onRead": "${lx.factsheet.githubId != null && !lx.factsheet.githubId.startsWith(customFields.orgName)}"
+				},
+				"identifier": {
+					"external": {
+						"id": {
+							"expr": "${data.gitHubHashId}"
+						},
+						"type": {
+							"expr": "githubId"
+						}
+					}
+				},
+				"run": 1,
+				"updates": [
+					{
+						"key": {
+							"expr": "githubId.externalId"
+						},
+						"values": [
+							{
+								"expr": "${content.id}"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "name"
+						},
+						"values": [
+							{
+								"expr": "${data.name}"
+							}
+						]
+					}
+				],
+				"read": {
+					"fields": ["githubId.externalId"]
+				}
+			},
+			{
+				"processorType": "inboundFactSheet",
+				"processorName": "migrate Language github repo external to readable external id",
+				"processorDescription": "CID-382 migrates Language the old external to new external id",
+				"type": "TechnicalComponent",
+				"filter": {
+					"exactType": "Language",
+					"onRead": "${lx.factsheet.githubId != null}"
+				},
+				"identifier": {
+					"external": {
+						"id": {
+							"expr": "${data.gitHubHashId}"
+						},
+						"type": {
+							"expr": "githubId"
+						}
+					}
+				},
+				"run": 1,
+				"updates": [
+					{
+						"key": {
+							"expr": "githubId.externalId"
+						},
+						"values": [
+							{
+								"expr": "${content.id}"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "name"
+						},
+						"values": [
+							{
+								"expr": "${data.name}"
+							}
+						]
+					}
+				],
+				"read": {
+					"fields": ["githubId.externalId"]
+				}
 			},
 			{
 				"processorType": "variableProcessor",

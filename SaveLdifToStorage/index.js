@@ -2,6 +2,7 @@
  * Handles LDIF storage
  */
 const { BlobClient, AnonymousCredential } = require('@azure/storage-blob');
+const { externalId } = require('../GithubRepoScanOrchestrator/helper');
 
 const ldifHeader = {
 	description: 'Map organisation github repos to LeanIX Fact Sheets'
@@ -74,15 +75,15 @@ class SaveLdifToStorageHandler {
 	convertToRepositoryContent(repoData) {
 		return {
 			type: 'Repository',
-			id: this.getExternalIdForRepo(repoData),
+			id: externalId.repository(this.orgName, repoData),
 			data: {
 				name: repoData.name,
 				url: repoData.url,
-				gitHubRepoId: repoData.id,
+				gitHubHashId: repoData.id,
 				description: repoData.description,
 				languages: repoData.languages.edges.map(({ size, node }) => {
 					return {
-						langId: node.id,
+						langId: externalId.language(node),
 						size: (size / 1000).toFixed(2)
 					};
 				}),
@@ -125,8 +126,9 @@ class SaveLdifToStorageHandler {
 	convertToLanguageContent(langData) {
 		return {
 			type: 'Language',
-			id: langData.id,
+			id: externalId.language(langData),
 			data: {
+				gitHubHashId: langData.id,
 				name: langData.name
 			}
 		};
@@ -134,7 +136,7 @@ class SaveLdifToStorageHandler {
 
 	/**
 	 *
-	 * @param {Object} topicData contains topic data related to repo
+	 * @param {Object} topicData contains topic data related to repo, Hash ID is used as external ID since factsheet is not created
 	 */
 	convertToRepoTopicContent(topicData) {
 		return {
@@ -153,11 +155,12 @@ class SaveLdifToStorageHandler {
 	convertToTeamContent(teamData) {
 		return {
 			type: 'Team',
-			id: teamData.id,
+			id: externalId.team(this.orgName, teamData),
 			data: {
 				name: teamData.name,
-				parent: teamData.parentTeam ? teamData.parentTeam.id : null,
-				repositories: teamData.repositories.nodes.map((node) => node.id)
+				gitHubHashId: teamData.id,
+				parent: teamData.parentTeam ? externalId.team(this.orgName, teamData.parentTeam) : null,
+				repositories: teamData.repositories.nodes.map((node) => externalId.repository(this.orgName, node))
 			}
 		};
 	}
@@ -179,7 +182,13 @@ class SaveLdifToStorageHandler {
 		const ldifContent = {
 			content: contentArray
 		};
-		return { ...ldifHeader, ...ldifContent };
+		return {
+			...ldifHeader,
+			customFields: {
+				orgName: this.orgName
+			},
+			...ldifContent
+		};
 	}
 
 	/**
@@ -192,15 +201,5 @@ class SaveLdifToStorageHandler {
 		const finalLdifData = JSON.stringify(finalLdif);
 		await blockBlobClient.upload(finalLdifData, Buffer.byteLength(finalLdifData));
 		this.context.log(`Successfully saved LDIF to ${blobStorageSasUrl}`);
-	}
-
-	/**
-	 *
-	 * @param {Object} repoData
-	 *
-	 * OrgName and repo name are sanitised(no spaces) at source (GitHub)
-	 */
-	getExternalIdForRepo(repoData) {
-		return `${this.orgName}/${repoData.name}`;
 	}
 }

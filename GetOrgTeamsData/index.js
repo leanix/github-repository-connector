@@ -19,6 +19,7 @@ async function getPagedRepos(graphqlClient, { teamId, cursor }) {
                     }
                     nodes {
                       id
+                      name
                     }
                   }
                 }
@@ -65,6 +66,7 @@ async function getPagedTeamsData(graphqlClient, { orgName, pageCount, cursor }) 
                     name
                     parentTeam {
                       id
+                      name
                     }
                     repositories(first: $reposPageCount) {
                       pageInfo {
@@ -73,6 +75,7 @@ async function getPagedTeamsData(graphqlClient, { orgName, pageCount, cursor }) 
                       }
                       nodes {
                         id
+                        name
                       }
                     }
                   }
