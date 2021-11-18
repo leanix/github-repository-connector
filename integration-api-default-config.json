@@ -453,8 +453,7 @@
 						"key": "github_project_ids",
 						"value": "${content.id}"
 					}
-				],
-				"logLevel": "debug"
+				]
 			},
 			{
 				"processorType": "inboundFactSheet",
@@ -493,7 +492,6 @@
 						"value": "${lx.factsheet.githubId}"
 					}
 				],
-				"logLevel": "debug",
 				"read": {
 					"fields": ["name", "githubId"]
 				}
