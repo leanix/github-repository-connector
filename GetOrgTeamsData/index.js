@@ -1,7 +1,6 @@
 ﻿const { graphql } = require('@octokit/graphql');
 
 class GetOrgTeamsDataHandler {
-
 	constructor(context) {
 		this.context = context;
 	}
@@ -121,7 +120,7 @@ class GetOrgTeamsDataHandler {
 		} while (pageInfo.hasNextPage);
 
 		for (const team of finalResult) {
-			team.repositories.nodes = this.filterNonOrgReposFromTeam(repositoriesIds)(team.repositories.nodes)
+			team.repositories.nodes = this.filterNonOrgReposFromTeam(repositoriesIds)(team.repositories.nodes);
 		}
 
 		return finalResult;
@@ -129,14 +128,13 @@ class GetOrgTeamsDataHandler {
 
 	filterNonOrgReposFromTeam(orgRepositoriesIds) {
 		function containsInOrgRepos(repoId) {
-			return orgRepositoriesIds.find(id => id === repoId);
+			return orgRepositoriesIds.find((id) => id === repoId);
 		}
 
-		return function(teamRepositories) {
-			return teamRepositories.filter(repo => containsInOrgRepos(repo.id));
-		}
+		return function (teamRepositories) {
+			return teamRepositories.filter((repo) => containsInOrgRepos(repo.id));
+		};
 	}
-
 }
 
 module.exports = async function (context, { orgName, ghToken, orgRepositoriesIds }) {
