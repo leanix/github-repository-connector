@@ -25,6 +25,7 @@ class GetOrgTeamsDataHandler {
                     }
                     nodes {
                       id
+                      name
                     }
                   }
                 }
@@ -71,6 +72,7 @@ class GetOrgTeamsDataHandler {
                     name
                     parentTeam {
                       id
+                      name
                     }
                     repositories(first: $reposPageCount) {
                       pageInfo {
@@ -79,6 +81,7 @@ class GetOrgTeamsDataHandler {
                       }
                       nodes {
                         id
+                        name
                       }
                     }
                   }

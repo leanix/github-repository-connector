@@ -78,7 +78,10 @@ function* processForLdif(context) {
 		teamResults,
 		repoIdsVisibilityMap,
 		blobStorageSasUrl: ldifResultUrl,
-		bindingKey
+		metadata: {
+			bindingKey,
+			orgName
+		}
 	});
 }
 

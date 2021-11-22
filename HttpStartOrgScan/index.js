@@ -7,7 +7,7 @@ module.exports = async function (context, req) {
 
 	const instanceId = await client.startNew('GithubRepoScanOrchestrator', undefined, input);
 
-	context.log(`Started orchestration with ID = '${instanceId}'.`);
+	context.log(`Started orchestration with ID = '${instanceId}'. run ID = ${input.runId}`);
 
 	return buildResponseBody({ runId: input.runId, status: iHubStatus.IN_PROGRESS });
 };
