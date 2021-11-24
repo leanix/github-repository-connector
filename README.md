@@ -15,7 +15,7 @@ Integration Hub.
 
 #### Connector Template
 
-- mi-github-repository-connector
+- vsm-github-repository-connector
 
 ## Setting up Azure Durable FunctionApp
 

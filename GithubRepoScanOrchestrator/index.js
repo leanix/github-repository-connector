@@ -37,7 +37,8 @@ function* processForLdif(context) {
 	try {
 		var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
 			orgName,
-			ghToken
+			ghToken,
+			orgRepositoriesIds: repositoriesIds
 		});
 	} catch (e) {
 		context.log(e);
