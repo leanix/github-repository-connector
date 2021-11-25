@@ -2,6 +2,7 @@
 	"name": "vsm-github-connector",
 	"description": "",
 	"connectorUrl": "https://functions-westeurope-prod-githubrepositoryconnector.azurewebsites.net/api/orchestrators/",
+	"documentationUrl": "https://docs-vsm.leanix.net/docs/github",
 	"connectorConfiguration": {
 		"orgName": "leanix",
 		"repoNamesExcludeList": []
