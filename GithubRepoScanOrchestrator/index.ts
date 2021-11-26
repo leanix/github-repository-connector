@@ -4,7 +4,7 @@
  *
  */
 
-const df = require('durable-functions');
+import * as df from 'durable-functions';
 const { iHubStatus, checkRegexExcludeList } = require('./helper');
 
 function* processForLdif(context) {

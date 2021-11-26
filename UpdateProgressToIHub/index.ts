@@ -1,7 +1,7 @@
 ﻿/*
  * Updates progress status to Integration Hub
  */
-const axios = require('axios');
+import axios from 'axios';
 const { iHubStatus, iHubProgressOrigin } = require('../GithubRepoScanOrchestrator/helper');
 
 module.exports = async function (context, { progressCallbackUrl, status, message }) {

@@ -1,6 +1,9 @@
-﻿const { graphql } = require('@octokit/graphql');
+﻿import { graphql } from '@octokit/graphql';
+import { Context } from "@azure/functions"
 
 class GetOrgTeamsDataHandler {
+	private context: Context;
+
 	constructor(context) {
 		this.context = context;
 	}

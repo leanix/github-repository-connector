@@ -1,4 +1,4 @@
-const { graphql } = require('@octokit/graphql');
+import { graphql } from '@octokit/graphql';
 
 /**
  *

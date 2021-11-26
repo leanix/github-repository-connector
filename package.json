@@ -1,9 +1,14 @@
 {
-	"name": "github-repo-connector-poc",
+	"name": "github-repo-connector",
 	"version": "1.0.0",
 	"description": "",
 	"scripts": {
-		"start": "func start",
+		"build": "tsc",
+		"build:production": "npm run prestart && npm prune --production",
+		"watch": "tsc --w",
+		"prestart": "npm run build && func extensions install",
+		"start:host": "func start",
+		"start": "npm-run-all --parallel start:host watch",
 		"test": "echo \"No tests yet...\"",
 		"check-format": "prettier --config .prettierrc.json \".\" --check",
 		"format": "prettier --config .prettierrc.json \".\" --write"
@@ -15,6 +20,8 @@
 		"durable-functions": "^1.4.6"
 	},
 	"devDependencies": {
-		"prettier": "2.3.2"
+		"prettier": "2.3.2",
+		"npm-run-all": "^4.1.5",
+		"typescript": "^3.3.3"
 	}
 }

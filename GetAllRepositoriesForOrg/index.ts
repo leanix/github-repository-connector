@@ -1,4 +1,4 @@
-﻿const { graphql } = require('@octokit/graphql');
+﻿import { graphql } from '@octokit/graphql';
 
 function excludeListedRepositoriesIDsList(repositoriesData, repoNamesExcludeListChecked) {
 	const regexExcludeListArray = repoNamesExcludeListChecked.map((regexString) => new RegExp(regexString));
