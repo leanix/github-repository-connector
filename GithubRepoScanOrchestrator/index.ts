@@ -85,7 +85,7 @@ function* processForLdif(context) {
 	});
 }
 
-module.exports = df.orchestrator(function* (context) {
+export default df.orchestrator(function* (context) {
 	const { progressCallbackUrl } = context.bindingData.input;
 
 	const retryOptions = new df.RetryOptions(5000, 3);

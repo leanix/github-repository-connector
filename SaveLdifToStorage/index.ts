@@ -1,6 +1,7 @@
 ﻿/*
  * Handles LDIF storage
  */
+import { AzureFunction } from '@azure/functions';
 const { BlobClient, AnonymousCredential } = require('@azure/storage-blob');
 const { externalId } = require('../GithubRepoScanOrchestrator/helper');
 
@@ -8,7 +9,7 @@ const ldifHeader: any = {
 	description: 'Map organisation github repos to LeanIX Fact Sheets'
 };
 
-module.exports = async function (
+const activityFunction: AzureFunction = async function (
 	context,
 	{ partialResults, teamResults, repoIdsVisibilityMap, blobStorageSasUrl, metadata: { bindingKey, orgName } }
 ) {
@@ -206,3 +207,5 @@ class SaveLdifToStorageHandler {
 		this.context.log(`Successfully saved LDIF to ${blobStorageSasUrl}`);
 	}
 }
+
+export default activityFunction;

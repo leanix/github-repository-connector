@@ -1,4 +1,5 @@
-﻿import { graphql } from '@octokit/graphql';
+﻿import { AzureFunction } from '@azure/functions';
+import { graphql } from '@octokit/graphql';
 
 function excludeListedRepositoriesIDsList(repositoriesData, repoNamesExcludeListChecked) {
 	const regexExcludeListArray = repoNamesExcludeListChecked.map((regexString) => new RegExp(regexString));
@@ -59,7 +60,7 @@ async function getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListC
 	return finalResult;
 }
 
-module.exports = async function (context, { orgName, repoNamesExcludeListChecked, ghToken }) {
+const activityFunction: AzureFunction = async function (context, { orgName, repoNamesExcludeListChecked, ghToken }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
 			authorization: `token ${ghToken}`
@@ -74,3 +75,5 @@ module.exports = async function (context, { orgName, repoNamesExcludeListChecked
 
 	context.done(null, finalResult);
 };
+
+export default activityFunction;

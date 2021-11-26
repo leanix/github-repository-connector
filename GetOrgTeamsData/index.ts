@@ -1,5 +1,5 @@
 ﻿import { graphql } from '@octokit/graphql';
-import { Context } from '@azure/functions';
+import { Context, AzureFunction } from '@azure/functions';
 
 class GetOrgTeamsDataHandler {
 	private context: Context;
@@ -140,7 +140,7 @@ class GetOrgTeamsDataHandler {
 	}
 }
 
-module.exports = async function (context, { orgName, ghToken, orgRepositoriesIds }) {
+const activityFunction: AzureFunction = async function (context, { orgName, ghToken, orgRepositoriesIds }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
 			authorization: `token ${ghToken}`
@@ -151,3 +151,5 @@ module.exports = async function (context, { orgName, ghToken, orgRepositoriesIds
 	const finalResult = await handler.getAllTeamsWithRepos(graphqlClient, orgName, orgRepositoriesIds);
 	context.done(null, finalResult);
 };
+
+export default activityFunction;

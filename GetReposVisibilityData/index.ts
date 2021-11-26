@@ -1,3 +1,4 @@
+import { AzureFunction } from '@azure/functions';
 import { graphql } from '@octokit/graphql';
 
 /**
@@ -73,7 +74,7 @@ async function getReposForVisibility(graphqlClient, orgName, visibilityType) {
 	return finalResultForVisibility;
 }
 
-module.exports = async function (context, { orgName, visibilityType, ghToken }) {
+const activityFunction: AzureFunction = async function (context, { orgName, visibilityType, ghToken }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
 			authorization: `token ${ghToken}`
@@ -83,3 +84,5 @@ module.exports = async function (context, { orgName, visibilityType, ghToken }) 
 
 	context.done(null, visibilityResult);
 };
+
+export default activityFunction;

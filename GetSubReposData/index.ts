@@ -1,7 +1,8 @@
+import { AzureFunction } from '@azure/functions';
 import { graphql } from '@octokit/graphql';
 import { getISODateStringOnFromToday } from '../GithubRepoScanOrchestrator/helper';
 
-module.exports = async function (context, { repoIds, ghToken }) {
+const activityFunction: AzureFunction = async function (context, { repoIds, ghToken }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
 			authorization: `token ${ghToken}`
@@ -161,3 +162,5 @@ async function getPagedLanguages(graphqlClient, { repoId, cursor }) {
 		pageInfo: data.node.languages.pageInfo
 	};
 }
+
+export default activityFunction;

@@ -1,10 +1,11 @@
 ﻿/*
  * Updates progress status to Integration Hub
  */
+import { AzureFunction } from '@azure/functions';
 import axios from 'axios';
 const { iHubStatus, iHubProgressOrigin } = require('../GithubRepoScanOrchestrator/helper');
 
-module.exports = async function (context, { progressCallbackUrl, status, message }) {
+const activityFunction: AzureFunction = async function (context, { progressCallbackUrl, status, message }) {
 	try {
 		const response = await axios.post(progressCallbackUrl, {
 			status,
@@ -19,3 +20,5 @@ module.exports = async function (context, { progressCallbackUrl, status, message
 		}
 	}
 };
+
+export default activityFunction;
