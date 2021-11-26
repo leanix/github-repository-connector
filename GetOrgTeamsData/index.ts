@@ -1,5 +1,5 @@
 ﻿import { graphql } from '@octokit/graphql';
-import { Context } from "@azure/functions"
+import { Context } from '@azure/functions';
 
 class GetOrgTeamsDataHandler {
 	private context: Context;
