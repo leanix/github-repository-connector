@@ -1,14 +1,15 @@
 ﻿/*
  * Handles LDIF storage
  */
+import { AzureFunction } from '@azure/functions';
 const { BlobClient, AnonymousCredential } = require('@azure/storage-blob');
 const { externalId } = require('../GithubRepoScanOrchestrator/helper');
 
-const ldifHeader = {
+const ldifHeader: any = {
 	description: 'Map organisation github repos to LeanIX Fact Sheets'
 };
 
-module.exports = async function (
+const activityFunction: AzureFunction = async function (
 	context,
 	{ partialResults, teamResults, repoIdsVisibilityMap, blobStorageSasUrl, metadata: { bindingKey, orgName } }
 ) {
@@ -18,6 +19,9 @@ module.exports = async function (
 };
 
 class SaveLdifToStorageHandler {
+	private context;
+	private readonly orgName;
+
 	constructor(context, orgName) {
 		this.context = context;
 		this.orgName = orgName;
@@ -113,9 +117,9 @@ class SaveLdifToStorageHandler {
 				return committerFreqMap;
 			}, {});
 			return Object.values(freqMap)
-				.sort((a, b) => b.freq - a.freq) // high to low
+				.sort((a: any, b: any) => b.freq - a.freq) // high to low
 				.slice(0, topCount)
-				.map((committerNode) => committerNode.committer.email);
+				.map((committerNode: any) => committerNode.committer.email);
 		};
 	}
 
@@ -203,3 +207,5 @@ class SaveLdifToStorageHandler {
 		this.context.log(`Successfully saved LDIF to ${blobStorageSasUrl}`);
 	}
 }
+
+export default activityFunction;

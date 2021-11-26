@@ -18,5 +18,6 @@
 			"type": "orchestrationClient",
 			"direction": "in"
 		}
-	]
+	],
+	"scriptFile": "../dist/HttpStartOrgScan/index.js"
 }

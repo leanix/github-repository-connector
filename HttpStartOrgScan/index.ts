@@ -1,7 +1,7 @@
 ﻿const df = require('durable-functions');
 const { iHubStatus } = require('../GithubRepoScanOrchestrator/helper');
 
-module.exports = async function (context, req) {
+export default async function (context, req) {
 	const client = df.getClient(context);
 	const input = req.body;
 
@@ -10,7 +10,7 @@ module.exports = async function (context, req) {
 	context.log(`Started orchestration with ID = '${instanceId}'. run ID = ${input.runId}`);
 
 	return buildResponseBody({ runId: input.runId, status: iHubStatus.IN_PROGRESS });
-};
+}
 
 function buildResponseBody(data) {
 	return {
