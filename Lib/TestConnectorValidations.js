@@ -23,7 +23,7 @@ class TestConnectorValidator {
 		}
 	}
 
-	async pingForRequiredDataAccess() {
+	async pingForRequiredDataAccess(orgName) {
 		await this.graphqlClient({
 			query: `
           query($orgName: String!) {
@@ -35,7 +35,7 @@ class TestConnectorValidator {
                 id
               },
 					`,
-			orgName: this.connectorConfiguration.orgName
+			orgName
 		});
 	}
 
@@ -54,7 +54,7 @@ class TestConnectorValidator {
 		TestConnectorValidator.checkRegexExcludeList(repoNamesExcludeList);
 
 		try {
-			this.pingForRequiredDataAccess();
+			this.pingForRequiredDataAccess(orgName);
 		} catch (e) {
 			throw new Error(`Failed to verify source for necessary information access. Error: ${e.message}`);
 		}
