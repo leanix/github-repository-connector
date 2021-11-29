@@ -1,4 +1,8 @@
-const { graphql } = require('@octokit/graphql');
+﻿const { graphql } = require('@octokit/graphql');
+
+module.exports = async function (context, { connectorConfiguration, secretsConfiguration }) {
+	await new TestConnectorValidator(context, { connectorConfiguration, secretsConfiguration }).test();
+};
 
 class TestConnectorValidator {
 	constructor(context, { connectorConfiguration, secretsConfiguration }) {
@@ -39,7 +43,7 @@ class TestConnectorValidator {
 		});
 	}
 
-	test() {
+	async test() {
 		const { orgName, repoNamesExcludeList } = this.connectorConfiguration;
 		const { ghToken } = this.secretsConfiguration;
 
@@ -54,11 +58,9 @@ class TestConnectorValidator {
 		TestConnectorValidator.checkRegexExcludeList(repoNamesExcludeList);
 
 		try {
-			this.pingForRequiredDataAccess(orgName);
+			await this.pingForRequiredDataAccess(orgName);
 		} catch (e) {
 			throw new Error(`Failed to verify source for necessary information access. Error: ${e.message}`);
 		}
 	}
 }
-
-module.exports = TestConnectorValidator;

@@ -5,7 +5,6 @@
  */
 
 const df = require('durable-functions');
-const TestConnectorValidator = require('../Lib/TestConnectorValidations');
 const iHubStatus = require('../Lib/IHubStatus');
 
 function* processForLdif(context) {
@@ -93,7 +92,10 @@ module.exports = df.orchestrator(function* (context) {
 	retryOptions.maxRetryIntervalInMilliseconds = 5000;
 
 	try {
-		new TestConnectorValidator(context, { connectorConfiguration, secretsConfiguration }).test();
+		yield context.df.callActivity('TestConnector', {
+			connectorConfiguration,
+			secretsConfiguration
+		});
 		yield* processForLdif(context);
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, { progressCallbackUrl, status: iHubStatus.FINISHED });
 	} catch (e) {
@@ -103,5 +105,6 @@ module.exports = df.orchestrator(function* (context) {
 			status: iHubStatus.FAILED,
 			message: e.message
 		});
+		throw e;
 	}
 });
