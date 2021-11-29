@@ -93,7 +93,7 @@ module.exports = df.orchestrator(function* (context) {
 	retryOptions.maxRetryIntervalInMilliseconds = 5000;
 
 	try {
-		// add ihub test connector validations her
+		// add ihub test connector validations here
 		yield* processForLdif(context);
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, { progressCallbackUrl, status: iHubStatus.FINISHED });
 	} catch (e) {
