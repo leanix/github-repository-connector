@@ -7,10 +7,7 @@ module.exports = async function (context, req) {
 	const input = req.body;
 
 	try {
-		await TestConnectorValidator(context, {
-			connectorConfiguration: input.connectorConfiguration,
-			secretsConfiguration: input.secretsConfiguration
-		});
+		await TestConnectorValidator(context, input);
 	} catch (e) {
 		if (input.testConnector) {
 			context.log('Test connector validations failed, returning...');

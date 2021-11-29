@@ -86,16 +86,13 @@ function* processForLdif(context) {
 }
 
 module.exports = df.orchestrator(function* (context) {
-	const { progressCallbackUrl, connectorConfiguration, secretsConfiguration } = context.bindingData.input;
+	const { progressCallbackUrl } = context.bindingData.input;
 
 	const retryOptions = new df.RetryOptions(5000, 3);
 	retryOptions.maxRetryIntervalInMilliseconds = 5000;
 
 	try {
-		yield context.df.callActivity('TestConnector', {
-			connectorConfiguration,
-			secretsConfiguration
-		});
+		yield context.df.callActivity('TestConnector', context.bindingData.input);
 		yield* processForLdif(context);
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, { progressCallbackUrl, status: iHubStatus.FINISHED });
 	} catch (e) {
