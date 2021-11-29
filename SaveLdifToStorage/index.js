@@ -75,7 +75,7 @@ class SaveLdifToStorageHandler {
 	convertToRepositoryContent(repoData) {
 		return {
 			type: 'Repository',
-			id: externalId.repository(this.orgName, repoData),
+			id: externalId().repository(this.orgName, repoData),
 			data: {
 				name: repoData.name,
 				url: repoData.url,
@@ -83,7 +83,7 @@ class SaveLdifToStorageHandler {
 				description: repoData.description,
 				languages: repoData.languages.edges.map(({ size, node }) => {
 					return {
-						langId: externalId.language(node),
+						langId: externalId().language(node),
 						size: (size / 1000).toFixed(2)
 					};
 				}),
@@ -126,7 +126,7 @@ class SaveLdifToStorageHandler {
 	convertToLanguageContent(langData) {
 		return {
 			type: 'Language',
-			id: externalId.language(langData),
+			id: externalId().language(langData),
 			data: {
 				gitHubHashId: langData.id,
 				name: langData.name
@@ -155,12 +155,12 @@ class SaveLdifToStorageHandler {
 	convertToTeamContent(teamData) {
 		return {
 			type: 'Team',
-			id: externalId.team(this.orgName, teamData),
+			id: externalId().team(this.orgName, teamData),
 			data: {
 				name: teamData.name,
 				gitHubHashId: teamData.id,
-				parent: teamData.parentTeam ? externalId.team(this.orgName, teamData.parentTeam) : null,
-				repositories: teamData.repositories.nodes.map((node) => externalId.repository(this.orgName, node))
+				parent: teamData.parentTeam ? externalId().team(this.orgName, teamData.parentTeam) : null,
+				repositories: teamData.repositories.nodes.map((node) => externalId().repository(this.orgName, node))
 			}
 		};
 	}
