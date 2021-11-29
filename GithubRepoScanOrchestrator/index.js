@@ -5,7 +5,8 @@
  */
 
 const df = require('durable-functions');
-const { iHubStatus, checkRegexExcludeList } = require('./helper');
+const { checkRegexExcludeList } = require('../Lib/helper');
+const iHubStatus = require('../Lib/IHubStatus');
 
 function* processForLdif(context) {
 	const {
@@ -92,6 +93,7 @@ module.exports = df.orchestrator(function* (context) {
 	retryOptions.maxRetryIntervalInMilliseconds = 5000;
 
 	try {
+		// add ihub test connector validations here
 		yield* processForLdif(context);
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, { progressCallbackUrl, status: iHubStatus.FINISHED });
 	} catch (e) {
