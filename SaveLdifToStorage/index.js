@@ -2,7 +2,7 @@
  * Handles LDIF storage
  */
 const { BlobClient, AnonymousCredential } = require('@azure/storage-blob');
-const { externalId } = require('../GithubRepoScanOrchestrator/helper');
+const { externalId } = require('../Lib/helper');
 
 const ldifHeader = {
 	description: 'Map organisation github repos to LeanIX Fact Sheets'

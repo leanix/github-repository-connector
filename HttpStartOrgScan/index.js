@@ -1,5 +1,5 @@
 ﻿const df = require('durable-functions');
-const { iHubStatus } = require('../GithubRepoScanOrchestrator/helper');
+const { iHubStatus } = require('../Lib/helper');
 
 module.exports = async function (context, req) {
 	const client = df.getClient(context);
