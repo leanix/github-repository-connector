@@ -64,7 +64,7 @@ class TestConnectorValidator {
 		try {
 			await this.pingForRequiredDataAccess(orgName);
 		} catch (e) {
-			throw new Error(`Failed to verify source for necessary information access. Error: ${e.message}`);
+			throw new Error(`Failed to verify source for necessary information access. Hint: Check token validity/expiry. Error: ${e.message}`);
 		}
 	}
 }
