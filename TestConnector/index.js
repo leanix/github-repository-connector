@@ -1,6 +1,10 @@
 ﻿const { graphql } = require('@octokit/graphql');
 
 module.exports = async function (context, { connectorConfiguration, secretsConfiguration }) {
+	if (process.env.LX_DEV_SKIP_TEST_CONNECTOR_CHECKS) {
+		context.log('Skipping test connector checks. reason: LX_DEV_SKIP_TEST_CONNECTOR_CHECKS flag is enabled');
+		return;
+	}
 	await new TestConnectorValidator(context, { connectorConfiguration, secretsConfiguration }).test();
 };
 
