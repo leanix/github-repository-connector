@@ -8,14 +8,18 @@ module.exports = async function (context, req) {
 
 	try {
 		await TestConnectorValidator(context, input);
+		if (input.testConnector) {
+			return buildResponseBody({ message: 'Ready!' });
+		}
 	} catch (e) {
 		if (input.testConnector) {
-			context.log('Test connector validations failed, returning...');
+			context.log('Test connector checks failed, returning...');
 			return buildResponseBody({ message: e.message }, 404);
 		}
+		context.log("Test connector checks failed. Still continuing to for monitoring")
 	}
 
-	const instanceId = await client.startNew('GithubRepoScanOrchestrator', input.runId, input);
+		const instanceId = await client.startNew('GithubRepoScanOrchestrator', input.runId, input);
 
 	context.log(`Started orchestration with ID = '${instanceId}'. run ID = ${input.runId}`);
 

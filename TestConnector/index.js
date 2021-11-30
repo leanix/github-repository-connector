@@ -34,14 +34,14 @@ class TestConnectorValidator {
 	async pingForRequiredDataAccess(orgName) {
 		await this.graphqlClient({
 			query: `
-          query($orgName: String!) {
+          query basic($orgName: String!) {
                 viewer {
                   login
                 }
-              },
-              organization(login: $orgName) {
-                id
-              },
+                organization(login: $orgName) {
+                	id
+              	}
+              }
 					`,
 			orgName
 		});
