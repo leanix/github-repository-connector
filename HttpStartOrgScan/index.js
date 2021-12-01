@@ -7,8 +7,8 @@ module.exports = async function (context, req) {
 	const input = req.body;
 
 	try {
-		await TestConnectorValidator(context, input);
 		if (input.testConnector) {
+			await TestConnectorValidator(context, input);
 			return buildResponseBody({ message: 'Ready!' });
 		}
 	} catch (e) {
