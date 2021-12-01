@@ -5,7 +5,6 @@
  */
 
 const df = require('durable-functions');
-const { checkRegexExcludeList } = require('../Lib/helper');
 const iHubStatus = require('../Lib/IHubStatus');
 const logStatus = require('../Lib/connectorLogStatus');
 const ConnectorLogger = require('../Lib/connectorLogger');
@@ -19,10 +18,8 @@ function* processForLdif(context, logger) {
 	} = context.bindingData.input;
 	const scannerCapacity = 100;
 
-	const repoNamesExcludeListChecked = checkRegexExcludeList(repoNamesExcludeList);
-	if (!context.df.isReplaying) {
-		yield logger.log(context, logStatus.INFO, 'Regex validation completed');
-	}
+	const repoNamesExcludeListChecked = repoNamesExcludeList ? repoNamesExcludeList : [];
+
 	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', { orgName, repoNamesExcludeListChecked, ghToken });
 	if (!context.df.isReplaying) {
 		yield logger.log(context, logStatus.INFO, 'All repo Ids fetching is completed');
@@ -111,11 +108,8 @@ module.exports = df.orchestrator(function* (context) {
 	retryOptions.maxRetryIntervalInMilliseconds = 5000;
 
 	try {
-		// add ihub test connector validations here
-		if (!context.df.isReplaying) {
-			yield logger.log(context, logStatus.INFO, 'Calling processForLdif method');
-		}
-		yield* processForLdif(context, logger);
+		yield context.df.callActivity('TestConnector', context.bindingData.input);
+		yield* processForLdif(context);
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, { progressCallbackUrl, status: iHubStatus.FINISHED });
 	} catch (e) {
 		context.log(e);
@@ -125,5 +119,6 @@ module.exports = df.orchestrator(function* (context) {
 			status: iHubStatus.FAILED,
 			message: e.message
 		});
+		throw e;
 	}
 });
