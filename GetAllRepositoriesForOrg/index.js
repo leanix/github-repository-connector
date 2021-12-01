@@ -1,5 +1,5 @@
 ﻿const { graphql } = require('@octokit/graphql');
-const ConnectorLogger = require('../Lib/connectorLogger')
+const ConnectorLogger = require('../Lib/connectorLogger');
 const logStatus = require('../Lib/connectorLogStatus');
 
 function excludeListedRepositoriesIDsList(repositoriesData, repoNamesExcludeListChecked) {
@@ -67,14 +67,14 @@ module.exports = async function (context, { orgName, repoNamesExcludeListChecked
 			authorization: `token ${ghToken}`
 		}
 	});
-	const logger = ConnectorLogger.getConnectorLogger(context)
+	const logger = ConnectorLogger.getConnectorLogger(context);
 	const finalResult = await getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListChecked);
 
 	if (!finalResult || !finalResult.length) {
-		await logger.log(context, logStatus.ERROR, `Zero repositories found in ${orgName} GitHub organisation.`)
+		await logger.log(context, logStatus.ERROR, `Zero repositories found in ${orgName} GitHub organisation.`);
 		throw new Error(`Zero repositories found in ${orgName} GitHub organisation.`);
 	}
-	await logger.log(context, logStatus.INFO, "Fetched "+ finalResult.length.toString()+" Org Repositories Ids")
+	await logger.log(context, logStatus.INFO, 'Fetched ' + finalResult.length.toString() + ' Org Repositories Ids');
 
 	context.done(null, finalResult);
 };
