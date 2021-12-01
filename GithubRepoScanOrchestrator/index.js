@@ -5,6 +5,7 @@
  */
 
 const df = require('durable-functions');
+const { checkRegexExcludeList } = require('../Lib/helper');
 const iHubStatus = require('../Lib/IHubStatus');
 
 function* processForLdif(context) {
@@ -17,7 +18,7 @@ function* processForLdif(context) {
 	} = context.bindingData.input;
 	const scannerCapacity = 100;
 
-	const repoNamesExcludeListChecked = repoNamesExcludeList ? repoNamesExcludeList : [];
+	const repoNamesExcludeListChecked = checkRegexExcludeList(repoNamesExcludeList);
 
 	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', { orgName, repoNamesExcludeListChecked, ghToken });
 
@@ -92,7 +93,7 @@ module.exports = df.orchestrator(function* (context) {
 	retryOptions.maxRetryIntervalInMilliseconds = 5000;
 
 	try {
-		yield context.df.callActivity('TestConnector', context.bindingData.input);
+		// add ihub test connector validations here
 		yield* processForLdif(context);
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, { progressCallbackUrl, status: iHubStatus.FINISHED });
 	} catch (e) {
@@ -102,6 +103,5 @@ module.exports = df.orchestrator(function* (context) {
 			status: iHubStatus.FAILED,
 			message: e.message
 		});
-		throw e;
 	}
 });
