@@ -9,7 +9,7 @@ const iHubStatus = require('../Lib/IHubStatus');
 
 function* processForLdif(context) {
 	const {
-		connectorConfiguration: { orgName, repoNamesExcludeList },
+		connectorConfiguration: { orgName, repoNamesExcludeList, flags },
 		secretsConfiguration: { ghToken },
 		ldifResultUrl,
 		progressCallbackUrl,
@@ -34,12 +34,17 @@ function* processForLdif(context) {
 
 	const partialResults = yield context.df.Task.all(output);
 
+	
 	try {
-		var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
-			orgName,
-			ghToken,
-			orgRepositoriesIds: repositoriesIds
-		});
+		if (!flags.importTeams) {
+			teamResults = [];
+		} else {
+			var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
+				orgName,
+				ghToken,
+				orgRepositoriesIds: repositoriesIds
+			});
+		}
 	} catch (e) {
 		context.log(e);
 		teamResults = [];
@@ -80,7 +85,8 @@ function* processForLdif(context) {
 		blobStorageSasUrl: ldifResultUrl,
 		metadata: {
 			bindingKey,
-			orgName
+			orgName,
+			flags
 		}
 	});
 }

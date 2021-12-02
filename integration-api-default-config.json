@@ -446,7 +446,7 @@
 				"processorDescription": "This inboundFactSheet creates a team FS for every team content type",
 				"type": "Team",
 				"filter": {
-					"exactType": "Team"
+					"advanced": "${header.customFields.flags.importTeams != false && content.type == 'Team'}"
 				},
 				"identifier": {
 					"external": {
@@ -521,7 +521,7 @@
 				"processorDescription": "This inboundRelation creates a relation b/w team and microservice FS",
 				"type": "relTeamToMicroservice",
 				"filter": {
-					"exactType": "Team"
+					"advanced": "${header.customFields.flags.importTeams == true && content.type == 'Team'}"
 				},
 				"from": {
 					"external": {
@@ -553,7 +553,7 @@
 				"processorDescription": "This inboundRelation creates a relation b/w team and it's parent team FS iff parent exists",
 				"type": "relToParent",
 				"filter": {
-					"advanced": "${content.type == 'Team' && content.data.parent != null }"
+					"advanced": "${header.customFields.flags.importTeams != false && content.type == 'Team' && content.data.parent != null }"
 				},
 				"from": {
 					"external": {
@@ -679,7 +679,7 @@
 				"processorName": "Add 'Github repository' Data Source tag on Microservice Factsheets",
 				"processorDescription": "Adds 'Github repository' Data Source tag on Software Artifact type FS for data source tracking",
 				"filter": {
-					"advanced": "${content.type == 'Repository' || content.type == 'Language' || content.type == 'Team'}"
+					"advanced": "${content.type == 'Repository' || content.type == 'Language' || (content.type == 'Team' && header.customFields.flags.importTeams != false)}"
 				},
 				"factSheets": {
 					"external": {
