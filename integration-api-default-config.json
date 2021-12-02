@@ -521,7 +521,7 @@
 				"processorDescription": "This inboundRelation creates a relation b/w team and microservice FS",
 				"type": "relTeamToMicroservice",
 				"filter": {
-					"advanced": "${header.customFields.flags.importTeams == true && content.type == 'Team'}"
+					"advanced": "${header.customFields.flags.importTeams != false && content.type == 'Team'}"
 				},
 				"from": {
 					"external": {

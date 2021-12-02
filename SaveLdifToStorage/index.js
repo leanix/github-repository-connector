@@ -21,7 +21,7 @@ class SaveLdifToStorageHandler {
 	constructor(context, orgName, flags) {
 		this.context = context;
 		this.orgName = orgName;
-		this.flags = flags
+		this.flags = flags;
 	}
 
 	/**
