@@ -34,7 +34,6 @@ function* processForLdif(context) {
 
 	const partialResults = yield context.df.Task.all(output);
 
-	
 	try {
 		if (!flags.importTeams) {
 			teamResults = [];
