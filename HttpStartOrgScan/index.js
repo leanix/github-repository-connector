@@ -6,13 +6,11 @@ module.exports = async function (context, req) {
 	const client = df.getClient(context);
 	const input = req.body;
 
-	try {
-		if (input.testConnector) {
+	if (input.testConnector) {
+		try {
 			await TestConnectorValidator(context, input);
 			return buildResponseBody({ message: 'Ready!' });
-		}
-	} catch (e) {
-		if (input.testConnector) {
+		} catch (e) {
 			context.log('Test connector checks failed, returning...');
 			return buildResponseBody({ message: e.message }, 404);
 		}
