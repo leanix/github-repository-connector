@@ -1,13 +1,15 @@
 ﻿const df = require('durable-functions');
 const iHubStatus = require('../Lib/IHubStatus');
-const ConnectorLogger = require('../Lib/connectorLogger');
+const { ConnectorLoggerFactory } = require('../Lib/connectorLogger');
 const TestConnectorValidator = require('../TestConnector');
 
 module.exports = async function (context, req) {
 	const client = df.getClient(context);
 	const input = req.body;
-	const logger = new ConnectorLogger(context.bindingData.connectorLoggingUrl, context.bindingData.runId);
 
+	//Initialize Connector Logger with required params
+	const logger = await ConnectorLoggerFactory.getInstance(context.bindingData.connectorLoggingUrl, context.bindingData.runId)
+	
 	if (input.testConnector) {
 		try {
 			await TestConnectorValidator(context, input);

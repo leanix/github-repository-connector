@@ -1,5 +1,5 @@
 ﻿const { graphql } = require('@octokit/graphql');
-const ConnectorLogger = require('../Lib/connectorLogger');
+const { ConnectorLoggerFactory } = require('../Lib/connectorLogger');
 
 module.exports = async function (context, { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId }) {
 	if (process.env.LX_DEV_SKIP_TEST_CONNECTOR_CHECKS) {
@@ -15,7 +15,7 @@ class TestConnectorValidator {
 		this.connectorConfiguration = connectorConfiguration;
 		this.secretsConfiguration = secretsConfiguration;
 		this.connectorLoggingUrl = connectorLoggingUrl;
-		this.runId = runId
+		this.runId = runId;
 		this.graphqlClient = graphql.defaults({
 			headers: {
 				authorization: `token ${this.secretsConfiguration.ghToken}`
@@ -53,7 +53,7 @@ class TestConnectorValidator {
 	async test() {
 		const { orgName, repoNamesExcludeList } = this.connectorConfiguration;
 		const { ghToken } = this.secretsConfiguration;
-		const logger = new ConnectorLogger(this.connectorLoggingUrl, this.runId);
+		const logger = ConnectorLoggerFactory.getConnectorLogger();
 		logger.logInfo(this.context, 'Checking input validity and correctness');
 		if (!orgName) {
 			logger.logError(this.context, 'GitHub organisation name cannot be empty');

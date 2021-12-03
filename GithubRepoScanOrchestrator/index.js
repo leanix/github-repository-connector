@@ -6,7 +6,7 @@
 
 const df = require('durable-functions');
 const iHubStatus = require('../Lib/IHubStatus');
-const ConnectorLogger = require('../Lib/connectorLogger');
+const { ConnectorLoggerFactory } = require('../Lib/connectorLogger');
 function* processForLdif(context, logger) {
 	const {
 		connectorConfiguration: { orgName, repoNamesExcludeList, flags },
@@ -103,7 +103,7 @@ function* processForLdif(context, logger) {
 		repoIdsVisibilityMap = {};
 	}
 	if (!context.df.isReplaying) {
-		yield logger.logInfo(context, 'All Repos visibility data fetching is completed');
+		yield logger.logInfo(context, "Completed 'GetReposVisibilityData' execution.");
 		yield logger.logInfo(context, "Starting 'SaveLdifToStorage' to generate LDIF and save it into blob storage url.");
 	}
 	yield context.df.callActivity('UpdateProgressToIHub', {
@@ -130,7 +130,7 @@ function* processForLdif(context, logger) {
 
 module.exports = df.orchestrator(function* (context) {
 	const { progressCallbackUrl } = context.bindingData.input;
-	const logger = new ConnectorLogger(context.bindingData.input.connectorLoggingUrl, context.bindingData.input.runId);
+	const logger = ConnectorLoggerFactory.getConnectorLogger();
 	const retryOptions = new df.RetryOptions(5000, 3);
 	retryOptions.maxRetryIntervalInMilliseconds = 5000;
 

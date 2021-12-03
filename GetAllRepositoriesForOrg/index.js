@@ -1,5 +1,5 @@
 ﻿const { graphql } = require('@octokit/graphql');
-const ConnectorLogger = require('../Lib/connectorLogger');
+const { ConnectorLoggerFactory } = require('../Lib/connectorLogger');
 
 function excludeListedRepositoriesIDsList(repositoriesData, repoNamesExcludeListChecked) {
 	const regexExcludeListArray = repoNamesExcludeListChecked.map((regexString) => new RegExp(regexString));
@@ -66,7 +66,7 @@ module.exports = async function (context, { orgName, repoNamesExcludeListChecked
 			authorization: `token ${ghToken}`
 		}
 	});
-	const logger = new ConnectorLogger(connectorLoggingUrl, runId);
+	const logger = ConnectorLoggerFactory.getConnectorLogger();
 	const finalResult = await getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListChecked);
 
 	if (!finalResult || !finalResult.length) {
