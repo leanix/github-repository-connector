@@ -1,26 +1,26 @@
 ﻿const df = require('durable-functions');
 const iHubStatus = require('../Lib/IHubStatus');
-const logStatus = require('../Lib/connectorLogStatus');
 const ConnectorLogger = require('../Lib/connectorLogger');
 const TestConnectorValidator = require('../TestConnector');
 
 module.exports = async function (context, req) {
 	const client = df.getClient(context);
 	const input = req.body;
-	const logger = ConnectorLogger.getConnectorLogger(context);
-	await logger.log(context, logStatus.INFO, 'Starting Orchestration.....');
-
+	const logger = new ConnectorLogger(context.bindingData.connectorLoggingUrl, context.bindingData.runId);
 	try {
 		if (input.testConnector) {
 			await TestConnectorValidator(context, input);
+			await logger.logInfo(context, 'Test connection was Successful!');
 			return buildResponseBody({ message: 'Ready!' });
 		}
 	} catch (e) {
 		if (input.testConnector) {
-			context.log('Test connector checks failed, returning...');
+			await logger.logError(context, e.message);
+			await logger.logInfo(context, 'Test connector checks failed, returning...');
 			return buildResponseBody({ message: e.message }, 404);
 		}
 	}
+	await logger.logInfo(context, 'Starting the Orchestration...');
 
 	const instanceId = await client.startNew('GithubRepoScanOrchestrator', input.runId, input);
 

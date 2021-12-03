@@ -6,7 +6,6 @@
 
 const df = require('durable-functions');
 const iHubStatus = require('../Lib/IHubStatus');
-const logStatus = require('../Lib/connectorLogStatus');
 const ConnectorLogger = require('../Lib/connectorLogger');
 function* processForLdif(context, logger) {
 	const {
@@ -14,16 +13,30 @@ function* processForLdif(context, logger) {
 		secretsConfiguration: { ghToken },
 		ldifResultUrl,
 		progressCallbackUrl,
-		bindingKey
+		bindingKey,
+		connectorLoggingUrl,
+		runId
 	} = context.bindingData.input;
 	const scannerCapacity = 100;
 
-	const repoNamesExcludeListChecked = repoNamesExcludeList ? repoNamesExcludeList : [];
-
-	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', { orgName, repoNamesExcludeListChecked, ghToken });
 	if (!context.df.isReplaying) {
-		yield logger.log(context, logStatus.INFO, 'All repo Ids fetching is completed');
+		yield logger.logInfo(context, "Starting 'GetAllRepositoriesForOrg' to fetch all repo Ids");
 	}
+
+	const repoNamesExcludeListChecked = repoNamesExcludeList ? repoNamesExcludeList : [];
+	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', {
+		orgName,
+		repoNamesExcludeListChecked,
+		ghToken,
+		connectorLoggingUrl,
+		runId
+	});
+
+	if (!context.df.isReplaying) {
+		yield logger.logInfo(context, "Completed 'GetAllRepositoriesForOrg' execution.");
+		yield logger.logInfo(context, "Starting 'GetSubReposData' to fetch all repos complete data");
+	}
+
 	const workPerScanner = [];
 	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
 		workPerScanner.push(repositoriesIds.slice(i, i + scannerCapacity));
@@ -36,24 +49,28 @@ function* processForLdif(context, logger) {
 	}
 
 	const partialResults = yield context.df.Task.all(output);
+
 	if (!context.df.isReplaying) {
-		yield logger.log(context, logStatus.INFO, 'All repo data fetching is completed');
+		yield logger.logInfo(context, "Completed 'GetSubReposData' execution.");
+		yield logger.logInfo(context, "Starting 'GetOrgTeamsData' to fetch teams related data");
 	}
+
 	try {
 		var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
 			orgName,
 			ghToken,
-			orgRepositoriesIds: repositoriesIds
+			orgRepositoriesIds: repositoriesIds,
+			connectorLoggingUrl,
+			runId
 		});
 	} catch (e) {
 		context.log(e);
-		if (!context.df.isReplaying) {
-			yield logger.log(context, logStatus.ERROR, e.message);
-		}
+		yield logger.logError(context, e.message);
 		teamResults = [];
 	}
 	if (!context.df.isReplaying) {
-		yield logger.log(context, logStatus.INFO, 'All Team data fetching is completed');
+		yield logger.logInfo(context, "Completed 'GetOrgTeamsData' execution.");
+		yield logger.logInfo(context, "Starting 'GetReposVisibilityData' to fetch repo visibility related data");
 	}
 	const repoVisibilityOutput = [];
 	const repoVisibilities = ['private', 'public', 'internal'];
@@ -74,11 +91,12 @@ function* processForLdif(context, logger) {
 		}
 	} catch (e) {
 		context.log(e);
-		yield logger.log(context, logStatus.ERROR, e.message);
+		yield logger.logError(context, e.message);
 		repoIdsVisibilityMap = {};
 	}
 	if (!context.df.isReplaying) {
-		yield logger.log(context, logStatus.INFO, 'All Repos visibility data fetching is completed');
+		yield logger.logInfo(context, 'All Repos visibility data fetching is completed');
+		yield logger.logInfo(context, "Starting 'SaveLdifToStorage' to generate LDIF and save it into blob storage url.");
 	}
 	yield context.df.callActivity('UpdateProgressToIHub', {
 		progressCallbackUrl,
@@ -97,23 +115,23 @@ function* processForLdif(context, logger) {
 		}
 	});
 	if (!context.df.isReplaying) {
-		yield logger.log(context, logStatus.INFO, 'Saving to LDIF is completed');
+		yield logger.logInfo(context, "Completed 'SaveLdifToStorage' execution.");
 	}
 }
 
 module.exports = df.orchestrator(function* (context) {
 	const { progressCallbackUrl } = context.bindingData.input;
-	const logger = ConnectorLogger.getConnectorLogger(context);
+	const logger = new ConnectorLogger(context.bindingData.input.connectorLoggingUrl, context.bindingData.input.runId);
 	const retryOptions = new df.RetryOptions(5000, 3);
 	retryOptions.maxRetryIntervalInMilliseconds = 5000;
 
 	try {
 		yield context.df.callActivity('TestConnector', context.bindingData.input);
-		yield* processForLdif(context);
+		yield* processForLdif(context, logger);
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, { progressCallbackUrl, status: iHubStatus.FINISHED });
 	} catch (e) {
 		context.log(e);
-		yield logger.log(context, logStatus.ERROR, e.message);
+		yield logger.logError(context, e.message);
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, {
 			progressCallbackUrl,
 			status: iHubStatus.FAILED,
