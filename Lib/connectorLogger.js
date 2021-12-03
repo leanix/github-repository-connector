@@ -11,13 +11,14 @@ class ConnectorLogger {
 	runId = null;
 
 	constructor(connectorLoggingUrl, runId) {
-		if (connectorLoggingUrl) {
-			if (!this.blockBlobClient)
-				this.blockBlobClient = new BlobClient(connectorLoggingUrl, new AnonymousCredential()).getAppendBlobClient();
-			this.runId = runId;
-		} else {
-			context.log('Error: Connector Logging Url is empty');
+		if (!connectorLoggingUrl) {
+			throw new Error("Error: Connector Logging Url is empty");
 		}
+
+		if (!this.blockBlobClient) {
+			this.blockBlobClient = new BlobClient(connectorLoggingUrl, new AnonymousCredential()).getAppendBlobClient();
+		}
+		this.runId = runId;
 	}
 
 	async logInfo(context, message) {
