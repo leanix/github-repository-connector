@@ -13,9 +13,7 @@ function* processForLdif(context, logger) {
 		secretsConfiguration: { ghToken },
 		ldifResultUrl,
 		progressCallbackUrl,
-		bindingKey,
-		connectorLoggingUrl,
-		runId
+		bindingKey
 	} = context.bindingData.input;
 	const scannerCapacity = 100;
 
@@ -27,9 +25,7 @@ function* processForLdif(context, logger) {
 	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', {
 		orgName,
 		repoNamesExcludeListChecked,
-		ghToken,
-		connectorLoggingUrl,
-		runId
+		ghToken
 	});
 
 	if (!context.df.isReplaying) {
@@ -64,9 +60,7 @@ function* processForLdif(context, logger) {
 			var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
 				orgName,
 				ghToken,
-				orgRepositoriesIds: repositoriesIds,
-				connectorLoggingUrl,
-				runId
+				orgRepositoriesIds: repositoriesIds
 			});
 			if (!context.df.isReplaying) {
 				yield logger.logInfo(context, "Completed 'GetOrgTeamsData' execution.");

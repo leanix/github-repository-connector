@@ -8,8 +8,8 @@ module.exports = async function (context, req) {
 	const input = req.body;
 
 	//Initialize Connector Logger with required params
-	const logger = await ConnectorLoggerFactory.getInstance(context.bindingData.connectorLoggingUrl, context.bindingData.runId)
-	
+	const logger = await ConnectorLoggerFactory.getInstance(context.bindingData.connectorLoggingUrl, context.bindingData.runId);
+
 	if (input.testConnector) {
 		try {
 			await TestConnectorValidator(context, input);

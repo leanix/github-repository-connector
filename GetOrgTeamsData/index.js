@@ -138,7 +138,7 @@ class GetOrgTeamsDataHandler {
 	}
 }
 
-module.exports = async function (context, { orgName, ghToken, orgRepositoriesIds, connectorLoggingUrl, runId }) {
+module.exports = async function (context, { orgName, ghToken, orgRepositoriesIds }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
 			authorization: `token ${ghToken}`
@@ -148,6 +148,6 @@ module.exports = async function (context, { orgName, ghToken, orgRepositoriesIds
 	let handler = new GetOrgTeamsDataHandler(context);
 	const logger = ConnectorLoggerFactory.getConnectorLogger();
 	const finalResult = await handler.getAllTeamsWithRepos(graphqlClient, orgName, orgRepositoriesIds);
-	logger.logInfo(context, `Fetch ${finalResult.length} teams data from the org given`);
+	await logger.logInfo(context, `Fetch ${finalResult.length} teams data from the org given`);
 	context.done(null, finalResult);
 };
