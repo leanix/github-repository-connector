@@ -45,16 +45,16 @@ var ConnectorLoggerFactory = (function () {
 		}
 	}
 
-	var newLogger;
+	var loggerInstance;
 	return {
 		getInstance: function (connectorLoggingUrl, runId) {
-			if (newLogger == null) {
-				newLogger = new ConnectorLogger(connectorLoggingUrl, runId);
+			if (loggerInstance == null) {
+				loggerInstance = new ConnectorLogger(connectorLoggingUrl, runId);
 			}
-			return newLogger;
+			return loggerInstance;
 		},
 		getConnectorLogger: function () {
-			return newLogger;
+			return loggerInstance;
 		}
 	};
 })();
