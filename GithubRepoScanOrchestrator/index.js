@@ -52,13 +52,15 @@ function* processForLdif(context, logger) {
 
 	if (!context.df.isReplaying) {
 		yield logger.logInfo(context, "Completed 'GetSubReposData' execution.");
-		yield logger.logInfo(context, "Starting 'GetOrgTeamsData' to fetch teams related data");
 	}
 
 	try {
 		if (flags && !flags.importTeams) {
 			teamResults = [];
 		} else {
+			if (!context.df.isReplaying) {
+				yield logger.logInfo(context, "Starting 'GetOrgTeamsData' to fetch teams related data");
+			}
 			var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
 				orgName,
 				ghToken,
@@ -66,6 +68,9 @@ function* processForLdif(context, logger) {
 				connectorLoggingUrl,
 				runId
 			});
+			if (!context.df.isReplaying) {
+				yield logger.logInfo(context, "Completed 'GetOrgTeamsData' execution.");
+			}
 		}
 	} catch (e) {
 		context.log(e);
@@ -73,7 +78,6 @@ function* processForLdif(context, logger) {
 		teamResults = [];
 	}
 	if (!context.df.isReplaying) {
-		yield logger.logInfo(context, "Completed 'GetOrgTeamsData' execution.");
 		yield logger.logInfo(context, "Starting 'GetReposVisibilityData' to fetch repo visibility related data");
 	}
 	const repoVisibilityOutput = [];
