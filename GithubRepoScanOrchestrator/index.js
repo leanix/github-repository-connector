@@ -9,7 +9,7 @@ const iHubStatus = require('../Lib/IHubStatus');
 const ConnectorLogger = require('../Lib/connectorLogger');
 function* processForLdif(context, logger) {
 	const {
-		connectorConfiguration: { orgName, repoNamesExcludeList },
+		connectorConfiguration: { orgName, repoNamesExcludeList, flags },
 		secretsConfiguration: { ghToken },
 		ldifResultUrl,
 		progressCallbackUrl,
@@ -56,13 +56,17 @@ function* processForLdif(context, logger) {
 	}
 
 	try {
-		var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
-			orgName,
-			ghToken,
-			orgRepositoriesIds: repositoriesIds,
-			connectorLoggingUrl,
-			runId
-		});
+		if (flags && !flags.importTeams) {
+			teamResults = [];
+		} else {
+			var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
+				orgName,
+				ghToken,
+				orgRepositoriesIds: repositoriesIds,
+				connectorLoggingUrl,
+				runId
+			});
+		}
 	} catch (e) {
 		context.log(e);
 		yield logger.logError(context, e.message);
@@ -111,7 +115,8 @@ function* processForLdif(context, logger) {
 		blobStorageSasUrl: ldifResultUrl,
 		metadata: {
 			bindingKey,
-			orgName
+			orgName,
+			flags
 		}
 	});
 	if (!context.df.isReplaying) {

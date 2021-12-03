@@ -7,14 +7,13 @@ module.exports = async function (context, req) {
 	const client = df.getClient(context);
 	const input = req.body;
 	const logger = new ConnectorLogger(context.bindingData.connectorLoggingUrl, context.bindingData.runId);
-	try {
-		if (input.testConnector) {
+
+	if (input.testConnector) {
+		try {
 			await TestConnectorValidator(context, input);
 			await logger.logInfo(context, 'Test connection was Successful!');
 			return buildResponseBody({ message: 'Ready!' });
-		}
-	} catch (e) {
-		if (input.testConnector) {
+		} catch (e) {
 			await logger.logError(context, e.message);
 			await logger.logInfo(context, 'Test connector checks failed, returning...');
 			return buildResponseBody({ message: e.message }, 404);

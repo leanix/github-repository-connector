@@ -5,7 +5,10 @@
 	"documentationUrl": "https://docs-vsm.leanix.net/docs/github",
 	"connectorConfiguration": {
 		"orgName": "leanix",
-		"repoNamesExcludeList": []
+		"repoNamesExcludeList": [],
+		"flags": {
+			"importTeams": true
+		}
 	},
 	"secretsConfiguration": {
 		"ghToken": ""

@@ -10,17 +10,18 @@ const ldifHeader = {
 
 module.exports = async function (
 	context,
-	{ partialResults, teamResults, repoIdsVisibilityMap, blobStorageSasUrl, metadata: { bindingKey, orgName } }
+	{ partialResults, teamResults, repoIdsVisibilityMap, blobStorageSasUrl, metadata: { bindingKey, orgName, flags } }
 ) {
-	let handler = new SaveLdifToStorageHandler(context, orgName);
+	let handler = new SaveLdifToStorageHandler(context, orgName, flags);
 	const contentArray = handler.handleLdifCreation(partialResults, teamResults, repoIdsVisibilityMap);
 	return await handler.uploadToBlob(handler.getFinalLdif(contentArray, bindingKey), blobStorageSasUrl);
 };
 
 class SaveLdifToStorageHandler {
-	constructor(context, orgName) {
+	constructor(context, orgName, flags) {
 		this.context = context;
 		this.orgName = orgName;
+		this.flags = flags;
 	}
 
 	/**
@@ -185,7 +186,10 @@ class SaveLdifToStorageHandler {
 		return {
 			...ldifHeader,
 			customFields: {
-				orgName: this.orgName
+				orgName: this.orgName,
+				flags: {
+					...this.flags
+				}
 			},
 			...ldifContent
 		};
