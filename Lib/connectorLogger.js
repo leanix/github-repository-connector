@@ -12,12 +12,9 @@ class ConnectorLogger {
 
 	constructor(connectorLoggingUrl, runId) {
 		if (!connectorLoggingUrl) {
-			throw new Error("Error: Connector Logging Url is empty");
+			throw new Error('Error: Connector Logging Url is empty');
 		}
-
-		if (!this.blockBlobClient) {
-			this.blockBlobClient = new BlobClient(connectorLoggingUrl, new AnonymousCredential()).getAppendBlobClient();
-		}
+		this.blockBlobClient = new BlobClient(connectorLoggingUrl, new AnonymousCredential()).getAppendBlobClient();
 		this.runId = runId;
 	}
 
@@ -25,19 +22,11 @@ class ConnectorLogger {
 		context.log(message);
 
 		if (this.blockBlobClient) {
-			this.blockBlobClient
-				.createIfNotExists()
-				.then(async () => {
-					const messageStr = typeof message === 'string' ? message : JSON.stringify(message, undefined, 2);
-					await this.blockBlobClient.appendBlock(
-						`${new Date().toISOString()} ${ConnectorLogger.logStatus.INFO.toString()}: [ Run ID: ${this.runId.toString()}] ${messageStr}
-`,
-						messageStr.length
-					);
-				})
-				.catch((error) => {
-					context.log(`Connector Log Error: Failed to get log. error: ${error.message}`);
-				});
+			const messageStr = typeof message === 'string' ? message : JSON.stringify(message, undefined, 2);
+			await this.blockBlobClient.appendBlock(
+				`${new Date().toISOString()} ${ConnectorLogger.logStatus.INFO.toString()}: [ Run ID: ${this.runId.toString()}] ${messageStr}`,
+				messageStr.length
+			);
 		} else {
 			context.log('Error: Connector Url Blob Client not initialized');
 		}
@@ -47,19 +36,11 @@ class ConnectorLogger {
 		context.log(message);
 
 		if (this.blockBlobClient) {
-			this.blockBlobClient
-				.createIfNotExists()
-				.then(async () => {
-					const messageStr = typeof message === 'string' ? message : JSON.stringify(message, undefined, 2);
-					await this.blockBlobClient.appendBlock(
-						`${new Date().toISOString()} ${ConnectorLogger.logStatus.ERROR.toString()}: [ Run ID: ${this.runId.toString()}] ${messageStr}
-`,
-						messageStr.length
-					);
-				})
-				.catch((error) => {
-					context.log(`Connector Log Error: Failed to get log. error: ${error.message}`);
-				});
+			const messageStr = typeof message === 'string' ? message : JSON.stringify(message, undefined, 2);
+			await this.blockBlobClient.appendBlock(
+				`${new Date().toISOString()} ${ConnectorLogger.logStatus.ERROR.toString()}: [ Run ID: ${this.runId.toString()}] ${messageStr}`,
+				messageStr.length
+			);
 		} else {
 			context.log('Connector Log Error: Connector Url Blob Client not initialized');
 		}

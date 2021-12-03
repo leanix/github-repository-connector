@@ -1,20 +1,21 @@
 ﻿const { graphql } = require('@octokit/graphql');
 const ConnectorLogger = require('../Lib/connectorLogger');
 
-module.exports = async function (context, { connectorConfiguration, secretsConfiguration }) {
+module.exports = async function (context, { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId }) {
 	if (process.env.LX_DEV_SKIP_TEST_CONNECTOR_CHECKS) {
 		context.log('Skipping test connector checks. reason: LX_DEV_SKIP_TEST_CONNECTOR_CHECKS flag is enabled');
 		return;
 	}
-	await new TestConnectorValidator(context, { connectorConfiguration, secretsConfiguration }).test();
+	await new TestConnectorValidator(context, { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId }).test();
 };
 
 class TestConnectorValidator {
-	constructor(context, { connectorConfiguration, secretsConfiguration }) {
-		context.log('INSIDE TEST CONNECTOR', context.bindingData);
+	constructor(context, { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId }) {
 		this.context = context;
 		this.connectorConfiguration = connectorConfiguration;
 		this.secretsConfiguration = secretsConfiguration;
+		this.connectorLoggingUrl = connectorLoggingUrl;
+		this.runId = runId
 		this.graphqlClient = graphql.defaults({
 			headers: {
 				authorization: `token ${this.secretsConfiguration.ghToken}`
@@ -52,7 +53,7 @@ class TestConnectorValidator {
 	async test() {
 		const { orgName, repoNamesExcludeList } = this.connectorConfiguration;
 		const { ghToken } = this.secretsConfiguration;
-		const logger = new ConnectorLogger(this.context.bindingData.connectorLoggingUrl, this.context.bindingData.runId);
+		const logger = new ConnectorLogger(this.connectorLoggingUrl, this.runId);
 		logger.logInfo(this.context, 'Checking input validity and correctness');
 		if (!orgName) {
 			logger.logError(this.context, 'GitHub organisation name cannot be empty');
