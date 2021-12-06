@@ -7,7 +7,6 @@ module.exports = async function (context, req) {
 	const client = df.getClient(context);
 	const input = req.body;
 
-	//Initialize Connector Logger with required params
 	const logger = getLoggerInstanceFromContext(context);
 
 	if (input.testConnector) {
