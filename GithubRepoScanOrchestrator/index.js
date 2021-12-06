@@ -26,8 +26,7 @@ function* processForLdif(context, logger) {
 		orgName,
 		repoNamesExcludeListChecked,
 		ghToken,
-		connectorLoggingUrl,
-		runId
+		metadata: { connectorLoggingUrl, runId }
 	});
 
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, "Completed 'GetAllRepositoriesForOrg' execution.");
@@ -57,8 +56,7 @@ function* processForLdif(context, logger) {
 				orgName,
 				ghToken,
 				orgRepositoriesIds: repositoriesIds,
-				connectorLoggingUrl,
-				runId
+				metadata: { connectorLoggingUrl, runId }
 			});
 			yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, "Completed 'GetOrgTeamsData' execution.");
 		}
