@@ -29,6 +29,23 @@ var ConnectorLoggerFactory = (function () {
 			}
 		}
 
+		async logInfoFromOrchestrator(context, isReplaying, message) {
+			if (!isReplaying) {
+				context.log(message);
+
+				if (this.blockBlobClient) {
+					await this.blockBlobClient.createIfNotExists();
+					const messageStr = typeof message === 'string' ? message : JSON.stringify(message, undefined, 2);
+					await this.blockBlobClient.appendBlock(
+						`${new Date().toISOString()} ${logStatus.INFO.toString()}: [ Run ID: ${this.runId.toString()}] ${messageStr}\n`,
+						messageStr.length
+					);
+				} else {
+					context.log('Error: Connector Url Blob Client not initialized');
+				}
+			}
+		}
+
 		async logError(context, message) {
 			context.log(message);
 

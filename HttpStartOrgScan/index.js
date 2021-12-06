@@ -21,7 +21,7 @@ module.exports = async function (context, req) {
 			return buildResponseBody({ message: e.message }, 404);
 		}
 	}
-	await logger.logInfo(context, 'Starting the Orchestration...');
+	await logger.logInfo(context, 'Starting the connector');
 
 	const instanceId = await client.startNew('GithubRepoScanOrchestrator', input.runId, input);
 

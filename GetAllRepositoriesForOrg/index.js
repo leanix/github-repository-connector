@@ -73,7 +73,7 @@ module.exports = async function (context, { orgName, repoNamesExcludeListChecked
 		await logger.logError(context, `Zero repositories found in ${orgName} GitHub organisation.`);
 		throw new Error(`Zero repositories found in ${orgName} GitHub organisation.`);
 	}
-	await logger.logInfo(context, 'Fetched ' + finalResult.length.toString() + ' Org Repositories Ids');
+	await logger.logInfo(context, `Fetched Org Repositories Ids. Result : ${finalResult.length.toString()} repos`);
 
 	context.done(null, finalResult);
 };

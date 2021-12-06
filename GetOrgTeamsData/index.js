@@ -148,6 +148,6 @@ module.exports = async function (context, { orgName, ghToken, orgRepositoriesIds
 	let handler = new GetOrgTeamsDataHandler(context);
 	const logger = ConnectorLoggerFactory.getConnectorLogger();
 	const finalResult = await handler.getAllTeamsWithRepos(graphqlClient, orgName, orgRepositoriesIds);
-	await logger.logInfo(context, `Fetch ${finalResult.length} teams data from the org given`);
+	await logger.logInfo(context, `Fetched teams data from the org given. Result : ${finalResult.length} teams`);
 	context.done(null, finalResult);
 };

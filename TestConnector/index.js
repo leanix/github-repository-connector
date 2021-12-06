@@ -54,7 +54,7 @@ class TestConnectorValidator {
 		const logger = ConnectorLoggerFactory.getConnectorLogger();
 		await logger.logInfo(this.context, 'Checking input validity and correctness');
 		if (!orgName) {
-			logger.logError(this.context, 'GitHub organisation name cannot be empty');
+			await logger.logError(this.context, 'GitHub organisation name cannot be empty');
 			throw new Error('GitHub organisation name cannot be empty');
 		}
 
@@ -62,8 +62,6 @@ class TestConnectorValidator {
 			await logger.logError(this.context, 'GitHub token cannot be empty');
 			throw new Error('GitHub token cannot be empty');
 		}
-		await logger.logInfo(this.context, 'orgName is not empty');
-		await logger.logInfo(this.context, 'ghToken is not empty');
 
 		TestConnectorValidator.checkRegexExcludeList(repoNamesExcludeList);
 		await logger.logInfo(this.context, 'repoNamesExcludeList list is valid regex array');
@@ -71,6 +69,7 @@ class TestConnectorValidator {
 		try {
 			await this.pingForRequiredDataAccess(orgName);
 			await logger.logInfo(this.context, 'orgName provided is valid');
+			await logger.logInfo(this.context, 'ghToken provided has required data access permissions');
 		} catch (e) {
 			throw new Error(`Failed to verify source for necessary information access. Hint: Check token validity/expiry. Error: ${e.message}`);
 		}
