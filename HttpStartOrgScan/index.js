@@ -1,6 +1,6 @@
 ﻿const df = require('durable-functions');
 const iHubStatus = require('../Lib/IHubStatus');
-const { ConnectorLoggerFactory } = require('../Lib/connectorLogger');
+const { getLoggerInstanceFromContext } = require('../Lib/connectorLogger');
 const TestConnectorValidator = require('../TestConnector');
 
 module.exports = async function (context, req) {
@@ -8,7 +8,7 @@ module.exports = async function (context, req) {
 	const input = req.body;
 
 	//Initialize Connector Logger with required params
-	const logger = await ConnectorLoggerFactory.getInstance(context.bindingData.connectorLoggingUrl, context.bindingData.runId);
+	const logger = getLoggerInstanceFromContext(context);
 
 	if (input.testConnector) {
 		try {

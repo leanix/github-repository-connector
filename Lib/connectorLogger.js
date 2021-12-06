@@ -4,76 +4,87 @@ const logStatus = {
 	ERROR: 'ERROR'
 };
 
-var ConnectorLoggerFactory = (function () {
-	class ConnectorLogger {
-		constructor(connectorLoggingUrl, runId) {
-			if (!connectorLoggingUrl) {
-				throw new Error('Error: Connector Logging Url is empty');
-			}
-			this.blockBlobClient = new BlobClient(connectorLoggingUrl, new AnonymousCredential()).getAppendBlobClient();
-			this.runId = runId;
+class ConnectorLogger {
+	constructor(connectorLoggingUrl, runId) {
+		if (!connectorLoggingUrl) {
+			throw new Error('Error: Connector Logging Url is empty');
 		}
+		this.blockBlobClient = new BlobClient(connectorLoggingUrl, new AnonymousCredential()).getAppendBlobClient();
+		this.runId = runId;
+	}
 
-		async logInfo(context, message) {
-			context.log(message);
+	async logInfo(context, message) {
+		context.log(message);
 
-			if (this.blockBlobClient) {
+		if (this.blockBlobClient) {
+			try {
 				await this.blockBlobClient.createIfNotExists();
 				const messageStr = typeof message === 'string' ? message : JSON.stringify(message, undefined, 2);
 				await this.blockBlobClient.appendBlock(
 					`${new Date().toISOString()} ${logStatus.INFO.toString()}: [ Run ID: ${this.runId.toString()}] ${messageStr}\n`,
 					messageStr.length
 				);
-			} else {
-				context.log('Error: Connector Url Blob Client not initialized');
+			} catch (err) {
+				context.log('Error: ', err.message);
 			}
+		} else {
+			context.log('Error: Connector Url Blob Client not initialized');
 		}
+	}
 
-		async logInfoFromOrchestrator(context, isReplaying, message) {
-			if (!isReplaying) {
-				context.log(message);
+	async logInfoFromOrchestrator(context, isReplaying, message) {
+		if (!isReplaying) {
+			context.log(message);
 
-				if (this.blockBlobClient) {
+			if (this.blockBlobClient) {
+				try {
 					await this.blockBlobClient.createIfNotExists();
 					const messageStr = typeof message === 'string' ? message : JSON.stringify(message, undefined, 2);
 					await this.blockBlobClient.appendBlock(
 						`${new Date().toISOString()} ${logStatus.INFO.toString()}: [ Run ID: ${this.runId.toString()}] ${messageStr}\n`,
 						messageStr.length
 					);
-				} else {
-					context.log('Error: Connector Url Blob Client not initialized');
+				} catch (err) {
+					context.log('Connector Log Error: ', err.message);
 				}
+			} else {
+				context.log('Error: Connector Url Blob Client not initialized');
 			}
 		}
+	}
 
-		async logError(context, message) {
-			context.log(message);
+	async logError(context, message) {
+		context.log(message);
 
-			if (this.blockBlobClient) {
+		if (this.blockBlobClient) {
+			try {
 				await this.blockBlobClient.createIfNotExists();
 				const messageStr = typeof message === 'string' ? message : JSON.stringify(message, undefined, 2);
 				await this.blockBlobClient.appendBlock(
 					`${new Date().toISOString()} ${logStatus.ERROR.toString()}: [ Run ID: ${this.runId.toString()}] ${messageStr}\n`,
 					messageStr.length
 				);
-			} else {
-				context.log('Connector Log Error: Connector Url Blob Client not initialized');
+			} catch (err) {
+				context.log('Connector Log Error: ', err.message);
 			}
+		} else {
+			context.log('Connector Log Error: Connector Url Blob Client not initialized');
 		}
 	}
+}
 
-	var loggerInstance;
-	return {
-		getInstance: function (connectorLoggingUrl, runId) {
-			if (loggerInstance == null) {
-				loggerInstance = new ConnectorLogger(connectorLoggingUrl, runId);
-			}
-			return loggerInstance;
-		},
-		getConnectorLogger: function () {
-			return loggerInstance;
-		}
-	};
-})();
+function getLoggerInstanceFromContext(context) {
+	if (context.bindingData.input) {
+		return new ConnectorLogger(context.bindingData.input.connectorLoggingUrl, context.bindingData.input.runId);
+	} else if (context.bindingData.connectorLoggingUrl && context.bindingData.runId) {
+		return new ConnectorLogger(context.bindingData.connectorLoggingUrl, context.bindingData.runId);
+	} else {
+		throw new Error('Error: Connector Logging Url and RunId not found in context.bindingData');
+	}
+}
 
-module.exports = { ConnectorLoggerFactory };
+function getLoggerInstanceFromUrlAndRunId(connectorLoggingUrl, runId) {
+	return new ConnectorLogger(connectorLoggingUrl, runId);
+}
+
+module.exports = { getLoggerInstanceFromContext, getLoggerInstanceFromUrlAndRunId };

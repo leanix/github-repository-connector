@@ -6,14 +6,16 @@
 
 const df = require('durable-functions');
 const iHubStatus = require('../Lib/IHubStatus');
-const { ConnectorLoggerFactory } = require('../Lib/connectorLogger');
+const { getLoggerInstanceFromContext } = require('../Lib/connectorLogger');
 function* processForLdif(context, logger) {
 	const {
 		connectorConfiguration: { orgName, repoNamesExcludeList, flags },
 		secretsConfiguration: { ghToken },
 		ldifResultUrl,
 		progressCallbackUrl,
-		bindingKey
+		bindingKey,
+		connectorLoggingUrl,
+		runId
 	} = context.bindingData.input;
 	const scannerCapacity = 100;
 
@@ -23,7 +25,9 @@ function* processForLdif(context, logger) {
 	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', {
 		orgName,
 		repoNamesExcludeListChecked,
-		ghToken
+		ghToken,
+		connectorLoggingUrl,
+		runId
 	});
 
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, "Completed 'GetAllRepositoriesForOrg' execution.");
@@ -52,7 +56,9 @@ function* processForLdif(context, logger) {
 			var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
 				orgName,
 				ghToken,
-				orgRepositoriesIds: repositoriesIds
+				orgRepositoriesIds: repositoriesIds,
+				connectorLoggingUrl,
+				runId
 			});
 			yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, "Completed 'GetOrgTeamsData' execution.");
 		}
@@ -116,7 +122,7 @@ function* processForLdif(context, logger) {
 
 module.exports = df.orchestrator(function* (context) {
 	const { progressCallbackUrl } = context.bindingData.input;
-	const logger = ConnectorLoggerFactory.getConnectorLogger();
+	const logger = getLoggerInstanceFromContext(context);
 	const retryOptions = new df.RetryOptions(5000, 3);
 	retryOptions.maxRetryIntervalInMilliseconds = 5000;
 
