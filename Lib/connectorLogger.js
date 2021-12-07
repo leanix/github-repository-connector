@@ -6,7 +6,7 @@ const logStatus = {
 
 class ConnectorLogger {
 	constructor(connectorLoggingUrl, runId) {
-		if(process.env.LX_DEV_SKIP_IHUB_LOGGING) {
+		if (process.env.LX_DEV_SKIP_IHUB_LOGGING) {
 			return;
 		}
 
@@ -18,7 +18,7 @@ class ConnectorLogger {
 	}
 
 	async logInfo(context, message) {
-		if(process.env.LX_DEV_SKIP_IHUB_LOGGING) {
+		if (process.env.LX_DEV_SKIP_IHUB_LOGGING) {
 			return;
 		}
 		context.log(message);
@@ -40,7 +40,7 @@ class ConnectorLogger {
 	}
 
 	async logInfoFromOrchestrator(context, isReplaying, message) {
-		if(process.env.LX_DEV_SKIP_IHUB_LOGGING) {
+		if (process.env.LX_DEV_SKIP_IHUB_LOGGING) {
 			return;
 		}
 
@@ -65,7 +65,7 @@ class ConnectorLogger {
 	}
 
 	async logError(context, message) {
-		if(process.env.LX_DEV_SKIP_IHUB_LOGGING) {
+		if (process.env.LX_DEV_SKIP_IHUB_LOGGING) {
 			return;
 		}
 
