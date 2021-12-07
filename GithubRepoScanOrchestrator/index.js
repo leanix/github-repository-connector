@@ -19,7 +19,7 @@ function* processForLdif(context, logger) {
 	} = context.bindingData.input;
 	const scannerCapacity = 100;
 
-	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, "Starting 'GetAllRepositoriesForOrg' to fetch all repo Ids");
+	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching ids of all the repos present in the org.');
 
 	const repoNamesExcludeListChecked = repoNamesExcludeList ? repoNamesExcludeList : [];
 	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', {
@@ -29,8 +29,8 @@ function* processForLdif(context, logger) {
 		metadata: { connectorLoggingUrl, runId }
 	});
 
-	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, "Completed 'GetAllRepositoriesForOrg' execution.");
-	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, "Starting 'GetSubReposData' to fetch all repos complete data");
+	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched ids of all repos present in the org');
+	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching complete repo information from collected repo ids.');
 
 	const workPerScanner = [];
 	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
@@ -45,31 +45,31 @@ function* processForLdif(context, logger) {
 
 	const partialResults = yield context.df.Task.all(output);
 
-	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, "Completed 'GetSubReposData' execution.");
+	yield logger.logInfoFromOrchestrator(
+		context,
+		context.df.isReplaying,
+		'Successfully fetched complete repo information from collected repo ids.'
+	);
 
 	try {
 		if (flags && !flags.importTeams) {
 			teamResults = [];
 		} else {
-			yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, "Starting 'GetOrgTeamsData' to fetch teams related data");
+			yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching org teams related data');
 			var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
 				orgName,
 				ghToken,
 				orgRepositoriesIds: repositoriesIds,
 				metadata: { connectorLoggingUrl, runId }
 			});
-			yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, "Completed 'GetOrgTeamsData' execution.");
+			yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched org teams data');
 		}
 	} catch (e) {
 		context.log(e);
 		yield logger.logError(context, e.message);
 		teamResults = [];
 	}
-	yield logger.logInfoFromOrchestrator(
-		context,
-		context.df.isReplaying,
-		"Starting 'GetReposVisibilityData' to fetch repo visibility related data"
-	);
+	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching repo visibility related data');
 	const repoVisibilityOutput = [];
 	const repoVisibilities = ['private', 'public', 'internal'];
 	for (let visibilityType of repoVisibilities) {
@@ -92,12 +92,8 @@ function* processForLdif(context, logger) {
 		yield logger.logError(context, e.message);
 		repoIdsVisibilityMap = {};
 	}
-	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, "Completed 'GetReposVisibilityData' execution.");
-	yield logger.logInfoFromOrchestrator(
-		context,
-		context.df.isReplaying,
-		"Starting 'SaveLdifToStorage' to generate LDIF and save it into blob storage url."
-	);
+	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched repo visibility related data');
+	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Starting to generate final LDIF and save into storage');
 	yield context.df.callActivity('UpdateProgressToIHub', {
 		progressCallbackUrl,
 		status: iHubStatus.IN_PROGRESS,
@@ -115,7 +111,7 @@ function* processForLdif(context, logger) {
 			flags
 		}
 	});
-	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, "Completed 'SaveLdifToStorage' execution.");
+	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, "Successfully generated LDIF and saved into storage');");
 }
 
 module.exports = df.orchestrator(function* (context) {
