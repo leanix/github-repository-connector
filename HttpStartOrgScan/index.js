@@ -7,19 +7,19 @@ module.exports = async function (context, req) {
 	const client = df.getClient(context);
 	const input = req.body;
 
-	const logger = getLoggerInstanceFromContext(context);
-
 	if (input.testConnector) {
 		try {
 			await TestConnectorValidator(context, input);
-			await logger.logInfo(context, 'Test connection was Successful!');
+			context.log('Test connection was Successful!');
 			return buildResponseBody({ message: 'Ready!' });
 		} catch (e) {
-			await logger.logError(context, e.message);
-			await logger.logInfo(context, 'Test connector checks failed, returning...');
+			context.log(e.message);
+			context.log('Test connector checks failed, returning...');
 			return buildResponseBody({ message: e.message }, 404);
 		}
 	}
+	const logger = getLoggerInstanceFromContext(context);
+
 	await logger.logInfo(context, 'Starting the connector');
 
 	const instanceId = await client.startNew('GithubRepoScanOrchestrator', input.runId, input);

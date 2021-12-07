@@ -9,20 +9,20 @@ class ConnectorLogger {
 		if (process.env.LX_DEV_SKIP_IHUB_LOGGING) {
 			return;
 		}
-
-		if (!connectorLoggingUrl) {
+		if (connectorLoggingUrl === undefined) {
 			throw new Error('Error: Connector Logging Url is empty');
 		}
-		this.blockBlobClient = new BlobClient(connectorLoggingUrl, new AnonymousCredential()).getAppendBlobClient();
+		if (connectorLoggingUrl) {
+			this.blockBlobClient = new BlobClient(connectorLoggingUrl, new AnonymousCredential()).getAppendBlobClient();
+		}
 		this.runId = runId;
 	}
 
 	async logInfo(context, message) {
-		if (process.env.LX_DEV_SKIP_IHUB_LOGGING) {
+		context.log(message);
+		if (process.env.LX_DEV_SKIP_IHUB_LOGGING || this.runId == -1) {
 			return;
 		}
-		context.log(message);
-
 		if (this.blockBlobClient) {
 			try {
 				await this.blockBlobClient.createIfNotExists();
@@ -40,7 +40,7 @@ class ConnectorLogger {
 	}
 
 	async logInfoFromOrchestrator(context, isReplaying, message) {
-		if (process.env.LX_DEV_SKIP_IHUB_LOGGING) {
+		if (process.env.LX_DEV_SKIP_IHUB_LOGGING || this.runId == -1) {
 			return;
 		}
 
@@ -65,11 +65,10 @@ class ConnectorLogger {
 	}
 
 	async logError(context, message) {
-		if (process.env.LX_DEV_SKIP_IHUB_LOGGING) {
+		context.log(message);
+		if (process.env.LX_DEV_SKIP_IHUB_LOGGING || this.runId == -1) {
 			return;
 		}
-
-		context.log(message);
 
 		if (this.blockBlobClient) {
 			try {
@@ -93,6 +92,8 @@ function getLoggerInstanceFromContext(context) {
 		return new ConnectorLogger(context.bindingData.input.connectorLoggingUrl, context.bindingData.input.runId);
 	} else if (context.bindingData.connectorLoggingUrl && context.bindingData.runId) {
 		return new ConnectorLogger(context.bindingData.connectorLoggingUrl, context.bindingData.runId);
+	} else if (context.bindingData.testConnector === 'True' || context.bindingData.testConnector === true) {
+		return new ConnectorLogger(null, -1);
 	} else {
 		throw new Error('Error: Connector Logging Url and RunId not found in context.bindingData');
 	}

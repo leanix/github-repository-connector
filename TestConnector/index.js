@@ -51,7 +51,9 @@ class TestConnectorValidator {
 	async test() {
 		const { orgName, repoNamesExcludeList } = this.connectorConfiguration;
 		const { ghToken } = this.secretsConfiguration;
+
 		const logger = getLoggerInstanceFromContext(this.context);
+
 		await logger.logInfo(this.context, 'Checking input validity and correctness');
 		if (!orgName) {
 			await logger.logError(this.context, 'GitHub organisation name cannot be empty');
