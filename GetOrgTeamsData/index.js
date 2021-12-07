@@ -1,8 +1,10 @@
 ﻿const { graphql } = require('@octokit/graphql');
+const { getLoggerInstanceFromUrlAndRunId } = require('../Lib/connectorLogger');
 
 class GetOrgTeamsDataHandler {
-	constructor(context) {
+	constructor(context, connectorLoggingUrl, runId) {
 		this.context = context;
+		this.logger = getLoggerInstanceFromUrlAndRunId(connectorLoggingUrl, runId);
 	}
 
 	static hasMoreRepos(team) {
@@ -123,6 +125,8 @@ class GetOrgTeamsDataHandler {
 			team.repositories.nodes = this.filterNonOrgReposFromTeam(repositoriesIds)(team.repositories.nodes);
 		}
 
+		await this.logger.logInfo(this.context, `Fetched teams data from the org given. Result : ${finalResult.length} teams`);
+
 		return finalResult;
 	}
 
@@ -137,14 +141,14 @@ class GetOrgTeamsDataHandler {
 	}
 }
 
-module.exports = async function (context, { orgName, ghToken, orgRepositoriesIds }) {
+module.exports = async function (context, { orgName, ghToken, orgRepositoriesIds, metadata: { connectorLoggingUrl, runId } }) {
 	const graphqlClient = graphql.defaults({
 		headers: {
 			authorization: `token ${ghToken}`
 		}
 	});
 
-	let handler = new GetOrgTeamsDataHandler(context);
+	let handler = new GetOrgTeamsDataHandler(context, connectorLoggingUrl, runId);
 	const finalResult = await handler.getAllTeamsWithRepos(graphqlClient, orgName, orgRepositoriesIds);
 	context.done(null, finalResult);
 };
