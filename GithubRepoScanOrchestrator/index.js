@@ -111,7 +111,7 @@ function* processForLdif(context, logger) {
 			flags
 		}
 	});
-	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, "Successfully generated LDIF and saved into storage');");
+	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully generated LDIF and saved into storage');
 }
 
 module.exports = df.orchestrator(function* (context) {
