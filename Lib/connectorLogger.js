@@ -20,7 +20,7 @@ class ConnectorLogger {
 
 	async logInfo(context, message) {
 		context.log(message);
-		if (process.env.LX_DEV_SKIP_IHUB_LOGGING || this.runId == -1) {
+		if (process.env.LX_DEV_SKIP_IHUB_LOGGING || this.runId === -1) {
 			return;
 		}
 		if (this.blockBlobClient) {
@@ -40,7 +40,7 @@ class ConnectorLogger {
 	}
 
 	async logInfoFromOrchestrator(context, isReplaying, message) {
-		if (process.env.LX_DEV_SKIP_IHUB_LOGGING || this.runId == -1) {
+		if (process.env.LX_DEV_SKIP_IHUB_LOGGING || this.runId === -1) {
 			return;
 		}
 
@@ -66,7 +66,7 @@ class ConnectorLogger {
 
 	async logError(context, message) {
 		context.log(message);
-		if (process.env.LX_DEV_SKIP_IHUB_LOGGING || this.runId == -1) {
+		if (process.env.LX_DEV_SKIP_IHUB_LOGGING || this.runId === -1) {
 			return;
 		}
 
