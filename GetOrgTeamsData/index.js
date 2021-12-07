@@ -125,7 +125,7 @@ class GetOrgTeamsDataHandler {
 			team.repositories.nodes = this.filterNonOrgReposFromTeam(repositoriesIds)(team.repositories.nodes);
 		}
 
-		await this.logger.logInfo(this.context, `Fetched teams data from the org given. Result : ${finalResult.length} teams`);
+		await this.logger.logInfo(this.context, `Fetched org teams. Result : ${finalResult.length} teams`);
 
 		return finalResult;
 	}

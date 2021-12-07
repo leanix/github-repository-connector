@@ -32,7 +32,7 @@ class ConnectorLogger {
 					messageStr.length
 				);
 			} catch (err) {
-				context.log('Error: ', err.message);
+				context.log(`Connector Log Error:  ${err.message}`);
 			}
 		} else {
 			context.log('Error: Connector Url Blob Client not initialized');
@@ -56,7 +56,7 @@ class ConnectorLogger {
 						messageStr.length
 					);
 				} catch (err) {
-					context.log('Connector Log Error: ', err.message);
+					context.log(`Connector Log Error:  ${err.message}`);
 				}
 			} else {
 				context.log('Error: Connector Url Blob Client not initialized');
@@ -79,7 +79,7 @@ class ConnectorLogger {
 					messageStr.length
 				);
 			} catch (err) {
-				context.log('Connector Log Error: ', err.message);
+				context.log(`Connector Log Error:  ${err.message}`);
 			}
 		} else {
 			context.log('Connector Log Error: Connector Url Blob Client not initialized');
