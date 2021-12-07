@@ -1,5 +1,5 @@
 const { graphql } = require('@octokit/graphql');
-const { getISODateStringOnFromToday } = require('../GithubRepoScanOrchestrator/helper');
+const { getISODateStringOnFromToday } = require('../Lib/helper');
 
 module.exports = async function (context, { repoIds, ghToken }) {
 	const graphqlClient = graphql.defaults({

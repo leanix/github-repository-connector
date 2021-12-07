@@ -6,7 +6,8 @@
 		"start": "func start",
 		"test": "echo \"No tests yet...\"",
 		"check-format": "prettier --config .prettierrc.json \".\" --check",
-		"format": "prettier --config .prettierrc.json \".\" --write"
+		"format": "prettier --config .prettierrc.json \".\" --write",
+		"lint": "eslint ."
 	},
 	"dependencies": {
 		"@azure/storage-blob": "^12.5.0",
@@ -15,6 +16,7 @@
 		"durable-functions": "^1.4.6"
 	},
 	"devDependencies": {
+		"eslint": "^7.31.0",
 		"prettier": "2.3.2"
 	}
 }

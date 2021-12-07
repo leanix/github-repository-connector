@@ -2,9 +2,13 @@
 	"name": "vsm-github-connector",
 	"description": "",
 	"connectorUrl": "https://functions-eastus-prod-githubrepositoryconnector.azurewebsites.net/api/orchestrators/",
+	"documentationUrl": "https://docs-vsm.leanix.net/docs/github",
 	"connectorConfiguration": {
 		"orgName": "leanix",
-		"repoNamesExcludeList": []
+		"repoNamesExcludeList": [],
+		"flags": {
+			"importTeams": true
+		}
 	},
 	"secretsConfiguration": {
 		"ghToken": ""
