@@ -6,6 +6,10 @@ const logStatus = {
 
 class ConnectorLogger {
 	constructor(connectorLoggingUrl, runId) {
+		if(process.env.LX_DEV_SKIP_IHUB_LOGGING) {
+			return;
+		}
+
 		if (!connectorLoggingUrl) {
 			throw new Error('Error: Connector Logging Url is empty');
 		}
@@ -14,6 +18,9 @@ class ConnectorLogger {
 	}
 
 	async logInfo(context, message) {
+		if(process.env.LX_DEV_SKIP_IHUB_LOGGING) {
+			return;
+		}
 		context.log(message);
 
 		if (this.blockBlobClient) {
@@ -33,6 +40,10 @@ class ConnectorLogger {
 	}
 
 	async logInfoFromOrchestrator(context, isReplaying, message) {
+		if(process.env.LX_DEV_SKIP_IHUB_LOGGING) {
+			return;
+		}
+
 		if (!isReplaying) {
 			context.log(message);
 
@@ -54,6 +65,10 @@ class ConnectorLogger {
 	}
 
 	async logError(context, message) {
+		if(process.env.LX_DEV_SKIP_IHUB_LOGGING) {
+			return;
+		}
+
 		context.log(message);
 
 		if (this.blockBlobClient) {
