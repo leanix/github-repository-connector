@@ -52,17 +52,17 @@ function* processForLdif(context, logger) {
 	);
 
 	try {
-		if (flags && !flags.importTeams) {
-			teamResults = [];
-		} else {
-			yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching org teams related data');
-			var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
-				orgName,
-				ghToken,
-				orgRepositoriesIds: repositoriesIds,
-				metadata: { connectorLoggingUrl, runId }
-			});
-			yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched org teams data');
+		yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching organisation teams related data');
+		var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
+			orgName,
+			ghToken,
+			orgRepositoriesIds: repositoriesIds,
+			metadata: { connectorLoggingUrl, runId }
+		});
+		yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched organisation teams data');
+		// Default case is true. so, explicitly check for false(boolean)
+		if (flags && flags.importTeams === false) {
+			yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, `Team data will not be processed (default). reason: 'importTeams' flag is false`);
 		}
 	} catch (e) {
 		context.log(e);
