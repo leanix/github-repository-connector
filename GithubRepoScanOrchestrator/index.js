@@ -62,7 +62,11 @@ function* processForLdif(context, logger) {
 		yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched organisation teams data');
 		// Default case is true. so, explicitly check for false(boolean)
 		if (flags && flags.importTeams === false) {
-			yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, `Team data will not be processed (default). reason: 'importTeams' flag is false`);
+			yield logger.logInfoFromOrchestrator(
+				context,
+				context.df.isReplaying,
+				`Team data will not be processed (default). reason: 'importTeams' flag is false`
+			);
 		}
 	} catch (e) {
 		context.log(e);
