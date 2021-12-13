@@ -30,6 +30,17 @@ jobs:
           with:
             secret-store-credentials: ${{ secrets.INJECTED_SECRET_STORE_CREDENTIALS }}
 
+        - name: Login via Az module
+          uses: azure/login@v1
+          with:
+            creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
+            enable-AzPSSession: true
+
+        - name: Install az tools
+          run: |
+            sudo apt-get update
+            sudo apt-get install -y azure-functions-core-tools-3
+
         - name: Find azure function URL
           id: func-url
           shell: bash
