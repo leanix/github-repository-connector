@@ -55,7 +55,6 @@ jobs:
         - name: Update connector definition file and shows the URL of the connector function
           run: |
             jq '.connectorUrl = "${{steps.func-url.outputs.FUNCTION_URL}}"' ${{env.IHUB_RESOURCES_PATH}}/connector-definition.json > connector-definition-test.json
-            cat connector-definition-test.json
 
         - name: Register GitHub Connector on test
           uses: leanix/integration-hub-connector-register-action@main
