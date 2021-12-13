@@ -33,7 +33,7 @@ jobs:
         - name: Login via Az module
           uses: azure/login@v1
           with:
-            creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
+            creds: ${{ secrets.AZURE_CREDENTIALS }}
             enable-AzPSSession: true
 
         - name: Install az tools
