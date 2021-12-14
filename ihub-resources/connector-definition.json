@@ -1,7 +1,7 @@
 {
 	"name": "vsm-github-connector",
 	"description": "",
-	"connectorUrl": "https://functions-eastus-prod-githubrepositoryconnector.azurewebsites.net/api/orchestrators/",
+	"connectorUrl": "<filled in by GitHub Action>",
 	"documentationUrl": "https://docs-vsm.leanix.net/docs/github",
 	"connectorConfiguration": {
 		"orgName": "leanix",

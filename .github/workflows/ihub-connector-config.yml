@@ -11,6 +11,11 @@ on:
       - 'ihub-resources/**'
   workflow_dispatch:
 
+env:
+  PROD_FUNCTIONAPP_MAIN_NAME: githubrepositoryconnector
+  TEST_FUNCTIONAPP_NAME: githubrepositoryconnector
+  IHUB_RESOURCES_PATH: ihub-resources
+
 jobs:
   register-ihub-connector-template-test:
     name: register connector template on test
@@ -24,12 +29,38 @@ jobs:
           uses: leanix/secrets-action@master
           with:
             secret-store-credentials: ${{ secrets.INJECTED_SECRET_STORE_CREDENTIALS }}
-  
+
+        - name: Login via Az module
+          uses: azure/login@v1
+          with:
+            creds: ${{ secrets.AZURE_CREDENTIALS }}
+            enable-AzPSSession: true
+
+        - name: Install az tools
+          run: |
+            sudo apt-get update
+            sudo apt-get install -y azure-functions-core-tools-3
+
+        - name: Find azure function URL
+          id: func-url
+          shell: bash
+          run: echo "::set-output name=FUNCTION_URL::$(func azure functionapp list-functions ${{env.TEST_FUNCTIONAPP_NAME}} --show-keys | grep -i 'Invoke url' | awk '{print $3}')"
+
+        - name: Check fetched function URL
+          if: ${{steps.func-url.outputs.FUNCTION_URL == ''}}
+          run: |
+            echo Connector function URL cannot be empty for standard connectors
+            exit 1
+
+        - name: Update connector definition file and shows the URL of the connector function
+          run: |
+            jq '.connectorUrl = "${{steps.func-url.outputs.FUNCTION_URL}}"' ${{env.IHUB_RESOURCES_PATH}}/connector-definition.json > connector-definition-test.json
+
         - name: Register GitHub Connector on test
           uses: leanix/integration-hub-connector-register-action@main
           with:
             environment: 'test'
-            connector_definition_file: 'ihub-resources/connector-definition-test.json'
+            connector_definition_file: 'connector-definition-test.json'
             connector_icon: 'ihub-resources/connector-github-icon.png'
 
   register-ihub-connector-template-prod:
@@ -49,10 +80,36 @@ jobs:
         with:
           secret-store-credentials: ${{ secrets.INJECTED_SECRET_STORE_CREDENTIALS }}
 
+      - name: Login via Az module
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
+          enable-AzPSSession: true
+
+      - name: Install az tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y azure-functions-core-tools-3
+
+      - name: Find azure function URL
+        id: func-url
+        shell: bash
+        run: echo "::set-output name=FUNCTION_URL::$(func azure functionapp list-functions functions-${{matrix.region}}-prod-${{env.PROD_FUNCTIONAPP_MAIN_NAME}} --show-keys | grep -i 'Invoke url' | awk '{print $3}')"
+
+      - name: Check fetched function URL
+        if: ${{steps.func-url.outputs.FUNCTION_URL == ''}}
+        run: |
+          echo Connector function URL cannot be empty for standard connectors
+          exit 1
+
+      - name: Update connector definition file and shows the URL of the connector function
+        run: |
+          jq '.connectorUrl = "${{steps.func-url.outputs.FUNCTION_URL}}"' ${{env.IHUB_RESOURCES_PATH}}/connector-definition.json > connector-definition-${{matrix.region}}.json
+
       - name: Register GitHub Connector on all regions prod
         uses: leanix/integration-hub-connector-register-action@main
         with:
           region: ${{ matrix.region }}
           environment: 'prod'
-          connector_definition_file: 'ihub-resources/connector-definition-${{ matrix.region }}.json'
+          connector_definition_file: 'connector-definition-${{ matrix.region }}.json'
           connector_icon: 'ihub-resources/connector-github-icon.png'
