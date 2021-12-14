@@ -301,7 +301,13 @@
 						},
 						"values": [
 							{
+								"expr": "${lx.factsheet.name}"
+							},
+							{
 								"expr": "${data.name}"
+							},
+							{
+								"expr": "${data.name} (Copy ${integration.now.getYear()}-${integration.now.getMonthValue()<10?'0':''}${integration.now.getMonthValue()}-${integration.now.getDayOfMonth()<10?'0':''}${integration.now.getDayOfMonth()} ${integration.now.getHour()<10?'0':''}${integration.now.getHour()}:${integration.now.getMinute()<10?'0':''}${integration.now.getMinute()})"
 							}
 						]
 					},
@@ -335,7 +341,10 @@
 							}
 						]
 					}
-				]
+				],
+				"read": {
+					"fields": [ "name"]
+				}
 			},
 			{
 				"processorType": "inboundDocument",
@@ -424,7 +433,13 @@
 						},
 						"values": [
 							{
+								"expr": "${lx.factsheet.name}"
+							},
+							{
 								"expr": "${data.name}"
+							},
+							{
+								"expr": "${data.name} (Copy ${integration.now.getYear()}-${integration.now.getMonthValue()<10?'0':''}${integration.now.getMonthValue()}-${integration.now.getDayOfMonth()<10?'0':''}${integration.now.getDayOfMonth()} ${integration.now.getHour()<10?'0':''}${integration.now.getHour()}:${integration.now.getMinute()<10?'0':''}${integration.now.getMinute()})"
 							}
 						]
 					},
@@ -438,7 +453,12 @@
 							}
 						]
 					}
-				]
+				],
+				"read": {
+					"fields": [
+						"name"
+					]
+				}
 			},
 			{
 				"processorType": "inboundFactSheet",
@@ -466,11 +486,22 @@
 						},
 						"values": [
 							{
+								"expr": "${lx.factsheet.name}"
+							},
+							{
 								"expr": "${data.name}"
+							},
+							{
+								"expr": "${data.name} (Copy ${integration.now.getYear()}-${integration.now.getMonthValue()<10?'0':''}${integration.now.getMonthValue()}-${integration.now.getDayOfMonth()<10?'0':''}${integration.now.getDayOfMonth()} ${integration.now.getHour()<10?'0':''}${integration.now.getHour()}:${integration.now.getMinute()<10?'0':''}${integration.now.getMinute()})"
 							}
 						]
 					}
-				]
+				],
+				"read": {
+					"fields": [
+						"name"
+					]
+				}
 			},
 			{
 				"processorType": "inboundRelation",
