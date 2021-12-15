@@ -343,7 +343,7 @@
 					}
 				],
 				"read": {
-					"fields": [ "name"]
+					"fields": ["name"]
 				}
 			},
 			{
@@ -455,9 +455,7 @@
 					}
 				],
 				"read": {
-					"fields": [
-						"name"
-					]
+					"fields": ["name"]
 				}
 			},
 			{
@@ -498,9 +496,7 @@
 					}
 				],
 				"read": {
-					"fields": [
-						"name"
-					]
+					"fields": ["name"]
 				}
 			},
 			{
