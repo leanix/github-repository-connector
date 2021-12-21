@@ -839,7 +839,7 @@
 		},
 		"visibleIf": [
 			{
-				"featureFlags": [""]
+				"featureFlags": ["integration.vsm.githubrepository"]
 			}
 		],
 		"readOnly": true,
