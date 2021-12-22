@@ -58,8 +58,8 @@
 				}
 			],
 			"maximumDeletionRatio": {
-				"factSheets": 60,
-				"subscriptions": 100
+				"subscriptions": 100,
+				"tags": 100
 			}
 		},
 		"processors": [
@@ -620,87 +620,6 @@
 						"value": "${content.id}"
 					}
 				]
-			},
-			{
-				"processorType": "inboundFactSheet",
-				"processorName": "Find excluded fact sheets",
-				"processorDescription": "Find the fact sheets that were created by a former github-connector run but are now excluded/not existing",
-				"type": "Microservice",
-				"filter": {
-					"advanced": "${integration.contentIndex == 0}"
-				},
-				"identifier": {
-					"search": {
-						"scope": {
-							"ids": [],
-							"facetFilters": [
-								{
-									"keys": ["Microservice"],
-									"facetKey": "FactSheetTypes",
-									"operator": "AND"
-								},
-								{
-									"keys": ["${integration.tags.getTagId('Data Source','GitHub Repository')}"],
-									"facetKey": "${integration.tags.getTagGroupId('Data Source')}",
-									"operator": "AND"
-								}
-							]
-						},
-						"filter": "${!variables['github_project_ids'].contains(lx.factsheet.githubId)}",
-						"multipleMatchesAllowed": true
-					}
-				},
-				"run": 4,
-				"updates": [],
-				"variables": [
-					{
-						"key": "fs_to_be_tagged",
-						"value": "${lx.factsheet.githubId}"
-					}
-				],
-				"read": {
-					"fields": ["name", "githubId"]
-				}
-			},
-			{
-				"processorType": "inboundTag",
-				"processorName": "add 'github-tracking-disabled' tag",
-				"processorDescription": "adds 'github-tracking-disabled' tag to the microservice that was created by github-connector but not included in the scan anymore",
-				"filter": {
-					"advanced": "${integration.contentIndex == 0}"
-				},
-				"factSheets": {
-					"external": {
-						"ids": "${integration.valueOfForEach}",
-						"type": {
-							"expr": "githubId"
-						}
-					}
-				},
-				"run": 7,
-				"updates": [
-					{
-						"key": {
-							"expr": "name"
-						},
-						"values": [
-							{
-								"expr": "github-tracking-disabled"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "group.name"
-						},
-						"values": [
-							{
-								"expr": "Data Quality"
-							}
-						]
-					}
-				],
-				"forEach": "${integration.processing.distinct(variables['fs_to_be_tagged'])}"
 			},
 			{
 				"processorType": "inboundTag",
