@@ -29,7 +29,7 @@
 								"operator": "AND"
 							},
 							{
-								"keys": ["${integration.tags.getTagId('Data Source','Github repository')}"],
+								"keys": ["${integration.tags.getTagId('Data Source','GitHub Repository')}"],
 								"facetKey": "${integration.tags.getTagGroupId('Data Source')}",
 								"operator": "AND"
 							}
@@ -58,6 +58,7 @@
 				}
 			],
 			"maximumDeletionRatio": {
+				"subscriptions": 100,
 				"tags": 100
 			}
 		},
@@ -401,7 +402,7 @@
 						},
 						"values": [
 							{
-								"expr": "GitHub repository related to the Microservice FactSheet"
+								"expr": "GitHub Repository related to the Microservice FactSheet"
 							}
 						]
 					}
@@ -622,8 +623,8 @@
 			},
 			{
 				"processorType": "inboundTag",
-				"processorName": "Add 'Github repository' Data Source tag on Microservice Factsheets",
-				"processorDescription": "Adds 'Github repository' Data Source tag on Software Artifact type FS for data source tracking",
+				"processorName": "Add 'GitHub Repository' Data Source tag on Microservice Factsheets",
+				"processorDescription": "Adds 'GitHub Repository' Data Source tag on Software Artifact type FS for data source tracking",
 				"filter": {
 					"advanced": "${content.type == 'Repository' || content.type == 'Language' || (content.type == 'Team' && header.customFields.flags.importTeams != false)}"
 				},
@@ -643,7 +644,7 @@
 						},
 						"values": [
 							{
-								"expr": "Github repository"
+								"expr": "GitHub Repository"
 							}
 						]
 					},
@@ -723,7 +724,7 @@
 									},
 									{
 										"key": "comment",
-										"value": "Managed by GitHub repository connector"
+										"value": "Managed by GitHub Repository connector"
 									}
 								]
 							}
