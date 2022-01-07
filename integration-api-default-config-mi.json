@@ -205,7 +205,7 @@
 				},
 				"factSheets": {
 					"external": {
-						"ids": "${variables['topic_'.concat(content.id)]}",
+						"ids": "${helper:getFromMap(variables,'topic_'.concat(content.id))}",
 						"type": {
 							"expr": "githubId"
 						}
