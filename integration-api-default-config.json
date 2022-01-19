@@ -338,13 +338,13 @@
 						},
 						"values": [
 							{
-								"expr": "microservice"
+								"expr": "${lx.factsheet.category}"
 							}
 						]
 					}
 				],
 				"read": {
-					"fields": ["name"]
+					"fields": ["name", "category"]
 				}
 			},
 			{
