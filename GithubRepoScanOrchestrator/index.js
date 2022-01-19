@@ -17,7 +17,7 @@ function* processForLdif(context, logger) {
 		connectorLoggingUrl,
 		runId
 	} = context.bindingData.input;
-	const scannerCapacity = 100;
+	const scannerCapacity = 500;
 
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching ids of all the repos present in the org.');
 
