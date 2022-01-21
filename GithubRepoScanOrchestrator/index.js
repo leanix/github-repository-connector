@@ -31,7 +31,7 @@ function* processForLdif(context, logger) {
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched ids of all repos present in the org');
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching complete repo information from collected repo ids.');
 
-  const partialResults = yield* fetchReposDataConcurrently(context, ghToken, repositoriesIds);
+	const partialResults = yield* fetchReposDataConcurrently(context, ghToken, repositoriesIds);
 
 	yield logger.logInfoFromOrchestrator(
 		context,
@@ -107,29 +107,29 @@ function* processForLdif(context, logger) {
 }
 
 function* fetchReposDataConcurrently(context, ghToken, repositoriesIds) {
-  const scannerCapacity = 100;
-  const allReposSetOfCapacity = [];
-  for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
-    allReposSetOfCapacity.push(repositoriesIds.slice(i, i + scannerCapacity));
-  }
+	const scannerCapacity = 100;
+	const allReposSetOfCapacity = [];
+	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
+		allReposSetOfCapacity.push(repositoriesIds.slice(i, i + scannerCapacity));
+	}
 
-  const partialResults = [];
-  const workers = 4;
-  const workingGroups = [];
-  for (let i = 0, j = allReposSetOfCapacity.length; i < j; i += workers) {
-    workingGroups.push(allReposSetOfCapacity.slice(i, i + workers));
-  }
+	const partialResults = [];
+	const workers = 4;
+	const workingGroups = [];
+	for (let i = 0, j = allReposSetOfCapacity.length; i < j; i += workers) {
+		workingGroups.push(allReposSetOfCapacity.slice(i, i + workers));
+	}
 
-  for (const workingGroup of workingGroups) {
-    const output = [];
-    for (const workingGroupElement of workingGroup) {
-      output.push(context.df.callActivity('GetSubReposData', { repoIds: workingGroupElement, ghToken }));
-    }
-    const completePartialResults = yield context.df.Task.all(output);
-    partialResults.push(...completePartialResults);
-  }
+	for (const workingGroup of workingGroups) {
+		const output = [];
+		for (const workingGroupElement of workingGroup) {
+			output.push(context.df.callActivity('GetSubReposData', { repoIds: workingGroupElement, ghToken }));
+		}
+		const completePartialResults = yield context.df.Task.all(output);
+		partialResults.push(...completePartialResults);
+	}
 
-  return partialResults;
+	return partialResults;
 }
 
 module.exports = df.orchestrator(function* (context) {
