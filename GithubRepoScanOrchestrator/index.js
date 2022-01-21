@@ -17,7 +17,6 @@ function* processForLdif(context, logger) {
 		connectorLoggingUrl,
 		runId
 	} = context.bindingData.input;
-	const scannerCapacity = 100;
 
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching ids of all the repos present in the org.');
 
@@ -32,18 +31,23 @@ function* processForLdif(context, logger) {
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched ids of all repos present in the org');
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching complete repo information from collected repo ids.');
 
-	const workPerScanner = [];
+	const scannerCapacity = 100;
+	const allReposSetOfCapacity = [];
 	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
-		workPerScanner.push(repositoriesIds.slice(i, i + scannerCapacity));
+		allReposSetOfCapacity.push(repositoriesIds.slice(i, i + scannerCapacity));
 	}
 
-	const output = [];
-	for (let i = 0; i < workPerScanner.length; i++) {
-		// This will starts Activity Functions in parallel
-		output.push(context.df.callActivity('GetSubReposData', { repoIds: workPerScanner[i], ghToken }));
+	const partialResults = [];
+	const workers = 2;
+	for (let inputRepoSet = 0; inputRepoSet < allReposSetOfCapacity.length; inputRepoSet+=workers) {
+		const output = [];
+		for (let repoSetIndex = inputRepoSet; repoSetIndex < repoSetIndex + workers; repoSetIndex++) {
+			// This will starts Activity Functions in parallel
+			output.push(context.df.callActivity('GetSubReposData', { repoIds: allReposSetOfCapacity[repoSetIndex], ghToken }));
+		}
+		const completePartialResults = yield context.df.Task.all(output);
+		partialResults.push(...completePartialResults);
 	}
-
-	const partialResults = yield context.df.Task.all(output);
 
 	yield logger.logInfoFromOrchestrator(
 		context,
