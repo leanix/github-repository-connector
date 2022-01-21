@@ -41,6 +41,7 @@ function* processForLdif(context, logger) {
 
 	try {
 		yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching organisation teams related data');
+		// pararrelise this function, timeout issue
 		var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
 			orgName,
 			ghToken,
@@ -106,30 +107,41 @@ function* processForLdif(context, logger) {
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully generated LDIF and saved into storage');
 }
 
-function* fetchReposDataConcurrently(context, ghToken, repositoriesIds) {
+function* fetchReposDataConcurrently(context,  ghToken, repositoriesIds) {
 	const scannerCapacity = 100;
 	const allReposSetOfCapacity = [];
 	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
 		allReposSetOfCapacity.push(repositoriesIds.slice(i, i + scannerCapacity));
 	}
 
-	const partialResults = [];
-	const workers = 4;
+	// todo remove concurrency
+	const completePartialResults = [];
+	const workers = 2;
 	const workingGroups = [];
 	for (let i = 0, j = allReposSetOfCapacity.length; i < j; i += workers) {
 		workingGroups.push(allReposSetOfCapacity.slice(i, i + workers));
 	}
 
+	let fetchedUntilNow = 0;
 	for (const workingGroup of workingGroups) {
+		yield context.df.callActivity('UpdateProgressToIHub', {
+			progressCallbackUrl: context.bindingData.input.progressCallbackUrl,
+			status: iHubStatus.IN_PROGRESS,
+			message: `Fetching batch repositories data. status: ${fetchedUntilNow}/${repositoriesIds.length}`
+		})
+
 		const output = [];
 		for (const workingGroupElement of workingGroup) {
 			output.push(context.df.callActivity('GetSubReposData', { repoIds: workingGroupElement, ghToken }));
 		}
-		const completePartialResults = yield context.df.Task.all(output);
-		partialResults.push(...completePartialResults);
+		const partialResults = yield context.df.Task.all(output);
+		fetchedUntilNow += partialResults.flatMap(x => x).length;
+		completePartialResults.push(...partialResults);
+
+		// todo add delay 5m https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-timers?tabs=javascript#usage-for-delay
 	}
 
-	return partialResults;
+	return completePartialResults;
 }
 
 module.exports = df.orchestrator(function* (context) {

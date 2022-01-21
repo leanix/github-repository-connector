@@ -49,6 +49,8 @@ class GetOrgTeamsDataHandler {
 		let finalResult = [];
 
 		do {
+			// todo add log data
+			await this.logger.logInfo(this.context, `Fetching batch organisation team's repositories data. Status : `);
 			var { repos, pageInfo } = await this.getPagedRepos(graphqlClient, { teamId: team.id, cursor: repoCursor });
 			finalResult = finalResult.concat(repos);
 			repoCursor = pageInfo.endCursor;
@@ -116,6 +118,8 @@ class GetOrgTeamsDataHandler {
 		const teamPageSize = 25;
 
 		do {
+			// todo add log data
+			await this.logger.logInfo(this.context, `Fetching batch organisation teams data. Status : `);
 			var { teams, pageInfo } = await this.getPagedTeamsData(graphqlClient, { orgName, pageCount: teamPageSize, cursor: teamCursor });
 			finalResult = finalResult.concat(teams);
 			teamCursor = pageInfo.endCursor;
