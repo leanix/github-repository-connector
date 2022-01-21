@@ -62,7 +62,7 @@ function mapRepoInfoToCommitHistory(repoInfos, reposCommitHistory) {
 }
 
 async function getReposData(context, repoIds, graphqlClient) {
-	const initialLanguagePageSize = 10;
+	const initialLanguagePageSize = 50;
 	const data = await graphqlClient({
 		query: `
             query getReposData($repoIds:[ID!]!, $languagePageCount: Int!){
