@@ -13,6 +13,10 @@
 						{
 							"group": "Data Quality",
 							"tag": "github-tracking-disabled"
+						},
+                        {
+							"group": "Data Source",
+							"tag": "Github Repository"
 						}
 					],
 					"scope": {
