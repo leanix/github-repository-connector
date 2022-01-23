@@ -70,7 +70,7 @@ jobs:
     strategy:
         matrix:
           # adding all the prod regions to region matrix below
-          region: [westeurope, germanywestcentral, eastus, canadacentral, australiaeast, switzerlandnorth]
+          region: [westeurope, germanywestcentral, eastus, canadacentral, australiaeast]
     steps:
       - name: Checkout
         uses: actions/checkout@v2

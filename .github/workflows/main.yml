@@ -21,7 +21,7 @@ jobs:
     strategy:
       matrix:
         # adding all the prod regions to region matrix below
-        region: [westeurope, germanywestcentral, eastus, canadacentral, australiaeast, switzerlandnorth]
+        region: [westeurope, germanywestcentral, eastus, canadacentral, australiaeast]
     steps:
       - name: 'Checkout GitHub Action'
         uses: actions/checkout@main

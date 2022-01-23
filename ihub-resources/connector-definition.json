@@ -1,6 +1,6 @@
 {
 	"name": "vsm-github-connector",
-	"description": "Connector to sync organization GitHub repo information into VSM Workspace",
+	"description": "",
 	"connectorUrl": "<filled in by GitHub Action>",
 	"documentationUrl": "https://docs-vsm.leanix.net/docs/github",
 	"connectorConfiguration": {
