@@ -1,25 +1,28 @@
-﻿const { graphql } = require('@octokit/graphql');
+﻿const GitHubClient = require('../Lib/GitHubClient');
 const { getLoggerInstanceFromUrlAndRunId } = require('../Lib/connectorLogger');
 
 class GetOrgTeamsDataHandler {
-	constructor(context, connectorLoggingUrl, runId) {
+	constructor(context, connectorLoggingUrl, runId, graphqlClient) {
 		this.context = context;
 		this.logger = getLoggerInstanceFromUrlAndRunId(connectorLoggingUrl, runId);
+		this.graphqlClient = graphqlClient;
+		this.graphqlClient.setLogger(this.logger);
 	}
 
 	static hasMoreRepos(team) {
 		return team.repositories.pageInfo.hasNextPage;
 	}
 
-	async getPagedRepos(graphqlClient, { teamId, cursor }) {
+	async getPagedRepos({ teamId, cursor }) {
 		const reposPageSize = 100;
-		const data = await graphqlClient({
+		const data = await this.graphqlClient.query({
 			query: `
             query getReposForTeam($teamId: ID!, $pageCount: Int!, $cursor: String) {
               node(id: $teamId) {
                 id
                 ... on Team {
                   repositories(first: $pageCount, after: $cursor) {
+                    totalCount
                     pageInfo {
                       endCursor
                       hasNextPage
@@ -40,30 +43,36 @@ class GetOrgTeamsDataHandler {
 
 		return {
 			repos: data.node.repositories.nodes,
-			pageInfo: data.node.repositories.pageInfo
+			pageInfo: data.node.repositories.pageInfo,
+			totalTeamReposCount: data.node.repositories.totalCount
 		};
 	}
 
-	async getAllReposForTeam(graphqlClient, team) {
+	async getAllReposForTeam(team) {
 		let repoCursor = null;
 		let finalResult = [];
 
 		do {
-			var { repos, pageInfo } = await this.getPagedRepos(graphqlClient, { teamId: team.id, cursor: repoCursor });
+			var { repos, pageInfo, totalTeamReposCount } = await this.getPagedRepos({ teamId: team.id, cursor: repoCursor });
 			finalResult = finalResult.concat(repos);
+			await this.logger.logInfo(
+				this.context,
+				`Fetching batch organisation team's repositories data. Team ID: ${team.id}, Fetch status: ${finalResult.length}/${totalTeamReposCount}`
+			);
 			repoCursor = pageInfo.endCursor;
 		} while (pageInfo.hasNextPage);
 
 		return finalResult;
 	}
 
-	async getPagedTeamsData(graphqlClient, { orgName, pageCount, cursor }) {
+	async getPagedTeamsData({ orgName, pageCount, cursor }) {
 		const initialRepoPageSize = 50;
-		const data = await graphqlClient({
+		const data = await this.graphqlClient.query({
 			query: `
             query getOrgTeams($queryString: String!, $pageCount: Int!, $cursor: String, $reposPageCount: Int!) {
               organization(login: $queryString) {
                 teams(first: $pageCount, after: $cursor) {
+                  totalCount
                   pageInfo {
                     endCursor
                     hasNextPage
@@ -100,24 +109,29 @@ class GetOrgTeamsDataHandler {
 
 		for (let team of teams) {
 			if (GetOrgTeamsDataHandler.hasMoreRepos(team)) {
-				team.repositories.nodes = await this.getAllReposForTeam(graphqlClient, team);
+				team.repositories.nodes = await this.getAllReposForTeam(team);
 			}
 		}
 
 		return {
 			teams,
-			pageInfo: data.organization.teams.pageInfo
+			pageInfo: data.organization.teams.pageInfo,
+			totalTeamsCount: data.organization.teams.totalCount
 		};
 	}
 
-	async getAllTeamsWithRepos(graphqlClient, orgName, repositoriesIds) {
+	async getAllTeamsWithRepos(orgName, repositoriesIds) {
 		let teamCursor = null;
 		let finalResult = [];
 		const teamPageSize = 25;
 
 		do {
-			var { teams, pageInfo } = await this.getPagedTeamsData(graphqlClient, { orgName, pageCount: teamPageSize, cursor: teamCursor });
+			var { teams, pageInfo, totalTeamsCount } = await this.getPagedTeamsData({ orgName, pageCount: teamPageSize, cursor: teamCursor });
 			finalResult = finalResult.concat(teams);
+			await this.logger.logInfo(
+				this.context,
+				`Fetching batch organisation teams data. Team fetch status : ${finalResult.length}/${totalTeamsCount}`
+			);
 			teamCursor = pageInfo.endCursor;
 		} while (pageInfo.hasNextPage);
 
@@ -142,13 +156,6 @@ class GetOrgTeamsDataHandler {
 }
 
 module.exports = async function (context, { orgName, ghToken, orgRepositoriesIds, metadata: { connectorLoggingUrl, runId } }) {
-	const graphqlClient = graphql.defaults({
-		headers: {
-			authorization: `token ${ghToken}`
-		}
-	});
-
-	let handler = new GetOrgTeamsDataHandler(context, connectorLoggingUrl, runId);
-	const finalResult = await handler.getAllTeamsWithRepos(graphqlClient, orgName, orgRepositoriesIds);
-	context.done(null, finalResult);
+	let handler = new GetOrgTeamsDataHandler(context, connectorLoggingUrl, runId, new GitHubClient(ghToken));
+	return await handler.getAllTeamsWithRepos(orgName, orgRepositoriesIds);
 };

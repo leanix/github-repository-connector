@@ -1,19 +1,21 @@
-const { graphql } = require('@octokit/graphql');
+const GitHubClient = require('../Lib/GitHubClient');
 const { getISODateStringOnFromToday } = require('../Lib/helper');
 
 module.exports = async function (context, { repoIds, ghToken }) {
-	const graphqlClient = graphql.defaults({
-		headers: {
-			authorization: `token ${ghToken}`
-		}
-	});
-	return await getReposData(context, repoIds, graphqlClient);
+	const handler = new SubReposDataHandler(context, new GitHubClient(ghToken));
+	return await handler.getReposData(repoIds);
 };
 
-async function getReposCommitHistoryData(context, graphqlClient, repoIds) {
-	try {
-		let data = await graphqlClient({
-			query: `
+class SubReposDataHandler {
+	constructor(context, graphqlClient) {
+		this.context = context;
+		this.graphqlClient = graphqlClient;
+	}
+
+	async getReposCommitHistoryData(repoIds) {
+		try {
+			let data = await this.graphqlClient.query({
+				query: `
 							query getReposData($repoIds:[ID!]!, $contributorHistorySince: GitTimestamp!){
 									nodes(ids: $repoIds){
 											id
@@ -42,29 +44,29 @@ async function getReposCommitHistoryData(context, graphqlClient, repoIds) {
 											}
 									}
 					`,
-			repoIds,
-			contributorHistorySince: getISODateStringOnFromToday()
-		});
-		return data.nodes;
-	} catch (e) {
-		context.log(`Failed to get repository commit history data, falling back to empty list. Error - ${e.message}`);
-		return [];
-	}
-}
-
-function mapRepoInfoToCommitHistory(repoInfos, reposCommitHistory) {
-	for (const repoInfo of repoInfos) {
-		let history = reposCommitHistory.find((history) => history.id === repoInfo.id);
-		repoInfo.defaultBranchRef = history ? history.defaultBranchRef : null;
+				repoIds,
+				contributorHistorySince: getISODateStringOnFromToday()
+			});
+			return data.nodes;
+		} catch (e) {
+			this.context.log(`Failed to get repository commit history data, falling back to empty list. Error - ${e.message}`);
+			return [];
+		}
 	}
 
-	return repoInfos;
-}
+	mapRepoInfoToCommitHistory(repoInfos, reposCommitHistory) {
+		for (const repoInfo of repoInfos) {
+			let history = reposCommitHistory.find((history) => history.id === repoInfo.id);
+			repoInfo.defaultBranchRef = history ? history.defaultBranchRef : null;
+		}
 
-async function getReposData(context, repoIds, graphqlClient) {
-	const initialLanguagePageSize = 50;
-	const data = await graphqlClient({
-		query: `
+		return repoInfos;
+	}
+
+	async getReposData(repoIds) {
+		const initialLanguagePageSize = 50;
+		const data = await this.graphqlClient.query({
+			query: `
             query getReposData($repoIds:[ID!]!, $languagePageCount: Int!){
                 nodes(ids: $repoIds){
                     id
@@ -97,40 +99,40 @@ async function getReposData(context, repoIds, graphqlClient) {
                     }
                 }
         `,
-		repoIds,
-		languagePageCount: initialLanguagePageSize
-	});
+			repoIds,
+			languagePageCount: initialLanguagePageSize
+		});
 
-	let repoInfos = data.nodes;
-	for (let repoInfo of repoInfos) {
-		if (repoInfo.languages.pageInfo.hasNextPage) {
-			repoInfo.languages.nodes = await getAllLanguagesForRepo(graphqlClient, repoInfo);
+		let repoInfos = data.nodes;
+		for (let repoInfo of repoInfos) {
+			if (repoInfo.languages.pageInfo.hasNextPage) {
+				repoInfo.languages.nodes = await this.getAllLanguagesForRepo(repoInfo);
+			}
 		}
+
+		const reposCommitHistoryData = await this.getReposCommitHistoryData(repoIds);
+		repoInfos = this.mapRepoInfoToCommitHistory(repoInfos, reposCommitHistoryData);
+
+		return repoInfos;
 	}
 
-	const reposCommitHistoryData = await getReposCommitHistoryData(context, graphqlClient, repoIds);
-	repoInfos = mapRepoInfoToCommitHistory(repoInfos, reposCommitHistoryData);
+	async getAllLanguagesForRepo(repoInfo) {
+		let languageCursor = null;
+		let finalResult = [];
 
-	return repoInfos;
-}
+		do {
+			var { languages, pageInfo } = await this.getPagedLanguages({ repoId: repoInfo.id, cursor: languageCursor });
+			finalResult = finalResult.concat(languages);
+			languageCursor = pageInfo.endCursor;
+		} while (pageInfo.hasNextPage);
 
-async function getAllLanguagesForRepo(graphqlClient, repoInfo) {
-	let languageCursor = null;
-	let finalResult = [];
+		return finalResult;
+	}
 
-	do {
-		var { languages, pageInfo } = await getPagedLanguages(graphqlClient, { repoId: repoInfo.id, cursor: languageCursor });
-		finalResult = finalResult.concat(languages);
-		languageCursor = pageInfo.endCursor;
-	} while (pageInfo.hasNextPage);
-
-	return finalResult;
-}
-
-async function getPagedLanguages(graphqlClient, { repoId, cursor }) {
-	const languagePageSize = 100;
-	const data = await graphqlClient({
-		query: `
+	async getPagedLanguages({ repoId, cursor }) {
+		const languagePageSize = 100;
+		const data = await this.graphqlClient.query({
+			query: `
             query getLanguagesForRepo($repoId: ID!, $pageCount: Int!, $cursor: String) {
                 node(id: $repoId) {
                     id
@@ -152,12 +154,13 @@ async function getPagedLanguages(graphqlClient, { repoId, cursor }) {
                 }
             }
         `,
-		repoId,
-		cursor,
-		pageCount: languagePageSize
-	});
-	return {
-		languages: data.node.languages.nodes,
-		pageInfo: data.node.languages.pageInfo
-	};
+			repoId,
+			cursor,
+			pageCount: languagePageSize
+		});
+		return {
+			languages: data.node.languages.nodes,
+			pageInfo: data.node.languages.pageInfo
+		};
+	}
 }

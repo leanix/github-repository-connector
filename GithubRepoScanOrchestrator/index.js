@@ -33,6 +33,12 @@ function* processForLdif(context, logger) {
 
 	const partialResults = yield* fetchReposDataConcurrently(context, ghToken, repositoriesIds);
 
+	yield context.df.callActivity('UpdateProgressToIHub', {
+		progressCallbackUrl,
+		status: iHubStatus.IN_PROGRESS,
+		message: 'Progress 20%'
+	});
+
 	yield logger.logInfoFromOrchestrator(
 		context,
 		context.df.isReplaying,
@@ -56,6 +62,11 @@ function* processForLdif(context, logger) {
 				`Team data will not be processed (default). reason: 'importTeams' flag is false`
 			);
 		}
+		yield context.df.callActivity('UpdateProgressToIHub', {
+			progressCallbackUrl,
+			status: iHubStatus.IN_PROGRESS,
+			message: 'Progress 40%'
+		});
 	} catch (e) {
 		context.log(e);
 		yield logger.logError(context, e.message);
@@ -89,7 +100,7 @@ function* processForLdif(context, logger) {
 	yield context.df.callActivity('UpdateProgressToIHub', {
 		progressCallbackUrl,
 		status: iHubStatus.IN_PROGRESS,
-		message: 'Successfully requested the data from GitHub'
+		message: 'Progress: 90%, Successfully requested the data from GitHub'
 	});
 
 	yield context.df.callActivity('SaveLdifToStorage', {
@@ -104,6 +115,10 @@ function* processForLdif(context, logger) {
 		}
 	});
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully generated LDIF and saved into storage');
+	return {
+		totalRepositories: repositoriesIds.length,
+		totalTeams: teamResults.length
+	};
 }
 
 function* fetchReposDataConcurrently(context, ghToken, repositoriesIds) {
@@ -113,7 +128,7 @@ function* fetchReposDataConcurrently(context, ghToken, repositoriesIds) {
 		allReposSetOfCapacity.push(repositoriesIds.slice(i, i + scannerCapacity));
 	}
 
-	const partialResults = [];
+	const completePartialResults = [];
 	const workers = 4;
 	const workingGroups = [];
 	for (let i = 0, j = allReposSetOfCapacity.length; i < j; i += workers) {
@@ -125,11 +140,11 @@ function* fetchReposDataConcurrently(context, ghToken, repositoriesIds) {
 		for (const workingGroupElement of workingGroup) {
 			output.push(context.df.callActivity('GetSubReposData', { repoIds: workingGroupElement, ghToken }));
 		}
-		const completePartialResults = yield context.df.Task.all(output);
-		partialResults.push(...completePartialResults);
+		const partialResults = yield context.df.Task.all(output);
+		completePartialResults.push(...partialResults);
 	}
 
-	return partialResults;
+	return completePartialResults;
 }
 
 module.exports = df.orchestrator(function* (context) {
@@ -140,7 +155,12 @@ module.exports = df.orchestrator(function* (context) {
 
 	try {
 		yield context.df.callActivity('TestConnector', context.bindingData.input);
-		yield* processForLdif(context, logger);
+		const logDataMetricsInfo = yield* processForLdif(context, logger);
+		yield context.df.callActivity('UpdateProgressToIHub', {
+			progressCallbackUrl,
+			status: iHubStatus.IN_PROGRESS,
+			message: `Progress 100%. Total repositories fetched: ${logDataMetricsInfo.totalRepositories}, Total teams fetched: ${logDataMetricsInfo.totalTeams}`
+		});
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, { progressCallbackUrl, status: iHubStatus.FINISHED });
 	} catch (e) {
 		context.log(e);
