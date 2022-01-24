@@ -1,6 +1,6 @@
 const { graphql } = require('@octokit/graphql');
 
-const RETRY_WAIT = 2 * 60; // 2 minutes
+const RETRY_WAIT = 7 * 60; // 7 minutes
 
 class GitHubClient {
 	constructor(token) {

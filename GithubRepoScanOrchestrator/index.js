@@ -31,7 +31,7 @@ function* processForLdif(context, logger) {
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched ids of all repos present in the org');
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching complete repo information from collected repo ids.');
 
-	const partialResults = yield* fetchReposDataConcurrently(context, ghToken, repositoriesIds);
+	const partialResults = yield* fetchReposDataConcurrently(context, connectorLoggingUrl, runId, ghToken, repositoriesIds);
 
 	yield context.df.callActivity('UpdateProgressToIHub', {
 		progressCallbackUrl,
@@ -121,7 +121,7 @@ function* processForLdif(context, logger) {
 	};
 }
 
-function* fetchReposDataConcurrently(context, ghToken, repositoriesIds) {
+function* fetchReposDataConcurrently(context, connectorLoggingUrl, runId, ghToken, repositoriesIds) {
 	const scannerCapacity = 100;
 	const allReposSetOfCapacity = [];
 	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
@@ -138,7 +138,7 @@ function* fetchReposDataConcurrently(context, ghToken, repositoriesIds) {
 	for (const workingGroup of workingGroups) {
 		const output = [];
 		for (const workingGroupElement of workingGroup) {
-			output.push(context.df.callActivity('GetSubReposData', { repoIds: workingGroupElement, ghToken }));
+			output.push(context.df.callActivity('GetSubReposData', { repoIds: workingGroupElement, ghToken, connectorLoggingUrl, runId }));
 		}
 		const partialResults = yield context.df.Task.all(output);
 		completePartialResults.push(...partialResults);
