@@ -20,6 +20,7 @@ class GetOrgTeamsDataHandler {
                 id
                 ... on Team {
                   repositories(first: $pageCount, after: $cursor) {
+                    totalCount
                     pageInfo {
                       endCursor
                       hasNextPage
@@ -40,7 +41,8 @@ class GetOrgTeamsDataHandler {
 
 		return {
 			repos: data.node.repositories.nodes,
-			pageInfo: data.node.repositories.pageInfo
+			pageInfo: data.node.repositories.pageInfo,
+			totalTeamReposCount: data.node.repositories.totalCount
 		};
 	}
 
@@ -49,9 +51,8 @@ class GetOrgTeamsDataHandler {
 		let finalResult = [];
 
 		do {
-			// todo add log data
-			await this.logger.logInfo(this.context, `Fetching batch organisation team's repositories data. Status : `);
-			var { repos, pageInfo } = await this.getPagedRepos(graphqlClient, { teamId: team.id, cursor: repoCursor });
+			var { repos, pageInfo, totalTeamReposCount } = await this.getPagedRepos(graphqlClient, { teamId: team.id, cursor: repoCursor });
+			await this.logger.logInfo(this.context, `Fetching batch organisation team's repositories data. Team ID: ${team.id}, Fetch status: ${finalResult.length}/${totalTeamReposCount}`);
 			finalResult = finalResult.concat(repos);
 			repoCursor = pageInfo.endCursor;
 		} while (pageInfo.hasNextPage);
@@ -66,6 +67,7 @@ class GetOrgTeamsDataHandler {
             query getOrgTeams($queryString: String!, $pageCount: Int!, $cursor: String, $reposPageCount: Int!) {
               organization(login: $queryString) {
                 teams(first: $pageCount, after: $cursor) {
+                  totalCount
                   pageInfo {
                     endCursor
                     hasNextPage
@@ -108,7 +110,8 @@ class GetOrgTeamsDataHandler {
 
 		return {
 			teams,
-			pageInfo: data.organization.teams.pageInfo
+			pageInfo: data.organization.teams.pageInfo,
+			totalTeamsCount: data.organization.teams.totalCount
 		};
 	}
 
@@ -118,9 +121,8 @@ class GetOrgTeamsDataHandler {
 		const teamPageSize = 25;
 
 		do {
-			// todo add log data
-			await this.logger.logInfo(this.context, `Fetching batch organisation teams data. Status : `);
-			var { teams, pageInfo } = await this.getPagedTeamsData(graphqlClient, { orgName, pageCount: teamPageSize, cursor: teamCursor });
+			var { teams, pageInfo, totalTeamsCount } = await this.getPagedTeamsData(graphqlClient, { orgName, pageCount: teamPageSize, cursor: teamCursor });
+			await this.logger.logInfo(this.context, `Fetching batch organisation teams data. Team fetch status : ${finalResult.length}/${totalTeamsCount}`);
 			finalResult = finalResult.concat(teams);
 			teamCursor = pageInfo.endCursor;
 		} while (pageInfo.hasNextPage);

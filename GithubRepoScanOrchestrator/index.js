@@ -33,6 +33,12 @@ function* processForLdif(context, logger) {
 
 	const partialResults = yield* fetchReposDataConcurrently(context, ghToken, repositoriesIds);
 
+	yield context.df.callActivity('UpdateProgressToIHub', {
+		progressCallbackUrl,
+		status: iHubStatus.IN_PROGRESS,
+		message: 'Progress 20%'
+	});
+
 	yield logger.logInfoFromOrchestrator(
 		context,
 		context.df.isReplaying,
@@ -41,7 +47,6 @@ function* processForLdif(context, logger) {
 
 	try {
 		yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching organisation teams related data');
-		// pararrelise this function, timeout issue
 		var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
 			orgName,
 			ghToken,
@@ -57,6 +62,11 @@ function* processForLdif(context, logger) {
 				`Team data will not be processed (default). reason: 'importTeams' flag is false`
 			);
 		}
+		yield context.df.callActivity('UpdateProgressToIHub', {
+			progressCallbackUrl,
+			status: iHubStatus.IN_PROGRESS,
+			message: 'Progress 40%'
+		});
 	} catch (e) {
 		context.log(e);
 		yield logger.logError(context, e.message);
@@ -90,7 +100,7 @@ function* processForLdif(context, logger) {
 	yield context.df.callActivity('UpdateProgressToIHub', {
 		progressCallbackUrl,
 		status: iHubStatus.IN_PROGRESS,
-		message: 'Successfully requested the data from GitHub'
+		message: 'Progress: 90%, Successfully requested the data from GitHub'
 	});
 
 	yield context.df.callActivity('SaveLdifToStorage', {
@@ -114,31 +124,20 @@ function* fetchReposDataConcurrently(context, ghToken, repositoriesIds) {
 		allReposSetOfCapacity.push(repositoriesIds.slice(i, i + scannerCapacity));
 	}
 
-	// todo remove concurrency
 	const completePartialResults = [];
-	const workers = 2;
+	const workers = 4;
 	const workingGroups = [];
 	for (let i = 0, j = allReposSetOfCapacity.length; i < j; i += workers) {
 		workingGroups.push(allReposSetOfCapacity.slice(i, i + workers));
 	}
 
-	let fetchedUntilNow = 0;
 	for (const workingGroup of workingGroups) {
-		yield context.df.callActivity('UpdateProgressToIHub', {
-			progressCallbackUrl: context.bindingData.input.progressCallbackUrl,
-			status: iHubStatus.IN_PROGRESS,
-			message: `Fetching batch repositories data. status: ${fetchedUntilNow}/${repositoriesIds.length}`
-		});
-
 		const output = [];
 		for (const workingGroupElement of workingGroup) {
 			output.push(context.df.callActivity('GetSubReposData', { repoIds: workingGroupElement, ghToken }));
 		}
 		const partialResults = yield context.df.Task.all(output);
-		fetchedUntilNow += partialResults.flatMap((x) => x).length;
 		completePartialResults.push(...partialResults);
-
-		// todo add delay 5m https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-timers?tabs=javascript#usage-for-delay
 	}
 
 	return completePartialResults;
