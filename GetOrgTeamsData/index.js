@@ -52,8 +52,8 @@ class GetOrgTeamsDataHandler {
 
 		do {
 			var { repos, pageInfo, totalTeamReposCount } = await this.getPagedRepos(graphqlClient, { teamId: team.id, cursor: repoCursor });
-			await this.logger.logInfo(this.context, `Fetching batch organisation team's repositories data. Team ID: ${team.id}, Fetch status: ${finalResult.length}/${totalTeamReposCount}`);
 			finalResult = finalResult.concat(repos);
+			await this.logger.logInfo(this.context, `Fetching batch organisation team's repositories data. Team ID: ${team.id}, Fetch status: ${finalResult.length}/${totalTeamReposCount}`);
 			repoCursor = pageInfo.endCursor;
 		} while (pageInfo.hasNextPage);
 
@@ -122,8 +122,8 @@ class GetOrgTeamsDataHandler {
 
 		do {
 			var { teams, pageInfo, totalTeamsCount } = await this.getPagedTeamsData(graphqlClient, { orgName, pageCount: teamPageSize, cursor: teamCursor });
-			await this.logger.logInfo(this.context, `Fetching batch organisation teams data. Team fetch status : ${finalResult.length}/${totalTeamsCount}`);
 			finalResult = finalResult.concat(teams);
+			await this.logger.logInfo(this.context, `Fetching batch organisation teams data. Team fetch status : ${finalResult.length}/${totalTeamsCount}`);
 			teamCursor = pageInfo.endCursor;
 		} while (pageInfo.hasNextPage);
 
