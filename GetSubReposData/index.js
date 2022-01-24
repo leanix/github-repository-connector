@@ -1,15 +1,18 @@
 const GitHubClient = require('../Lib/GitHubClient');
 const { getISODateStringOnFromToday } = require('../Lib/helper');
+const { getLoggerInstanceFromUrlAndRunId } = require('../Lib/connectorLogger');
 
-module.exports = async function (context, { repoIds, ghToken }) {
-	const handler = new SubReposDataHandler(context, new GitHubClient(ghToken));
+module.exports = async function (context, { repoIds, connectorLoggingUrl, runId, ghToken }) {
+	const handler = new SubReposDataHandler(context, connectorLoggingUrl, runId, new GitHubClient(ghToken));
 	return await handler.getReposData(repoIds);
 };
 
 class SubReposDataHandler {
-	constructor(context, graphqlClient) {
+	constructor(context, connectorLoggingUrl, runId, graphqlClient) {
 		this.context = context;
 		this.graphqlClient = graphqlClient;
+		this.logger = getLoggerInstanceFromUrlAndRunId(connectorLoggingUrl, runId);
+		this.graphqlClient.setLogger(this.logger);
 	}
 
 	async getReposCommitHistoryData(repoIds) {
