@@ -107,7 +107,7 @@ function* processForLdif(context, logger) {
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully generated LDIF and saved into storage');
 }
 
-function* fetchReposDataConcurrently(context,  ghToken, repositoriesIds) {
+function* fetchReposDataConcurrently(context, ghToken, repositoriesIds) {
 	const scannerCapacity = 100;
 	const allReposSetOfCapacity = [];
 	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
@@ -128,14 +128,14 @@ function* fetchReposDataConcurrently(context,  ghToken, repositoriesIds) {
 			progressCallbackUrl: context.bindingData.input.progressCallbackUrl,
 			status: iHubStatus.IN_PROGRESS,
 			message: `Fetching batch repositories data. status: ${fetchedUntilNow}/${repositoriesIds.length}`
-		})
+		});
 
 		const output = [];
 		for (const workingGroupElement of workingGroup) {
 			output.push(context.df.callActivity('GetSubReposData', { repoIds: workingGroupElement, ghToken }));
 		}
 		const partialResults = yield context.df.Task.all(output);
-		fetchedUntilNow += partialResults.flatMap(x => x).length;
+		fetchedUntilNow += partialResults.flatMap((x) => x).length;
 		completePartialResults.push(...partialResults);
 
 		// todo add delay 5m https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-timers?tabs=javascript#usage-for-delay

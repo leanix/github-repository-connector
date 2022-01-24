@@ -1,22 +1,23 @@
-﻿const { graphql } = require('@octokit/graphql');
-const { getLoggerInstanceFromUrlAndRunId } = require('../Lib/connectorLogger');
+﻿const { getLoggerInstanceFromUrlAndRunId } = require('../Lib/connectorLogger');
+const GitHubClient = require('../Lib/GitHubClient');
 
 class GetAllRepositoriesForOrgHandler {
-	constructor(context, connectorLoggingUrl, runId) {
+	constructor(context, connectorLoggingUrl, runId, graphqlClient) {
 		this.context = context;
 		this.logger = getLoggerInstanceFromUrlAndRunId(connectorLoggingUrl, runId);
+		this.graphqlClient = graphqlClient;
+		this.graphqlClient.setLogger(this.logger);
 	}
 
 	excludeListedRepositoriesIDsList(repositoriesData, repoNamesExcludeListChecked) {
 		const regexExcludeListArray = repoNamesExcludeListChecked.map((regexString) => new RegExp(regexString));
-		let remainingRepoIdsArray = repositoriesData
+		return repositoriesData
 			.filter((repoData) => !regexExcludeListArray.find((regex) => repoData.name.match(regex)))
 			.map((repoData) => repoData.id);
-		return remainingRepoIdsArray;
 	}
 
-	async getRepositoriesIds(graphqlClient, { orgName, pageCount, cursor }, repoNamesExcludeListChecked) {
-		const data = await graphqlClient({
+	async getRepositoriesIds({ orgName, pageCount, cursor }, repoNamesExcludeListChecked) {
+		const data = await this.graphqlClient.query({
 			query: `
 				query getOrgRepositories($orgName: String!, $pageCount: Int!, $cursor: String) {
 				  organization(login: $orgName) {
@@ -46,13 +47,12 @@ class GetAllRepositoriesForOrgHandler {
 		};
 	}
 
-	async getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListChecked) {
+	async getAllRepositoryIds(orgName, repoNamesExcludeListChecked) {
 		let cursor = null;
 		let finalResult = [];
 
 		do {
 			var { ids, pageInfo } = await this.getRepositoriesIds(
-				graphqlClient,
 				{
 					orgName,
 					pageCount: 100,
@@ -76,12 +76,7 @@ class GetAllRepositoriesForOrgHandler {
 }
 
 module.exports = async function (context, { orgName, repoNamesExcludeListChecked, ghToken, metadata: { connectorLoggingUrl, runId } }) {
-	const graphqlClient = graphql.defaults({
-		headers: {
-			authorization: `token ${ghToken}`
-		}
-	});
-	let handler = new GetAllRepositoriesForOrgHandler(context, connectorLoggingUrl, runId);
-	const finalResult = await handler.getAllRepositoryIds(graphqlClient, orgName, repoNamesExcludeListChecked);
+	let handler = new GetAllRepositoriesForOrgHandler(context, connectorLoggingUrl, runId, new GitHubClient(ghToken));
+	const finalResult = await handler.getAllRepositoryIds(orgName, repoNamesExcludeListChecked);
 	context.done(null, finalResult);
 };
