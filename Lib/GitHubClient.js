@@ -24,7 +24,7 @@ class GitHubClient {
 					throw new Error(`Graphql rate limit exceeded. Connector is not yet capable to recover automatically. error: ${e.message}`);
 				}
 
-				if(e.message.includes('You have exceeded a secondary rate limit')) {
+				if (e.message.includes('You have exceeded a secondary rate limit')) {
 					if (this.connectorLogger) {
 						await this.connectorLogger.logInfo('GitHub API rate limit exceeded. Attempting to automatically recover.');
 					}
