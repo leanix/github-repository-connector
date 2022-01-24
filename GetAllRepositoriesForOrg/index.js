@@ -77,6 +77,5 @@ class GetAllRepositoriesForOrgHandler {
 
 module.exports = async function (context, { orgName, repoNamesExcludeListChecked, ghToken, metadata: { connectorLoggingUrl, runId } }) {
 	let handler = new GetAllRepositoriesForOrgHandler(context, connectorLoggingUrl, runId, new GitHubClient(ghToken));
-	const finalResult = await handler.getAllRepositoryIds(orgName, repoNamesExcludeListChecked);
-	context.done(null, finalResult);
+	return await handler.getAllRepositoryIds(orgName, repoNamesExcludeListChecked);
 };
