@@ -163,5 +163,4 @@ class SubReposDataHandler {
 			pageInfo: data.node.languages.pageInfo
 		};
 	}
-
 }

@@ -118,7 +118,7 @@ function* processForLdif(context, logger) {
 	return {
 		totalRepositories: repositoriesIds.length,
 		totalTeams: teamResults.length
-	}
+	};
 }
 
 function* fetchReposDataConcurrently(context, ghToken, repositoriesIds) {
@@ -155,9 +155,12 @@ module.exports = df.orchestrator(function* (context) {
 
 	try {
 		yield context.df.callActivity('TestConnector', context.bindingData.input);
-		// todo add rate limit info
 		const logDataMetricsInfo = yield* processForLdif(context, logger);
-		// todo add rate limit info, logDataMetricsInfo
+		yield context.df.callActivity('UpdateProgressToIHub', {
+			progressCallbackUrl,
+			status: iHubStatus.IN_PROGRESS,
+			message: `Progress 100%. Total repositories fetched: ${logDataMetricsInfo.totalRepositories}, Total teams fetched: ${logDataMetricsInfo.totalTeams}`
+		});
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, { progressCallbackUrl, status: iHubStatus.FINISHED });
 	} catch (e) {
 		context.log(e);

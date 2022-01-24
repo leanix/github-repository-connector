@@ -1,4 +1,6 @@
-const { graphql, GraphqlResponseError } = require('@octokit/graphql');
+const { graphql } = require('@octokit/graphql');
+
+RETRY_WAIT = 2 * 60; // 2 minutes
 
 class GitHubClient {
 	graphqlClient;
@@ -20,11 +22,17 @@ class GitHubClient {
 		try {
 			return await this.graphqlClient(gqlRequestObject);
 		} catch (e) {
-			if (e instanceof GraphqlResponseError) {
-				await this.connectorLogger.logInfo('GitHub rate limit exceeded. Attempting to automatically recover.');
-        const retryAfterSeconds = e.headers ? e.headers['Retry-After'] : e.headers['Retry-After'] ? e.headers['Retry-After']: 2 * 60;
-        await sleep(retryAfterSeconds);
-        return await this.graphqlClient(gqlRequestObject);
+			if (e.name === 'GraphqlError') {
+				if (parseInt(e.headers['x-ratelimit-remaining']) === 0) {
+					throw new Error(`Graphql rate limit exceeded. Connector is not yet capable to recover automatically. error: ${e.message}`);
+				}
+
+				if (this.connectorLogger) {
+					await this.connectorLogger.logInfo('GitHub API rate limit exceeded. Attempting to automatically recover.');
+				}
+
+				await sleep(RETRY_WAIT * 1000);
+				return await this.graphqlClient(gqlRequestObject);
 			}
 			throw e;
 		}
@@ -32,9 +40,9 @@ class GitHubClient {
 }
 
 async function sleep(ms) {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms);
-  })
+	return new Promise((resolve) => {
+		setTimeout(resolve, ms);
+	});
 }
 
 module.exports = GitHubClient;
