@@ -6,7 +6,7 @@ class GetOrgTeamsDataHandler {
 		this.context = context;
 		this.logger = getLoggerInstanceFromUrlAndRunId(connectorLoggingUrl, runId);
 		this.graphqlClient = graphqlClient;
-		this.graphqlClient.setLogger(this.logger);
+		this.graphqlClient.setLogger(this.logger, this.context);
 	}
 
 	static hasMoreRepos(team) {

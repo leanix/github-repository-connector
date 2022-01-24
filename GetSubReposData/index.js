@@ -12,7 +12,7 @@ class SubReposDataHandler {
 		this.context = context;
 		this.graphqlClient = graphqlClient;
 		this.logger = getLoggerInstanceFromUrlAndRunId(connectorLoggingUrl, runId);
-		this.graphqlClient.setLogger(this.logger);
+		this.graphqlClient.setLogger(this.logger, this.context);
 	}
 
 	async getReposCommitHistoryData(repoIds) {
