@@ -57,7 +57,7 @@ class GetOrgTeamsDataHandler {
 			finalResult = finalResult.concat(repos);
 			await this.logger.logInfo(
 				this.context,
-				`Fetching batch organisation team's repositories data. Team ID: ${team.id}, Fetch status: ${finalResult.length}/${totalTeamReposCount}`
+				`Fetching batch-wise organisation team's repositories data. Team ID: ${team.id}, Fetch status: ${finalResult.length}/${totalTeamReposCount}`
 			);
 			repoCursor = pageInfo.endCursor;
 		} while (pageInfo.hasNextPage);
@@ -139,8 +139,7 @@ class GetOrgTeamsDataHandler {
 			team.repositories.nodes = this.filterNonOrgReposFromTeam(repositoriesIds)(team.repositories.nodes);
 		}
 
-		await this.logger.logInfo(this.context, `Fetched org teams. Result : ${finalResult.length} teams`);
-
+		await this.logger.logInfo(this.context, `Completed fetching organisation teams. Result: ${finalResult.length}`);
 		return finalResult;
 	}
 

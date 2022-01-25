@@ -31,7 +31,7 @@ function* processForLdif(context, logger) {
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched ids of all repos present in the org');
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching complete repo information from collected repo ids.');
 
-	const partialResults = yield* fetchReposDataConcurrently(context, connectorLoggingUrl, runId, ghToken, repositoriesIds);
+	const partialResults = yield* fetchReposDataConcurrently(context, repositoriesIds);
 
 	yield context.df.callActivity('UpdateProgressToIHub', {
 		progressCallbackUrl,
@@ -45,34 +45,9 @@ function* processForLdif(context, logger) {
 		'Successfully fetched complete repo information from collected repo ids.'
 	);
 
-	try {
-		yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching organisation teams related data');
-		var teamResults = yield context.df.callActivity('GetOrgTeamsData', {
-			orgName,
-			ghToken,
-			orgRepositoriesIds: repositoriesIds,
-			metadata: { connectorLoggingUrl, runId }
-		});
-		yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched organisation teams data');
-		// Default case is true. so, explicitly check for false(boolean)
-		if (flags && flags.importTeams === false) {
-			yield logger.logInfoFromOrchestrator(
-				context,
-				context.df.isReplaying,
-				`Team data will not be processed (default). reason: 'importTeams' flag is false`
-			);
-		}
-		yield context.df.callActivity('UpdateProgressToIHub', {
-			progressCallbackUrl,
-			status: iHubStatus.IN_PROGRESS,
-			message: 'Progress 40%'
-		});
-	} catch (e) {
-		context.log(e);
-		yield logger.logError(context, e.message);
-		teamResults = [];
-	}
-	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching repo visibility related data');
+	const teamResults = yield* fetchTeams(context, logger, repositoriesIds);
+
+	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, `Fetching repository's visibility related data`);
 	const repoVisibilityOutput = [];
 	const repoVisibilities = ['private', 'public', 'internal'];
 	for (let visibilityType of repoVisibilities) {
@@ -121,8 +96,14 @@ function* processForLdif(context, logger) {
 	};
 }
 
-function* fetchReposDataConcurrently(context, connectorLoggingUrl, runId, ghToken, repositoriesIds) {
-	const scannerCapacity = 100;
+function* fetchReposDataConcurrently(context, repositoriesIds) {
+  const {
+    secretsConfiguration: { ghToken },
+    connectorLoggingUrl,
+    runId
+  } = context.bindingData.input;
+
+  const scannerCapacity = 100;
 	const allReposSetOfCapacity = [];
 	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
 		allReposSetOfCapacity.push(repositoriesIds.slice(i, i + scannerCapacity));
@@ -145,6 +126,45 @@ function* fetchReposDataConcurrently(context, connectorLoggingUrl, runId, ghToke
 	}
 
 	return completePartialResults;
+}
+
+function* fetchTeams(context, logger, repositoriesIds) {
+
+	const {
+		connectorConfiguration: { orgName, flags },
+		secretsConfiguration: { ghToken },
+		progressCallbackUrl,
+		connectorLoggingUrl,
+		runId
+	} = context.bindingData.input;
+
+	try {
+		yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching organisation teams related data');
+		const teamResults = yield context.df.callActivity('GetOrgTeamsData', {
+			orgName,
+			ghToken,
+			orgRepositoriesIds: repositoriesIds,
+			metadata: { connectorLoggingUrl, runId }
+		});
+		yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched organisation teams data');
+		// Default case is true. so, explicitly check for false(boolean)
+		if (flags && flags.importTeams === false) {
+			yield logger.logInfoFromOrchestrator(
+				context,
+				context.df.isReplaying,
+				`Team data will not be processed (default). reason: 'importTeams' flag is false`
+			);
+		}
+		yield context.df.callActivity('UpdateProgressToIHub', {
+			progressCallbackUrl,
+			status: iHubStatus.IN_PROGRESS,
+			message: 'Progress 40%'
+		});
+		return teamResults;
+	} catch (e) {
+		yield logger.logError(context, e.message);
+		 return [];
+	}
 }
 
 module.exports = df.orchestrator(function* (context) {
