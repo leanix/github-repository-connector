@@ -150,26 +150,24 @@ function* fetchTeams(context, logger, repositoriesIds) {
 			metadata: { connectorLoggingUrl, runId }
 		});
 
-
 		const finalTeamsResult = [];
-		const output = [];
-		for (const team of teamResultsWithInitialRepos) {
-			if (team.hasMoreReposInitialSet) {
-				output.push(
-					context.df.callActivity('GetOrgTeamReposData', {
-						orgName,
-						ghToken,
-						orgRepositoriesIds: repositoriesIds,
-						team,
-						metadata: { connectorLoggingUrl, runId }
-					})
-				);
-			} else {
-				finalTeamsResult.push(team);
+		if (teamResultsWithInitialRepos && teamResultsWithInitialRepos.length) {
+			const output = [];
+			for (const team of teamResultsWithInitialRepos) {
+				if (team.hasMoreReposInitialSet) {
+					output.push(
+						context.df.callActivity('GetOrgTeamReposData', {
+							orgName,
+							ghToken,
+							orgRepositoriesIds: repositoriesIds,
+							team,
+							metadata: { connectorLoggingUrl, runId }
+						})
+					);
+				} else {
+					finalTeamsResult.push(team);
+				}
 			}
-		}
-
-		if(teamResultsWithInitialRepos && teamResultsWithInitialRepos.length) {
 			const teamWithAllRepos = yield context.df.Task.all(output);
 			finalTeamsResult.push(...teamWithAllRepos);
 		}
