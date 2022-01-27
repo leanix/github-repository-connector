@@ -46,6 +46,11 @@ function* processForLdif(context, logger) {
 	);
 
 	const teamResults = yield* fetchTeams(context, logger, repositoriesIds);
+	yield context.df.callActivity('UpdateProgressToIHub', {
+		progressCallbackUrl,
+		status: iHubStatus.IN_PROGRESS,
+		message: 'Progress 40%'
+	});
 
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, `Fetching repository's visibility related data`);
 	const repoVisibilityOutput = [];
@@ -97,13 +102,13 @@ function* processForLdif(context, logger) {
 }
 
 function* fetchReposDataConcurrently(context, repositoriesIds) {
-  const {
-    secretsConfiguration: { ghToken },
-    connectorLoggingUrl,
-    runId
-  } = context.bindingData.input;
+	const {
+		secretsConfiguration: { ghToken },
+		connectorLoggingUrl,
+		runId
+	} = context.bindingData.input;
 
-  const scannerCapacity = 100;
+	const scannerCapacity = 100;
 	const allReposSetOfCapacity = [];
 	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
 		allReposSetOfCapacity.push(repositoriesIds.slice(i, i + scannerCapacity));
@@ -129,24 +134,44 @@ function* fetchReposDataConcurrently(context, repositoriesIds) {
 }
 
 function* fetchTeams(context, logger, repositoriesIds) {
-
 	const {
 		connectorConfiguration: { orgName, flags },
 		secretsConfiguration: { ghToken },
-		progressCallbackUrl,
 		connectorLoggingUrl,
 		runId
 	} = context.bindingData.input;
 
 	try {
 		yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching organisation teams related data');
-		const teamResults = yield context.df.callActivity('GetOrgTeamsData', {
+		const teamResultsWithInitialRepos = yield context.df.callActivity('GetOrgTeamsData', {
 			orgName,
 			ghToken,
 			orgRepositoriesIds: repositoriesIds,
 			metadata: { connectorLoggingUrl, runId }
 		});
-		yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched organisation teams data');
+
+		const finalTeamsResult = []
+		const output = [];
+		for (const team of teamResultsWithInitialRepos) {
+			if (team.hasMoreReposInitialSet) {
+				output.push(
+					context.df.callActivity('GetOrgTeamReposData', {
+						orgName,
+						ghToken,
+						orgRepositoriesIds: repositoriesIds,
+						team,
+						metadata: { connectorLoggingUrl, runId }
+					})
+				);
+			} else {
+				finalTeamsResult.push(team)
+			}
+		}
+		const teamWithAllRepos = yield context.df.Task.all(output);
+		finalTeamsResult.push(...teamWithAllRepos);
+
+		yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, `Successfully fetched organisation teams data. Result: ${finalTeamsResult.length}`);
+
 		// Default case is true. so, explicitly check for false(boolean)
 		if (flags && flags.importTeams === false) {
 			yield logger.logInfoFromOrchestrator(
@@ -155,15 +180,10 @@ function* fetchTeams(context, logger, repositoriesIds) {
 				`Team data will not be processed (default). reason: 'importTeams' flag is false`
 			);
 		}
-		yield context.df.callActivity('UpdateProgressToIHub', {
-			progressCallbackUrl,
-			status: iHubStatus.IN_PROGRESS,
-			message: 'Progress 40%'
-		});
-		return teamResults;
+		return finalTeamsResult;
 	} catch (e) {
 		yield logger.logError(context, e.message);
-		 return [];
+		return [];
 	}
 }
 
