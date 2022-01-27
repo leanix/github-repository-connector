@@ -7,36 +7,6 @@
 		"processingDirection": "inbound",
 		"processingMode": "full",
 		"deletionScope": {
-			"tags": [
-				{
-					"tagScopes": [
-						{
-							"group": "Data Quality",
-							"tag": "github-tracking-disabled"
-						}
-					],
-					"scope": {
-						"ids": [],
-						"facetFilters": [
-							{
-								"keys": ["Microservice"],
-								"facetKey": "FactSheetTypes",
-								"operator": "AND"
-							},
-							{
-								"keys": ["${integration.tags.getTagId('Data Quality','github-tracking-disabled')}"],
-								"facetKey": "${integration.tags.getTagGroupId('Data Quality')}",
-								"operator": "AND"
-							},
-							{
-								"keys": ["${integration.tags.getTagId('Data Source','GitHub Repository')}"],
-								"facetKey": "${integration.tags.getTagGroupId('Data Source')}",
-								"operator": "AND"
-							}
-						]
-					}
-				}
-			],
 			"subscriptions": [
 				{
 					"subscriptionScopes": [
@@ -58,8 +28,7 @@
 				}
 			],
 			"maximumDeletionRatio": {
-				"subscriptions": 100,
-				"tags": 100
+				"subscriptions": 100
 			}
 		},
 		"processors": [
