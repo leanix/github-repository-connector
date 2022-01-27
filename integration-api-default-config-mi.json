@@ -14,7 +14,7 @@
 							"group": "Data Quality",
 							"tag": "github-tracking-disabled"
 						},
-                        {
+						{
 							"group": "Data Source",
 							"tag": "Github repository"
 						}
