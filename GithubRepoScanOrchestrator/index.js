@@ -150,6 +150,7 @@ function* fetchTeams(context, logger, repositoriesIds) {
 			metadata: { connectorLoggingUrl, runId }
 		});
 
+
 		const finalTeamsResult = [];
 		const output = [];
 		for (const team of teamResultsWithInitialRepos) {
@@ -167,8 +168,11 @@ function* fetchTeams(context, logger, repositoriesIds) {
 				finalTeamsResult.push(team);
 			}
 		}
-		const teamWithAllRepos = yield context.df.Task.all(output);
-		finalTeamsResult.push(...teamWithAllRepos);
+
+		if(teamResultsWithInitialRepos && teamResultsWithInitialRepos.length) {
+			const teamWithAllRepos = yield context.df.Task.all(output);
+			finalTeamsResult.push(...teamWithAllRepos);
+		}
 
 		yield logger.logInfoFromOrchestrator(
 			context,
