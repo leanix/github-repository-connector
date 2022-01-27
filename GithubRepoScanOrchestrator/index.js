@@ -150,7 +150,7 @@ function* fetchTeams(context, logger, repositoriesIds) {
 			metadata: { connectorLoggingUrl, runId }
 		});
 
-		const finalTeamsResult = []
+		const finalTeamsResult = [];
 		const output = [];
 		for (const team of teamResultsWithInitialRepos) {
 			if (team.hasMoreReposInitialSet) {
@@ -164,13 +164,17 @@ function* fetchTeams(context, logger, repositoriesIds) {
 					})
 				);
 			} else {
-				finalTeamsResult.push(team)
+				finalTeamsResult.push(team);
 			}
 		}
 		const teamWithAllRepos = yield context.df.Task.all(output);
 		finalTeamsResult.push(...teamWithAllRepos);
 
-		yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, `Successfully fetched organisation teams data. Result: ${finalTeamsResult.length}`);
+		yield logger.logInfoFromOrchestrator(
+			context,
+			context.df.isReplaying,
+			`Successfully fetched organisation teams data. Result: ${finalTeamsResult.length}`
+		);
 
 		// Default case is true. so, explicitly check for false(boolean)
 		if (flags && flags.importTeams === false) {

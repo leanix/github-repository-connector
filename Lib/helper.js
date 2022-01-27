@@ -39,7 +39,6 @@ class Util {
 			return teamRepositories.filter((repo) => containsInOrgRepos(repo.id));
 		};
 	}
-
 }
 
 module.exports = Util;
