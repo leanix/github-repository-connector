@@ -1,4 +1,4 @@
-const { graphql } = require('@octokit/graphql');
+const GitHubClient = require('../Lib/GitHubClient');
 
 /**
  *
@@ -16,13 +16,13 @@ function getRepoIdsVisibilityMap(repoNodes, visibilityType) {
 
 /**
  *
- * @param {graphql} graphqlClient
+ * @param {GitHubClient} graphqlClient
  * @param {Object} param1
  * @param {String} visibilityType
  */
 async function getPagedRepoIdsForVisibility(graphqlClient, { searchQuery, cursor }, visibilityType) {
 	const initialRepoPageSize = 100;
-	const data = await graphqlClient({
+	const data = await graphqlClient.query({
 		query: `query getOrgRepoVisibility($searchQuery: String!, $pageCount: Int!, $cursor: String) {
                     search(query: $searchQuery, type: REPOSITORY, first: $pageCount, after:$cursor) {
                     repositoryCount
@@ -51,7 +51,7 @@ async function getPagedRepoIdsForVisibility(graphqlClient, { searchQuery, cursor
 
 /**
  *
- * @param {graphql} graphqlClient
+ * @param {GitHubClient} graphqlClient
  * @param {String} orgName
  * @param {String} visibilityType
  */
@@ -74,12 +74,7 @@ async function getReposForVisibility(graphqlClient, orgName, visibilityType) {
 }
 
 module.exports = async function (context, { orgName, visibilityType, ghToken }) {
-	const graphqlClient = graphql.defaults({
-		headers: {
-			authorization: `token ${ghToken}`
-		}
-	});
-	const visibilityResult = await getReposForVisibility(graphqlClient, orgName, visibilityType);
+	const visibilityResult = await getReposForVisibility(new GitHubClient(ghToken), orgName, visibilityType);
 
 	context.done(null, visibilityResult);
 };

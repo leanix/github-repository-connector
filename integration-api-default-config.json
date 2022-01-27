@@ -11,10 +11,6 @@
 				{
 					"tagScopes": [
 						{
-							"group": "Data Quality",
-							"tag": "github-tracking-disabled"
-						},
-						{
 							"group": "Data Source",
 							"tag": "Github repository"
 						}
@@ -25,11 +21,6 @@
 							{
 								"keys": ["Microservice"],
 								"facetKey": "FactSheetTypes",
-								"operator": "AND"
-							},
-							{
-								"keys": ["${integration.tags.getTagId('Data Quality','github-tracking-disabled')}"],
-								"facetKey": "${integration.tags.getTagGroupId('Data Quality')}",
 								"operator": "AND"
 							},
 							{

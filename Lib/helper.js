@@ -29,6 +29,16 @@ class Util {
 			}
 		};
 	}
+
+	static filterNonOrgReposFromTeam(orgRepositoriesIds) {
+		function containsInOrgRepos(repoId) {
+			return orgRepositoriesIds.find((id) => id === repoId);
+		}
+
+		return function (teamRepositories) {
+			return teamRepositories.filter((repo) => containsInOrgRepos(repo.id));
+		};
+	}
 }
 
 module.exports = Util;
