@@ -40,13 +40,15 @@ class ConnectorLogger {
 	}
 
 	async logInfoFromOrchestrator(context, isReplaying, message) {
+		if (!isReplaying) {
+			context.log(message);
+		}
+
 		if (process.env.LX_DEV_SKIP_IHUB_LOGGING || this.runId === -1) {
 			return;
 		}
 
 		if (!isReplaying) {
-			context.log(message);
-
 			if (this.blockBlobClient) {
 				try {
 					await this.blockBlobClient.createIfNotExists();

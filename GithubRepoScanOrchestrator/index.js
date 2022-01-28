@@ -7,6 +7,8 @@
 const df = require('durable-functions');
 const iHubStatus = require('../Lib/IHubStatus');
 const { getLoggerInstanceFromContext } = require('../Lib/connectorLogger');
+const { DateTime } = require('luxon');
+
 function* processForLdif(context, logger) {
 	const {
 		connectorConfiguration: { orgName, repoNamesExcludeList, flags },
@@ -51,31 +53,7 @@ function* processForLdif(context, logger) {
 		status: iHubStatus.IN_PROGRESS,
 		message: 'Progress 40%'
 	});
-
-	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, `Fetching repository's visibility related data`);
-	const repoVisibilityOutput = [];
-	const repoVisibilities = ['private', 'public', 'internal'];
-	for (let visibilityType of repoVisibilities) {
-		repoVisibilityOutput.push(
-			context.df.callActivity('GetReposVisibilityData', {
-				orgName,
-				visibilityType,
-				ghToken
-			})
-		);
-	}
-	try {
-		const repoVisibilityPartialResults = yield context.df.Task.all(repoVisibilityOutput);
-		var repoIdsVisibilityMap = {};
-		for (let visibilityResult of repoVisibilityPartialResults) {
-			repoIdsVisibilityMap = { ...repoIdsVisibilityMap, ...visibilityResult };
-		}
-	} catch (e) {
-		context.log(e);
-		yield logger.logError(context, e.message);
-		repoIdsVisibilityMap = {};
-	}
-	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched repo visibility related data');
+	const repoIdsVisibilityMap = yield* fetchRepoVisibility(context, logger, orgName, ghToken);
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Starting to generate final LDIF and save into storage');
 	yield context.df.callActivity('UpdateProgressToIHub', {
 		progressCallbackUrl,
@@ -101,7 +79,7 @@ function* processForLdif(context, logger) {
 	};
 }
 
-function* fetchReposDataConcurrently(context, repositoriesIds) {
+function* fetchReposDataConcurrently(context, repositoriesIds, maxConcurrentWorkers = 4) {
 	const {
 		secretsConfiguration: { ghToken },
 		connectorLoggingUrl,
@@ -115,10 +93,9 @@ function* fetchReposDataConcurrently(context, repositoriesIds) {
 	}
 
 	const completePartialResults = [];
-	const workers = 4;
 	const workingGroups = [];
-	for (let i = 0, j = allReposSetOfCapacity.length; i < j; i += workers) {
-		workingGroups.push(allReposSetOfCapacity.slice(i, i + workers));
+	for (let i = 0, j = allReposSetOfCapacity.length; i < j; i += maxConcurrentWorkers) {
+		workingGroups.push(allReposSetOfCapacity.slice(i, i + maxConcurrentWorkers));
 	}
 
 	for (const workingGroup of workingGroups) {
@@ -150,26 +127,12 @@ function* fetchTeams(context, logger, repositoriesIds) {
 			metadata: { connectorLoggingUrl, runId }
 		});
 
-		const finalTeamsResult = [];
-		if (teamResultsWithInitialRepos && teamResultsWithInitialRepos.length) {
-			const output = [];
-			for (const team of teamResultsWithInitialRepos) {
-				if (team.hasMoreReposInitialSet) {
-					output.push(
-						context.df.callActivity('GetOrgTeamReposData', {
-							orgName,
-							ghToken,
-							orgRepositoriesIds: repositoriesIds,
-							team,
-							metadata: { connectorLoggingUrl, runId }
-						})
-					);
-				} else {
-					finalTeamsResult.push(team);
-				}
-			}
-			const teamWithAllRepos = yield context.df.Task.all(output);
-			finalTeamsResult.push(...teamWithAllRepos);
+		const finalTeamsResult = teamResultsWithInitialRepos.filter((team) => !team.hasMoreReposInitialSet);
+		if (finalTeamsResult.length !== teamResultsWithInitialRepos.length) {
+			// If there are teams which have more than initially fetched repositories set
+			const teamsWithMoreRepos = teamResultsWithInitialRepos.filter((team) => team.hasMoreReposInitialSet);
+			const data = yield* fetchTeamReposConcurrently(context, logger, repositoriesIds, teamsWithMoreRepos);
+			finalTeamsResult.push(...data);
 		}
 
 		yield logger.logInfoFromOrchestrator(
@@ -190,6 +153,110 @@ function* fetchTeams(context, logger, repositoriesIds) {
 	} catch (e) {
 		yield logger.logError(context, e.message);
 		return [];
+	}
+}
+
+function isRateLimitExceededError(e) {
+	const isExceeded =
+		e.name === 'GraphqlError' && (parseInt(e.headers['x-ratelimit-remaining']) === 0 || e.message.includes('API rate limit'));
+	return [isExceeded, e.headers['x-ratelimit-reset']];
+}
+
+function* fetchTeamReposConcurrently(context, logger, repositoriesIds, teams, maxConcurrentWorkers = 4) {
+	if (!teams || !teams.length) {
+		return [];
+	}
+
+	const {
+		connectorConfiguration: { orgName },
+		secretsConfiguration: { ghToken },
+		connectorLoggingUrl,
+		runId
+	} = context.bindingData.input;
+
+	const result = [];
+	const workingGroups = [];
+	for (let i = 0, j = teams.length; i < j; i += maxConcurrentWorkers) {
+		workingGroups.push(teams.slice(i, i + maxConcurrentWorkers));
+	}
+
+	for (const workingGroup of workingGroups) {
+		const output = [];
+		try {
+			for (const workingGroupTeam of workingGroup) {
+				// todo update to ihub from inside the function
+				output.push(
+					context.df.callActivity('GetOrgTeamReposData', {
+						orgName,
+						ghToken,
+						orgRepositoriesIds: repositoriesIds,
+						team: workingGroupTeam,
+						metadata: { connectorLoggingUrl, runId }
+					})
+				);
+			}
+			const partialResults = yield context.df.Task.all(output);
+			result.push(...partialResults);
+		} catch (e) {
+			let [limitExceeded, reset] = isRateLimitExceededError(e);
+			if (limitExceeded) {
+				yield logger.logInfoFromOrchestrator(
+					context,
+					context.df.isReplaying,
+					`GitHub GraphQL API rate limit exceeded. Attempting to automatically recover. Reset after: ${reset}`
+				);
+				yield* sleepWithTimelyIHubUpdate(context, logger, `Progress 20%`);
+				workingGroups.push(workingGroup);
+			} else {
+				throw e;
+			}
+		}
+	}
+	return result;
+}
+
+function* fetchRepoVisibility(context, logger, orgName, ghToken) {
+	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, `Fetching repository's visibility related data`);
+	const repoVisibilityOutput = [];
+	const repoVisibilities = ['private', 'public', 'internal'];
+	for (let visibilityType of repoVisibilities) {
+		repoVisibilityOutput.push(
+			context.df.callActivity('GetReposVisibilityData', {
+				orgName,
+				visibilityType,
+				ghToken
+			})
+		);
+	}
+	try {
+		const repoVisibilityPartialResults = yield context.df.Task.all(repoVisibilityOutput);
+		var repoIdsVisibilityMap = {};
+		for (let visibilityResult of repoVisibilityPartialResults) {
+			repoIdsVisibilityMap = { ...repoIdsVisibilityMap, ...visibilityResult };
+		}
+	} catch (e) {
+		context.log(e);
+		yield logger.logError(context, e.message);
+		repoIdsVisibilityMap = {};
+	}
+	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched repo visibility related data');
+	return repoIdsVisibilityMap;
+}
+
+function* sleepWithTimelyIHubUpdate(context, logger, message, updateEveryMinutes = 10, waitForMinutes = 60) {
+	const { progressCallbackUrl } = context.bindingData.input;
+
+	for (let i = 0; i < Math.ceil(waitForMinutes / updateEveryMinutes); i++) {
+		const elapse = (i + 1) * updateEveryMinutes;
+		const deadline = DateTime.fromJSDate(context.df.currentUtcDateTime, { zone: 'utc' }).plus({ minutes: elapse });
+		yield context.df.createTimer(deadline.toJSDate());
+		const msg = `Connector sleeping: ${message}`;
+		yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, msg);
+		yield context.df.callActivity('UpdateProgressToIHub', {
+			progressCallbackUrl,
+			status: iHubStatus.IN_PROGRESS,
+			msg
+		});
 	}
 }
 
