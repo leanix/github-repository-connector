@@ -20,19 +20,13 @@ class GitHubClient {
 		try {
 			return await this.graphqlClient(gqlRequestObject);
 		} catch (e) {
-			if (e.name === 'HttpError') {
-				if (parseInt(e.headers['x-ratelimit-remaining']) === 0) {
-					throw new Error(`Graphql rate limit exceeded. Connector is not yet capable to recover automatically. error: ${e.message}`);
+			if (e.name === 'HttpError' && e.message.includes('secondary rate limit')) {
+				if (this.connectorLogger) {
+					await this.connectorLogger.logInfo(this.context, 'GitHub API rate limit exceeded. Attempting to automatically recover.');
 				}
 
-				if (e.message.includes('secondary rate limit')) {
-					if (this.connectorLogger) {
-						await this.connectorLogger.logInfo(this.context, 'GitHub API rate limit exceeded. Attempting to automatically recover.');
-					}
-
-					await sleep(RETRY_WAIT * 1000);
-					return await this.graphqlClient(gqlRequestObject);
-				}
+				await sleep(RETRY_WAIT * 1000);
+				return await this.graphqlClient(gqlRequestObject);
 			}
 			throw e;
 		}
