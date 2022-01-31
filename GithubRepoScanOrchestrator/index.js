@@ -171,6 +171,7 @@ function* fetchTeamReposConcurrently(context, logger, repositoriesIds, teams, ma
 		connectorConfiguration: { orgName },
 		secretsConfiguration: { ghToken },
 		connectorLoggingUrl,
+		progressCallbackUrl,
 		runId
 	} = context.bindingData.input;
 
@@ -184,7 +185,6 @@ function* fetchTeamReposConcurrently(context, logger, repositoriesIds, teams, ma
 		const output = [];
 		try {
 			for (const workingGroupTeam of workingGroup) {
-				// todo update to ihub from inside the function
 				output.push(
 					context.df.callActivity('GetOrgTeamReposData', {
 						orgName,
@@ -195,6 +195,11 @@ function* fetchTeamReposConcurrently(context, logger, repositoriesIds, teams, ma
 					})
 				);
 			}
+			yield context.df.callActivity('UpdateProgressToIHub', {
+				progressCallbackUrl,
+				status: iHubStatus.IN_PROGRESS,
+				message: 'Progress 25%'
+			});
 			const partialResults = yield context.df.Task.all(output);
 			result.push(...partialResults);
 		} catch (e) {

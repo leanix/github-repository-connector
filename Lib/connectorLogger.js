@@ -54,7 +54,7 @@ class ConnectorLogger {
 					await this.blockBlobClient.createIfNotExists();
 					const messageStr = typeof message === 'string' ? message : JSON.stringify(message, undefined, 2);
 					await this.blockBlobClient.appendBlock(
-						`${new Date().toISOString()} ${logStatus.INFO.toString()}: [ Run ID: ${this.runId.toString()}] ${messageStr}\n`,
+						`${new Date().toISOString()} ${logStatus.INFO.toString()}: [Run ID: ${this.runId.toString()}] ${messageStr}\n`,
 						messageStr.length
 					);
 				} catch (err) {
