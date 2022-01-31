@@ -733,11 +733,7 @@
 				],
 				"read": {
 					"subscriptions": {
-						"types": [
-							"ACCOUNTABLE",
-							"OBSERVER",
-							"RESPONSIBLE"
-						]
+						"types": ["ACCOUNTABLE", "OBSERVER", "RESPONSIBLE"]
 					}
 				}
 			}
