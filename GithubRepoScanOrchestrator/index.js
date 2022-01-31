@@ -267,7 +267,8 @@ module.exports = df.orchestrator(function* (context) {
 	retryOptions.maxRetryIntervalInMilliseconds = 5000;
 
 	try {
-		yield context.df.callActivity('TestConnector', context.bindingData.input);
+		const { connectorConfiguration, secretsConfiguration } = context.bindingData.input;
+		yield context.df.callActivity('TestConnector', { connectorConfiguration, secretsConfiguration });
 		const logDataMetricsInfo = yield* processForLdif(context, logger);
 		yield context.df.callActivity('UpdateProgressToIHub', {
 			progressCallbackUrl,
