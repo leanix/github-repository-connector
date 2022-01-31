@@ -216,7 +216,7 @@ function* fetchTeamReposConcurrently(context, logger, repositoriesIds, teams, ma
 					context.df.isReplaying,
 					`GitHub GraphQL API rate limit exceeded. Attempting to automatically recover. Reset after: ${reset}`
 				);
-				yield* sleepWithTimelyIHubUpdate(context, logger, `Progress 20%`);
+				yield* sleepWithTimelyIHubUpdate(context, logger, `Progress 25%`);
 				workingGroups.push(workingGroup);
 			} else {
 				throw e;
