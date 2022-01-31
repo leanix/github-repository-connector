@@ -267,15 +267,14 @@ module.exports = df.orchestrator(function* (context) {
 	retryOptions.maxRetryIntervalInMilliseconds = 5000;
 
 	try {
-		const { connectorConfiguration, secretsConfiguration } = context.bindingData.input;
-		yield context.df.callActivity('TestConnector', { connectorConfiguration, secretsConfiguration });
+		const { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId } = context.bindingData.input;
+		yield context.df.callActivity('TestConnector', { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId });
 		const logDataMetricsInfo = yield* processForLdif(context, logger);
-		yield context.df.callActivity('UpdateProgressToIHub', {
+		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, {
 			progressCallbackUrl,
-			status: iHubStatus.IN_PROGRESS,
+			status: iHubStatus.FINISHED,
 			message: `Progress 100%. Total repositories fetched: ${logDataMetricsInfo.totalRepositories}, Total teams fetched: ${logDataMetricsInfo.totalTeams}`
 		});
-		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, { progressCallbackUrl, status: iHubStatus.FINISHED });
 	} catch (e) {
 		context.log(e);
 		yield logger.logError(context, e.message);
