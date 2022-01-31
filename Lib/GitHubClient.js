@@ -20,7 +20,7 @@ class GitHubClient {
 		try {
 			return await this.graphqlClient(gqlRequestObject);
 		} catch (e) {
-			if (e.name === 'HttpError' && e.message.includes('secondary rate limit')) {
+			if (e.name === 'HttpError' && (e.message.includes('secondary rate limit') || e.message.includes('EAI_AGAIN'))) {
 				if (this.connectorLogger) {
 					await this.connectorLogger.logInfo(this.context, 'GitHub API rate limit exceeded. Attempting to automatically recover.');
 				}
