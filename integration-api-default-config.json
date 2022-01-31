@@ -7,6 +7,26 @@
 		"processingDirection": "inbound",
 		"processingMode": "full",
 		"deletionScope": {
+			"tags": [
+				{
+					"tagScopes": [
+						{
+							"group": "Data Source",
+							"tag": "Github repository"
+						}
+					],
+					"scope": {
+						"ids": [],
+						"facetFilters": [
+							{
+								"keys": ["Team", "Microservice", "TechnicalComponent"],
+								"facetKey": "FactSheetTypes",
+								"operator": "AND"
+							}
+						]
+					}
+				}
+			],
 			"subscriptions": [
 				{
 					"subscriptionScopes": [
@@ -28,7 +48,8 @@
 				}
 			],
 			"maximumDeletionRatio": {
-				"subscriptions": 100
+				"subscriptions": 100,
+				"tags": 100
 			}
 		},
 		"processors": [
