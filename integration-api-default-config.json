@@ -22,11 +22,6 @@
 								"keys": ["Microservice"],
 								"facetKey": "FactSheetTypes",
 								"operator": "AND"
-							},
-							{
-								"keys": ["${integration.tags.getTagId('Data Source','Github repository')}"],
-								"facetKey": "${integration.tags.getTagGroupId('Data Source')}",
-								"operator": "AND"
 							}
 						]
 					}
