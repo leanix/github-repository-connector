@@ -601,22 +601,6 @@
 				"run": 3
 			},
 			{
-				"processorType": "variableProcessor",
-				"processorName": "Store all repository ids",
-				"processorDescription": "Store all repository ids from the provided LDIF",
-				"filter": {
-					"exactType": "Repository"
-				},
-				"run": 3,
-				"enabled": true,
-				"variables": [
-					{
-						"key": "github_project_ids",
-						"value": "${content.id}"
-					}
-				]
-			},
-			{
 				"processorType": "inboundTag",
 				"processorName": "Add 'GitHub Repository' Data Source tag on Microservice Factsheets",
 				"processorDescription": "Adds 'GitHub Repository' Data Source tag on Software Artifact type FS for data source tracking",
