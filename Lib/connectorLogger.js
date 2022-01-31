@@ -40,19 +40,21 @@ class ConnectorLogger {
 	}
 
 	async logInfoFromOrchestrator(context, isReplaying, message) {
+		if (!isReplaying) {
+			context.log(message);
+		}
+
 		if (process.env.LX_DEV_SKIP_IHUB_LOGGING || this.runId === -1) {
 			return;
 		}
 
 		if (!isReplaying) {
-			context.log(message);
-
 			if (this.blockBlobClient) {
 				try {
 					await this.blockBlobClient.createIfNotExists();
 					const messageStr = typeof message === 'string' ? message : JSON.stringify(message, undefined, 2);
 					await this.blockBlobClient.appendBlock(
-						`${new Date().toISOString()} ${logStatus.INFO.toString()}: [ Run ID: ${this.runId.toString()}] ${messageStr}\n`,
+						`${new Date().toISOString()} ${logStatus.INFO.toString()}: [Run ID: ${this.runId.toString()}] ${messageStr}\n`,
 						messageStr.length
 					);
 				} catch (err) {
