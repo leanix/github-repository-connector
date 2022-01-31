@@ -21,7 +21,7 @@
 							{
 								"keys": ["Team", "Microservice", "TechnicalComponent"],
 								"facetKey": "FactSheetTypes",
-								"operator": "AND"
+								"operator": "OR"
 							}
 						]
 					}
