@@ -19,7 +19,7 @@
 						"ids": [],
 						"facetFilters": [
 							{
-								"keys": ["Team", "Repository", "Language"],
+								"keys": ["Team", "Microservice", "TechnicalComponent"],
 								"facetKey": "FactSheetTypes",
 								"operator": "AND"
 							}
