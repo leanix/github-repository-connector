@@ -157,6 +157,12 @@ function* fetchTeams(context, logger, repositoriesIds) {
 }
 
 function isRateLimitExceededError(e) {
+	if (!e) {
+		return [false];
+	}
+	if (!e.headers) {
+		return [false];
+	}
 	const isExceeded =
 		e.name === 'GraphqlError' && (parseInt(e.headers['x-ratelimit-remaining']) === 0 || e.message.includes('API rate limit'));
 	return [isExceeded, e.headers['x-ratelimit-reset']];
@@ -233,14 +239,13 @@ function* fetchRepoVisibility(context, logger, orgName, ghToken) {
 			})
 		);
 	}
+	let repoIdsVisibilityMap = {};
 	try {
 		const repoVisibilityPartialResults = yield context.df.Task.all(repoVisibilityOutput);
-		var repoIdsVisibilityMap = {};
 		for (let visibilityResult of repoVisibilityPartialResults) {
 			repoIdsVisibilityMap = { ...repoIdsVisibilityMap, ...visibilityResult };
 		}
 	} catch (e) {
-		context.log(e);
 		yield logger.logError(context, e.message);
 		repoIdsVisibilityMap = {};
 	}
