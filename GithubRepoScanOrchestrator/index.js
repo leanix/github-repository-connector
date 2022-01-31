@@ -157,6 +157,12 @@ function* fetchTeams(context, logger, repositoriesIds) {
 }
 
 function isRateLimitExceededError(e) {
+	if (!e) {
+		return [false];
+	}
+	if (!e.headers) {
+		return [false];
+	}
 	const isExceeded =
 		e.name === 'GraphqlError' && (parseInt(e.headers['x-ratelimit-remaining']) === 0 || e.message.includes('API rate limit'));
 	return [isExceeded, e.headers['x-ratelimit-reset']];
@@ -210,7 +216,7 @@ function* fetchTeamReposConcurrently(context, logger, repositoriesIds, teams, ma
 					context.df.isReplaying,
 					`GitHub GraphQL API rate limit exceeded. Attempting to automatically recover. Reset after: ${reset}`
 				);
-				yield* sleepWithTimelyIHubUpdate(context, logger, `Progress 20%`);
+				yield* sleepWithTimelyIHubUpdate(context, logger, `Progress 25%`);
 				workingGroups.push(workingGroup);
 			} else {
 				throw e;
@@ -233,14 +239,13 @@ function* fetchRepoVisibility(context, logger, orgName, ghToken) {
 			})
 		);
 	}
+	let repoIdsVisibilityMap = {};
 	try {
 		const repoVisibilityPartialResults = yield context.df.Task.all(repoVisibilityOutput);
-		var repoIdsVisibilityMap = {};
 		for (let visibilityResult of repoVisibilityPartialResults) {
 			repoIdsVisibilityMap = { ...repoIdsVisibilityMap, ...visibilityResult };
 		}
 	} catch (e) {
-		context.log(e);
 		yield logger.logError(context, e.message);
 		repoIdsVisibilityMap = {};
 	}
@@ -272,14 +277,14 @@ module.exports = df.orchestrator(function* (context) {
 	retryOptions.maxRetryIntervalInMilliseconds = 5000;
 
 	try {
-		yield context.df.callActivity('TestConnector', context.bindingData.input);
+		const { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId } = context.bindingData.input;
+		yield context.df.callActivity('TestConnector', { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId });
 		const logDataMetricsInfo = yield* processForLdif(context, logger);
-		yield context.df.callActivity('UpdateProgressToIHub', {
+		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, {
 			progressCallbackUrl,
-			status: iHubStatus.IN_PROGRESS,
+			status: iHubStatus.FINISHED,
 			message: `Progress 100%. Total repositories fetched: ${logDataMetricsInfo.totalRepositories}, Total teams fetched: ${logDataMetricsInfo.totalTeams}`
 		});
-		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, { progressCallbackUrl, status: iHubStatus.FINISHED });
 	} catch (e) {
 		context.log(e);
 		yield logger.logError(context, e.message);
