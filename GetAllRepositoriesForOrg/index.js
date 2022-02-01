@@ -2,11 +2,11 @@
 const GitHubClient = require('../Lib/GitHubClient');
 
 class GetAllRepositoriesForOrgHandler {
-	constructor(context, connectorLoggingUrl, runId, graphqlClient) {
+	constructor(context, connectorLoggingUrl, progressCallbackUrl, runId, graphqlClient) {
 		this.context = context;
 		this.logger = getLoggerInstanceFromUrlAndRunId(connectorLoggingUrl, runId);
 		this.graphqlClient = graphqlClient;
-		this.graphqlClient.setLogger(this.logger, this.context);
+		this.graphqlClient.setLogger(this.logger, this.context, progressCallbackUrl);
 	}
 
 	excludeListedRepositoriesIDsList(repositoriesData, repoNamesExcludeListChecked) {
@@ -75,7 +75,10 @@ class GetAllRepositoriesForOrgHandler {
 	}
 }
 
-module.exports = async function (context, { orgName, repoNamesExcludeListChecked, ghToken, metadata: { connectorLoggingUrl, runId } }) {
-	let handler = new GetAllRepositoriesForOrgHandler(context, connectorLoggingUrl, runId, new GitHubClient(ghToken));
+module.exports = async function (
+	context,
+	{ orgName, repoNamesExcludeListChecked, ghToken, metadata: { connectorLoggingUrl, runId, progressCallbackUrl } }
+) {
+	let handler = new GetAllRepositoriesForOrgHandler(context, connectorLoggingUrl, progressCallbackUrl, runId, new GitHubClient(ghToken));
 	return await handler.getAllRepositoryIds(orgName, repoNamesExcludeListChecked);
 };

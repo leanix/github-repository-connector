@@ -3,13 +3,13 @@ const { getLoggerInstanceFromUrlAndRunId } = require('../Lib/connectorLogger');
 const Util = require('../Lib/helper');
 
 class GetOrgTeamReposDataHandler {
-	constructor(context, connectorLoggingUrl, runId, orgName, team, graphqlClient) {
+	constructor(context, connectorLoggingUrl, progressCallbackUrl, runId, orgName, team, graphqlClient) {
 		this.context = context;
 		this.logger = getLoggerInstanceFromUrlAndRunId(connectorLoggingUrl, runId);
 		this.orgName = orgName;
 		this.team = team;
 		this.graphqlClient = graphqlClient;
-		this.graphqlClient.setLogger(this.logger, this.context);
+		this.graphqlClient.setLogger(this.logger, this.context, progressCallbackUrl);
 	}
 
 	async getPagedRepos({ teamId, cursor }) {
@@ -65,8 +65,19 @@ class GetOrgTeamReposDataHandler {
 	}
 }
 
-module.exports = async function (context, { orgName, ghToken, orgRepositoriesIds, team, metadata: { connectorLoggingUrl, runId } }) {
-	let handler = new GetOrgTeamReposDataHandler(context, connectorLoggingUrl, runId, orgName, team, new GitHubClient(ghToken));
+module.exports = async function (
+	context,
+	{ orgName, ghToken, orgRepositoriesIds, team, metadata: { connectorLoggingUrl, runId, progressCallbackUrl } }
+) {
+	let handler = new GetOrgTeamReposDataHandler(
+		context,
+		connectorLoggingUrl,
+		progressCallbackUrl,
+		runId,
+		orgName,
+		team,
+		new GitHubClient(ghToken)
+	);
 	team.repositories.nodes = await handler.getAllReposForTeam(orgRepositoriesIds);
 	return team;
 };

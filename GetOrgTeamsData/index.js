@@ -3,11 +3,11 @@ const { getLoggerInstanceFromUrlAndRunId } = require('../Lib/connectorLogger');
 const Util = require('../Lib/helper');
 
 class GetOrgTeamsDataHandler {
-	constructor(context, connectorLoggingUrl, runId, graphqlClient) {
+	constructor(context, connectorLoggingUrl, progressCallbackUrl, runId, graphqlClient) {
 		this.context = context;
 		this.logger = getLoggerInstanceFromUrlAndRunId(connectorLoggingUrl, runId);
 		this.graphqlClient = graphqlClient;
-		this.graphqlClient.setLogger(this.logger, this.context);
+		this.graphqlClient.setLogger(this.logger, this.context, progressCallbackUrl);
 	}
 
 	static hasMoreRepos(team) {
@@ -92,7 +92,10 @@ class GetOrgTeamsDataHandler {
 	}
 }
 
-module.exports = async function (context, { orgName, ghToken, orgRepositoriesIds, metadata: { connectorLoggingUrl, runId } }) {
-	let handler = new GetOrgTeamsDataHandler(context, connectorLoggingUrl, runId, new GitHubClient(ghToken));
+module.exports = async function (
+	context,
+	{ orgName, ghToken, orgRepositoriesIds, metadata: { connectorLoggingUrl, runId, progressCallbackUrl } }
+) {
+	let handler = new GetOrgTeamsDataHandler(context, connectorLoggingUrl, progressCallbackUrl, runId, new GitHubClient(ghToken));
 	return await handler.getAllTeamsWithRepos(orgName, orgRepositoriesIds);
 };
