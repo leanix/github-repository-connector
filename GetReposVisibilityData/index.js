@@ -82,7 +82,5 @@ module.exports = async function (
 	const logger = getLoggerInstanceFromUrlAndRunId(connectorLoggingUrl, runId);
 	await logger.logInfo(context, `Fetching repository visibility information. Type: ${visibilityType}`);
 	gitHubClient.setLogger(logger, context, progressCallbackUrl);
-	const visibilityResult = await getReposForVisibility(gitHubClient, orgName, visibilityType);
-
-	context.done(null, visibilityResult);
+	return await getReposForVisibility(gitHubClient, orgName, visibilityType);
 };

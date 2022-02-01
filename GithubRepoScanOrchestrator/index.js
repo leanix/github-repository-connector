@@ -293,9 +293,8 @@ module.exports = df.orchestrator(function* (context) {
 	retryOptions.maxRetryIntervalInMilliseconds = 5000;
 
 	try {
-		// todo check the non-determinism issue
-		// const { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId } = context.bindingData.input;
-		// yield context.df.callActivity('TestConnector', { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId });
+		const { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId } = context.bindingData.input;
+		yield context.df.callActivity('TestConnector', { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId });
 		const logDataMetricsInfo = yield* processForLdif(context, logger);
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, {
 			progressCallbackUrl,
