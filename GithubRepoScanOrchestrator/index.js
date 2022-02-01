@@ -58,7 +58,7 @@ function* processForLdif(context, logger) {
 	yield context.df.callActivity('UpdateProgressToIHub', {
 		progressCallbackUrl,
 		status: iHubStatus.IN_PROGRESS,
-		message: 'Progress: 90%, Successfully requested the data from GitHub'
+		message: 'Progress: 90%: Successfully requested the data from GitHub'
 	});
 
 	yield context.df.callActivity('SaveLdifToStorage', {
@@ -293,8 +293,9 @@ module.exports = df.orchestrator(function* (context) {
 	retryOptions.maxRetryIntervalInMilliseconds = 5000;
 
 	try {
-		const { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId } = context.bindingData.input;
-		yield context.df.callActivity('TestConnector', { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId });
+		// todo check the non-determinism issue
+		// const { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId } = context.bindingData.input;
+		// yield context.df.callActivity('TestConnector', { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId });
 		const logDataMetricsInfo = yield* processForLdif(context, logger);
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, {
 			progressCallbackUrl,
