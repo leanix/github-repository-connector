@@ -652,7 +652,7 @@
 				"type": "Microservice",
 				"filter": {
 					"exactType": "Repository",
-					"onRead": "${!data.contributors.contains(lx.subscriptions[integration.indexOfForEach].user.email)}"
+					"onRead": "${!(data.contributors.contains(lx.subscriptions[integration.indexOfForEach].user.email) && data.contributors.contains(lx.subscriptions[integration.indexOfForEach].user.userName) && lx.subscriptions[integration.indexOfForEach].type != 'OBSERVER')}"
 				},
 				"identifier": {
 					"external": {
