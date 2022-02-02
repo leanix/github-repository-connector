@@ -31,8 +31,12 @@
 				{
 					"subscriptionScopes": [
 						{
-							"type": "OBSERVER",
+							"type": "RESPONSIBLE",
 							"roles": ["Contributor"]
+						},
+						{
+							"type": "OBSERVER",
+							"roles": ["SourceCodeContributor"]
 						}
 					],
 					"scope": {
@@ -651,8 +655,7 @@
 				"run": 3,
 				"type": "Microservice",
 				"filter": {
-					"exactType": "Repository",
-					"onRead": "${!(data.contributors.contains(lx.subscriptions[integration.indexOfForEach].user.email) && data.contributors.contains(lx.subscriptions[integration.indexOfForEach].user.userName) && lx.subscriptions[integration.indexOfForEach].type != 'OBSERVER')}"
+					"exactType": "Repository"
 				},
 				"identifier": {
 					"external": {
@@ -695,7 +698,7 @@
 								"map": [
 									{
 										"key": "roleName",
-										"value": "Contributor"
+										"value": "SourceCodeContributor"
 									},
 									{
 										"key": "comment",
@@ -725,12 +728,7 @@
 							}
 						]
 					}
-				],
-				"read": {
-					"subscriptions": {
-						"types": ["ACCOUNTABLE", "OBSERVER", "RESPONSIBLE"]
-					}
-				}
+				]
 			}
 		],
 		"variables": {},
