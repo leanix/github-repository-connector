@@ -31,10 +31,6 @@
 				{
 					"subscriptionScopes": [
 						{
-							"type": "RESPONSIBLE",
-							"roles": ["Contributor"]
-						},
-						{
 							"type": "OBSERVER",
 							"roles": ["Contributor"]
 						}
