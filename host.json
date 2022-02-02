@@ -1,8 +1,10 @@
 {
 	"version": "2.0",
 	"logging": {
-		"DurableTask.AzureStorage": "Warning",
-		"DurableTask.Core": "Warning",
+		"logLevel": {
+			"DurableTask.AzureStorage": "Warning",
+			"DurableTask.Core": "Warning"
+		},
 		"applicationInsights": {
 			"samplingSettings": {
 				"isEnabled": true,
