@@ -27,7 +27,7 @@ function* processForLdif(context, logger) {
 		orgName,
 		repoNamesExcludeListChecked,
 		ghToken,
-		metadata: { connectorLoggingUrl, runId }
+		metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
 	});
 
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched ids of all repos present in the org');
@@ -53,12 +53,12 @@ function* processForLdif(context, logger) {
 		status: iHubStatus.IN_PROGRESS,
 		message: 'Progress 40%'
 	});
-	const repoIdsVisibilityMap = yield* fetchRepoVisibility(context, logger, orgName, ghToken);
+	const repoIdsVisibilityMap = yield* fetchRepoVisibility(context, logger);
 	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Starting to generate final LDIF and save into storage');
 	yield context.df.callActivity('UpdateProgressToIHub', {
 		progressCallbackUrl,
 		status: iHubStatus.IN_PROGRESS,
-		message: 'Progress: 90%, Successfully requested the data from GitHub'
+		message: 'Progress: 90%: Successfully requested the data from GitHub'
 	});
 
 	yield context.df.callActivity('SaveLdifToStorage', {
@@ -83,7 +83,8 @@ function* fetchReposDataConcurrently(context, repositoriesIds, maxConcurrentWork
 	const {
 		secretsConfiguration: { ghToken },
 		connectorLoggingUrl,
-		runId
+		runId,
+		progressCallbackUrl
 	} = context.bindingData.input;
 
 	const scannerCapacity = 100;
@@ -101,7 +102,13 @@ function* fetchReposDataConcurrently(context, repositoriesIds, maxConcurrentWork
 	for (const workingGroup of workingGroups) {
 		const output = [];
 		for (const workingGroupElement of workingGroup) {
-			output.push(context.df.callActivity('GetSubReposData', { repoIds: workingGroupElement, ghToken, connectorLoggingUrl, runId }));
+			output.push(
+				context.df.callActivity('GetSubReposData', {
+					repoIds: workingGroupElement,
+					ghToken,
+					metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
+				})
+			);
 		}
 		const partialResults = yield context.df.Task.all(output);
 		completePartialResults.push(...partialResults);
@@ -115,7 +122,8 @@ function* fetchTeams(context, logger, repositoriesIds) {
 		connectorConfiguration: { orgName, flags },
 		secretsConfiguration: { ghToken },
 		connectorLoggingUrl,
-		runId
+		runId,
+		progressCallbackUrl
 	} = context.bindingData.input;
 
 	try {
@@ -124,7 +132,7 @@ function* fetchTeams(context, logger, repositoriesIds) {
 			orgName,
 			ghToken,
 			orgRepositoriesIds: repositoriesIds,
-			metadata: { connectorLoggingUrl, runId }
+			metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
 		});
 
 		const finalTeamsResult = teamResultsWithInitialRepos.filter((team) => !team.hasMoreReposInitialSet);
@@ -197,7 +205,7 @@ function* fetchTeamReposConcurrently(context, logger, repositoriesIds, teams, ma
 						ghToken,
 						orgRepositoriesIds: repositoriesIds,
 						team: workingGroupTeam,
-						metadata: { connectorLoggingUrl, runId }
+						metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
 					})
 				);
 			}
@@ -226,24 +234,26 @@ function* fetchTeamReposConcurrently(context, logger, repositoriesIds, teams, ma
 	return result;
 }
 
-function* fetchRepoVisibility(context, logger, orgName, ghToken) {
-	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, `Fetching repository's visibility related data`);
-	const repoVisibilityOutput = [];
+function* fetchRepoVisibility(context, logger) {
+	const {
+		connectorConfiguration: { orgName },
+		secretsConfiguration: { ghToken },
+		connectorLoggingUrl,
+		runId,
+		progressCallbackUrl
+	} = context.bindingData.input;
+
+	let repoIdsVisibilityMap = {};
 	const repoVisibilities = ['private', 'public', 'internal'];
-	for (let visibilityType of repoVisibilities) {
-		repoVisibilityOutput.push(
-			context.df.callActivity('GetReposVisibilityData', {
+	try {
+		for (let visibilityType of repoVisibilities) {
+			const visibilityRepoMap = yield context.df.callActivity('GetReposVisibilityData', {
 				orgName,
 				visibilityType,
-				ghToken
+				ghToken,
+				metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
 			})
-		);
-	}
-	let repoIdsVisibilityMap = {};
-	try {
-		const repoVisibilityPartialResults = yield context.df.Task.all(repoVisibilityOutput);
-		for (let visibilityResult of repoVisibilityPartialResults) {
-			repoIdsVisibilityMap = { ...repoIdsVisibilityMap, ...visibilityResult };
+			repoIdsVisibilityMap = {...repoIdsVisibilityMap, ...visibilityRepoMap};
 		}
 	} catch (e) {
 		yield logger.logError(context, e.message);

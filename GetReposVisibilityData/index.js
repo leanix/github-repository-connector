@@ -1,4 +1,5 @@
 const GitHubClient = require('../Lib/GitHubClient');
+const { getLoggerInstanceFromUrlAndRunId } = require('../Lib/connectorLogger');
 
 /**
  *
@@ -73,8 +74,13 @@ async function getReposForVisibility(graphqlClient, orgName, visibilityType) {
 	return finalResultForVisibility;
 }
 
-module.exports = async function (context, { orgName, visibilityType, ghToken }) {
-	const visibilityResult = await getReposForVisibility(new GitHubClient(ghToken), orgName, visibilityType);
-
-	context.done(null, visibilityResult);
+module.exports = async function (
+	context,
+	{ orgName, visibilityType, ghToken, metadata: { connectorLoggingUrl, runId, progressCallbackUrl } }
+) {
+	const gitHubClient = new GitHubClient(ghToken);
+	const logger = getLoggerInstanceFromUrlAndRunId(connectorLoggingUrl, runId);
+	await logger.logInfo(context, `Fetching repository visibility information. Type: ${visibilityType}`);
+	gitHubClient.setLogger(logger, context, progressCallbackUrl);
+	return await getReposForVisibility(gitHubClient, orgName, visibilityType);
 };
