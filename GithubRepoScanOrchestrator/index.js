@@ -243,23 +243,17 @@ function* fetchRepoVisibility(context, logger) {
 		progressCallbackUrl
 	} = context.bindingData.input;
 
-	const repoVisibilityOutput = [];
+	let repoIdsVisibilityMap = {};
 	const repoVisibilities = ['private', 'public', 'internal'];
-	for (let visibilityType of repoVisibilities) {
-		repoVisibilityOutput.push(
-			context.df.callActivity('GetReposVisibilityData', {
+	try {
+		for (let visibilityType of repoVisibilities) {
+			const visibilityRepoMap = yield context.df.callActivity('GetReposVisibilityData', {
 				orgName,
 				visibilityType,
 				ghToken,
 				metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
 			})
-		);
-	}
-	let repoIdsVisibilityMap = {};
-	try {
-		const repoVisibilityPartialResults = yield context.df.Task.all(repoVisibilityOutput);
-		for (let visibilityResult of repoVisibilityPartialResults) {
-			repoIdsVisibilityMap = { ...repoIdsVisibilityMap, ...visibilityResult };
+			repoIdsVisibilityMap = {...repoIdsVisibilityMap, ...visibilityRepoMap};
 		}
 	} catch (e) {
 		yield logger.logError(context, e.message);
