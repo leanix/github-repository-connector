@@ -22,7 +22,7 @@ class GitHubClient {
 	}
 
 	async query(gqlRequestObject, message = 'In Progress') {
-		if(this.lastUpdated.diffNow('minutes').seconds < -5) {
+		if (this.lastUpdated.diffNow('minutes').minutes < -5) {
 			await UpdateProgressToIHub(this.context, {
 				progressCallbackUrl: this.progressCallbackUrl,
 				status: IHubStatus.IN_PROGRESS,
