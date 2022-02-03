@@ -36,7 +36,7 @@
 						},
 						{
 							"type": "OBSERVER",
-							"roles": ["SourceCodeContributor"]
+							"roles": ["Source Code Contributor"]
 						}
 					],
 					"scope": {
