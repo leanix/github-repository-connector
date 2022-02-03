@@ -48,6 +48,7 @@ class GitHubClient {
 					status: IHubStatus.IN_PROGRESS,
 					message: 'Connector Awake: recovered from rate limiting'
 				});
+				this.lastUpdated = DateTime.now();
 				return await this.graphqlClient(gqlRequestObject);
 			}
 			throw e;
