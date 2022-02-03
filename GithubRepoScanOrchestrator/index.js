@@ -252,8 +252,8 @@ function* fetchRepoVisibility(context, logger) {
 				visibilityType,
 				ghToken,
 				metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
-			})
-			repoIdsVisibilityMap = {...repoIdsVisibilityMap, ...visibilityRepoMap};
+			});
+			repoIdsVisibilityMap = { ...repoIdsVisibilityMap, ...visibilityRepoMap };
 		}
 	} catch (e) {
 		yield logger.logError(context, e.message);
