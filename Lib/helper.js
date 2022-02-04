@@ -52,7 +52,7 @@ class Util {
 		 * 3. If this limit is reached and the execution fails with same error. Set new upper limit close to new data.
 		 * */
 		if (allTeamsReposToBeFetchedCount >= 400_000) {
-			throw new Error('Data processing limit exceeded. Please try again with less number of teams and repositories.');
+			throw new Error('Data processing limit exceeded. Please try again with less number of teams and repositories. Hint: turn off the "importTeams" flag');
 		}
 	}
 }
