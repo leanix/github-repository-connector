@@ -652,10 +652,11 @@
 				"processorType": "inboundSubscription",
 				"processorName": "create-user-subscriptions-from-repo-contributors",
 				"processorDescription": "Creates repo contributors as MS subscriptions",
-				"run": 3,
+				"run": 5,
 				"type": "Microservice",
 				"filter": {
-					"exactType": "Repository"
+					"exactType": "Repository",
+					"advanced": "${helper:getFromMap(variables, content.id.concat('_').concat(integration.valueOfForEach)) == null || !helper:getFromMap(variables, content.id.concat('_').concat(integration.valueOfForEach)).contains('true')}"
 				},
 				"identifier": {
 					"external": {
@@ -727,6 +728,61 @@
 								"expr": "${integration.valueOfForEach}"
 							}
 						]
+					}
+				]
+			},
+			{
+				"processorType": "inboundFactSheet",
+				"processorName": "Variable to read the existing subs on FS",
+				"processorDescription": "Variable to read the existing subs on FS",
+				"type": "Microservice",
+				"filter": {
+					"exactType": "Repository"
+				},
+				"identifier": {
+					"external": {
+						"id": {
+							"expr": "${content.id}"
+						},
+						"type": {
+							"expr": "githubId"
+						}
+					}
+				},
+				"run": 3,
+				"updates": [],
+				"variables": [
+					{
+						"key": "${content.id}_${integration.variables.valueOfForEach.user.email}",
+						"value": "${integration.variables.valueOfForEach.type != 'OBSERVER' && integration.variables.valueOfForEach.roles.toString().contains('Source Code Contributor')}",
+						"forEach": {
+							"elementOf": "${lx.subscriptions}"
+						}
+					}
+				],
+				"read": {
+					"subscriptions": {
+						"types": [
+							"ACCOUNTABLE",
+							"RESPONSIBLE"
+						]
+					}
+				}
+			},
+			{
+				"processorType": "variableProcessor",
+				"processorName": "Variable for subs not to delete/modify",
+				"processorDescription": "Variable for subs not to delete/modify",
+				"filter": {
+					"advanced": "${helper:getFromMap(variables, content.id.concat('_').concat(integration.valueOfForEach)).contains('true')}",
+					"exactType": "Repository"
+				},
+				"run": 4,
+				"forEach": "${data.contributors}",
+				"variables": [
+					{
+						"key": "${content.id}_donot_delete",
+						"value": "${integration.valueOfForEach}"
 					}
 				]
 			}
