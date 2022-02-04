@@ -8,7 +8,7 @@ const df = require('durable-functions');
 const iHubStatus = require('../Lib/IHubStatus');
 const { getLoggerInstanceFromContext } = require('../Lib/connectorLogger');
 const { DateTime } = require('luxon');
-const Util = require("../Lib/helper");
+const Util = require('../Lib/helper');
 
 function* processForLdif(context, logger) {
 	const {

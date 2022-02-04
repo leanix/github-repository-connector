@@ -46,13 +46,13 @@ class Util {
 		}, 0);
 
 		/*
-		* Limit calculation rationale:
-		* 1. Azure function fails with 'Singleton lock renewal failed for blob xxx/host with error code 409' when teams = 192 and repos / team = 2600
-		* 2. Setting the upper limit to 400_000 to avoid the above issue
-		* 3. If this limit is reached and the execution fails with same error. Set new upper limit close to new data.
-		* */
-		if(allTeamsReposToBeFetchedCount >= 400_000) {
-			throw new Error("Data processing limit exceeded. Please try again with less number of teams and repositories.");
+		 * Limit calculation rationale:
+		 * 1. Azure function fails with 'Singleton lock renewal failed for blob xxx/host with error code 409' when teams = 192 and repos / team = 2600
+		 * 2. Setting the upper limit to 400_000 to avoid the above issue
+		 * 3. If this limit is reached and the execution fails with same error. Set new upper limit close to new data.
+		 * */
+		if (allTeamsReposToBeFetchedCount >= 400_000) {
+			throw new Error('Data processing limit exceeded. Please try again with less number of teams and repositories.');
 		}
 	}
 }
