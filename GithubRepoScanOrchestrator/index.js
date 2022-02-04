@@ -47,7 +47,18 @@ function* processForLdif(context, logger) {
 		'Successfully fetched complete repo information from collected repo ids.'
 	);
 
-	const teamResults = yield* fetchTeams(context, logger, repositoriesIds);
+	// Default case is true. so, explicitly check for false(boolean)
+	let teamResults = [];
+	if (flags && flags.importTeams === false) {
+		yield logger.logInfoFromOrchestrator(
+			context,
+			context.df.isReplaying,
+			`Team data will not be processed. reason: 'importTeams' flag is false`
+		);
+	} else {
+		teamResults = yield* fetchTeams(context, logger, repositoriesIds);
+	}
+
 	yield context.df.callActivity('UpdateProgressToIHub', {
 		progressCallbackUrl,
 		status: iHubStatus.IN_PROGRESS,
@@ -119,7 +130,7 @@ function* fetchReposDataConcurrently(context, repositoriesIds, maxConcurrentWork
 
 function* fetchTeams(context, logger, repositoriesIds) {
 	const {
-		connectorConfiguration: { orgName, flags },
+		connectorConfiguration: { orgName },
 		secretsConfiguration: { ghToken },
 		connectorLoggingUrl,
 		runId,
@@ -148,15 +159,6 @@ function* fetchTeams(context, logger, repositoriesIds) {
 			context.df.isReplaying,
 			`Successfully fetched organisation teams data. Result: ${finalTeamsResult.length}`
 		);
-
-		// Default case is true. so, explicitly check for false(boolean)
-		if (flags && flags.importTeams === false) {
-			yield logger.logInfoFromOrchestrator(
-				context,
-				context.df.isReplaying,
-				`Team data will not be processed (default). reason: 'importTeams' flag is false`
-			);
-		}
 		return finalTeamsResult;
 	} catch (e) {
 		yield logger.logError(context, e.message);

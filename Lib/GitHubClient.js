@@ -1,6 +1,7 @@
 const { graphql } = require('@octokit/graphql');
 const UpdateProgressToIHub = require('../UpdateProgressToIHub');
 const IHubStatus = require('../Lib/IHubStatus');
+const { DateTime } = require('luxon');
 
 const RETRY_WAIT = 7 * 60; // 7 minutes
 
@@ -11,6 +12,7 @@ class GitHubClient {
 				authorization: `token ${token}`
 			}
 		});
+		this.lastUpdated = DateTime.now();
 	}
 
 	setLogger(logger, context, progressCallbackUrl) {
@@ -19,7 +21,15 @@ class GitHubClient {
 		this.progressCallbackUrl = progressCallbackUrl;
 	}
 
-	async query(gqlRequestObject) {
+	async query(gqlRequestObject, message = 'In Progress') {
+		if (this.lastUpdated.diffNow('minutes').minutes < -5) {
+			await UpdateProgressToIHub(this.context, {
+				progressCallbackUrl: this.progressCallbackUrl,
+				status: IHubStatus.IN_PROGRESS,
+				message
+			});
+			this.lastUpdated = DateTime.now();
+		}
 		try {
 			return await this.graphqlClient(gqlRequestObject);
 		} catch (e) {
@@ -33,6 +43,12 @@ class GitHubClient {
 					message: 'Connector Idle: Automatically recovering from rate limiting'
 				});
 				await sleep(RETRY_WAIT * 1000);
+				await UpdateProgressToIHub(this.context, {
+					progressCallbackUrl: this.progressCallbackUrl,
+					status: IHubStatus.IN_PROGRESS,
+					message: 'Connector Awake: recovered from rate limiting'
+				});
+				this.lastUpdated = DateTime.now();
 				return await this.graphqlClient(gqlRequestObject);
 			}
 			throw e;
