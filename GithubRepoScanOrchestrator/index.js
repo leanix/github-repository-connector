@@ -47,7 +47,6 @@ function* processForLdif(context, logger) {
 		'Successfully fetched complete repo information from collected repo ids.'
 	);
 
-
 	// Default case is true. so, explicitly check for false(boolean)
 	let teamResults = [];
 	if (flags && flags.importTeams === false) {
@@ -131,7 +130,7 @@ function* fetchReposDataConcurrently(context, repositoriesIds, maxConcurrentWork
 
 function* fetchTeams(context, logger, repositoriesIds) {
 	const {
-		connectorConfiguration: { orgName},
+		connectorConfiguration: { orgName },
 		secretsConfiguration: { ghToken },
 		connectorLoggingUrl,
 		runId,
