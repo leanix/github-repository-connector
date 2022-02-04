@@ -6,6 +6,7 @@ const logStatus = {
 
 class ConnectorLogger {
 	constructor(connectorLoggingUrl, runId) {
+		this.runId = runId;
 		if (process.env.LX_DEV_SKIP_IHUB_LOGGING) {
 			return;
 		}
@@ -15,59 +16,28 @@ class ConnectorLogger {
 		if (connectorLoggingUrl) {
 			this.blockBlobClient = new BlobClient(connectorLoggingUrl, new AnonymousCredential()).getAppendBlobClient();
 		}
-		this.runId = runId;
 	}
 
 	async logInfo(context, message) {
-		context.log(message);
-		if (process.env.LX_DEV_SKIP_IHUB_LOGGING || this.runId === -1) {
-			return;
-		}
-		if (this.blockBlobClient) {
-			try {
-				await this.blockBlobClient.createIfNotExists();
-				const messageStr = typeof message === 'string' ? message : JSON.stringify(message, undefined, 2);
-				await this.blockBlobClient.appendBlock(
-					`${new Date().toISOString()} ${logStatus.INFO.toString()}: [Run ID: ${this.runId.toString()}] ${messageStr}\n`,
-					messageStr.length
-				);
-			} catch (err) {
-				context.log(`Connector Log Error:  ${err.message}`);
-			}
-		} else {
-			context.log('Error: Connector Url Blob Client not initialized');
-		}
+		const logMessage = this.constructLogMessage(message);
+		await this.iHubLog(logStatus.INFO, message, logMessage, context);
 	}
 
 	async logInfoFromOrchestrator(context, isReplaying, message) {
+		const logMessage = this.constructLogMessage(message);
 		if (!isReplaying) {
-			context.log(message);
-		}
-
-		if (process.env.LX_DEV_SKIP_IHUB_LOGGING || this.runId === -1) {
-			return;
-		}
-
-		if (!isReplaying) {
-			if (this.blockBlobClient) {
-				try {
-					await this.blockBlobClient.createIfNotExists();
-					const messageStr = typeof message === 'string' ? message : JSON.stringify(message, undefined, 2);
-					await this.blockBlobClient.appendBlock(
-						`${new Date().toISOString()} ${logStatus.INFO.toString()}: [Run ID: ${this.runId.toString()}] ${messageStr}\n`,
-						messageStr.length
-					);
-				} catch (err) {
-					context.log(`Connector Log Error:  ${err.message}`);
-				}
-			} else {
-				context.log('Error: Connector Url Blob Client not initialized');
-			}
+			await this.iHubLog(logStatus.INFO, message, logMessage, context);
 		}
 	}
 
 	async logError(context, message) {
-		context.log(message);
+		const logMessage = this.constructLogMessage(message);
+		await this.iHubLog(logStatus.ERROR, message, logMessage, context);
+	}
+
+	async iHubLog(type, message, logMessage, context) {
+		context.log(logMessage);
+
 		if (process.env.LX_DEV_SKIP_IHUB_LOGGING || this.runId === -1) {
 			return;
 		}
@@ -75,18 +45,24 @@ class ConnectorLogger {
 		if (this.blockBlobClient) {
 			try {
 				await this.blockBlobClient.createIfNotExists();
-				const messageStr = typeof message === 'string' ? message : JSON.stringify(message, undefined, 2);
+				const messageStr = typeof message === "string" ? message : JSON.stringify(message, undefined, 2);
 				await this.blockBlobClient.appendBlock(
-					`${new Date().toISOString()} ${logStatus.ERROR.toString()}: [Run ID: ${this.runId.toString()}] ${messageStr}\n`,
+					`${new Date().toISOString()} ${type.toString()}: ${logMessage}\n`,
 					messageStr.length
 				);
 			} catch (err) {
 				context.log(`Connector Log Error:  ${err.message}`);
 			}
 		} else {
-			context.log('Connector Log Error: Connector Url Blob Client not initialized');
+			context.log("Connector Log Error: Connector Url Blob Client not initialized");
 		}
 	}
+
+	constructLogMessage(message) {
+		const messageStr = typeof message === "string" ? message : JSON.stringify(message, undefined, 2);
+		return `[Run ID: ${this.runId.toString()}] ${messageStr}\n`;
+	}
+
 }
 
 function getLoggerInstanceFromContext(context) {
