@@ -34,7 +34,7 @@ class GetOrgTeamsDataHandler {
                       name
                     }
                     repositories(first: $reposPageCount) {
-											totalCount
+		      totalCount
                       pageInfo {
                         endCursor
                         hasNextPage
