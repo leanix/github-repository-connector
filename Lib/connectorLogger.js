@@ -45,24 +45,20 @@ class ConnectorLogger {
 		if (this.blockBlobClient) {
 			try {
 				await this.blockBlobClient.createIfNotExists();
-				const messageStr = typeof message === "string" ? message : JSON.stringify(message, undefined, 2);
-				await this.blockBlobClient.appendBlock(
-					`${new Date().toISOString()} ${type.toString()}: ${logMessage}\n`,
-					messageStr.length
-				);
+				const messageStr = typeof message === 'string' ? message : JSON.stringify(message, undefined, 2);
+				await this.blockBlobClient.appendBlock(`${new Date().toISOString()} ${type.toString()}: ${logMessage}\n`, messageStr.length);
 			} catch (err) {
 				context.log(`Connector Log Error:  ${err.message}`);
 			}
 		} else {
-			context.log("Connector Log Error: Connector Url Blob Client not initialized");
+			context.log('Connector Log Error: Connector Url Blob Client not initialized');
 		}
 	}
 
 	constructLogMessage(message) {
-		const messageStr = typeof message === "string" ? message : JSON.stringify(message, undefined, 2);
+		const messageStr = typeof message === 'string' ? message : JSON.stringify(message, undefined, 2);
 		return `[Run ID: ${this.runId.toString()}] ${messageStr}\n`;
 	}
-
 }
 
 function getLoggerInstanceFromContext(context) {
