@@ -8,6 +8,7 @@ const df = require('durable-functions');
 const iHubStatus = require('../Lib/IHubStatus');
 const { getLoggerInstanceFromContext } = require('../Lib/connectorLogger');
 const { DateTime } = require('luxon');
+const Util = require("../Lib/helper");
 
 function* processForLdif(context, logger) {
 	const {
@@ -134,6 +135,8 @@ function* fetchTeams(context, logger, repositoriesIds) {
 			orgRepositoriesIds: repositoriesIds,
 			metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
 		});
+
+		Util.verifyTeamReposDataLimit(teamResultsWithInitialRepos);
 
 		const finalTeamsResult = teamResultsWithInitialRepos.filter((team) => !team.hasMoreReposInitialSet);
 		if (finalTeamsResult.length !== teamResultsWithInitialRepos.length) {
