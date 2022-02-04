@@ -652,7 +652,7 @@
 				"processorType": "inboundSubscription",
 				"processorName": "create-user-subscriptions-from-repo-contributors",
 				"processorDescription": "Creates repo contributors as MS subscriptions",
-				"run": 5,
+				"run": 4,
 				"type": "Microservice",
 				"filter": {
 					"exactType": "Repository",
@@ -765,23 +765,6 @@
 						"types": ["ACCOUNTABLE", "RESPONSIBLE"]
 					}
 				}
-			},
-			{
-				"processorType": "variableProcessor",
-				"processorName": "Variable for subs not to delete/modify",
-				"processorDescription": "Variable for subs not to delete/modify",
-				"filter": {
-					"advanced": "${helper:getFromMap(variables, content.id.concat('_').concat(integration.valueOfForEach)).contains('true')}",
-					"exactType": "Repository"
-				},
-				"run": 4,
-				"forEach": "${data.contributors}",
-				"variables": [
-					{
-						"key": "${content.id}_donot_delete",
-						"value": "${integration.valueOfForEach}"
-					}
-				]
 			}
 		],
 		"variables": {},
