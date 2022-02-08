@@ -753,8 +753,7 @@
 				"updates": [],
 				"variables": [
 					{
-						"key": "${content.id}_${integration.variables.valueOfForEach.user.email}",
-						"value": "${integration.variables.valueOfForEach.type != 'OBSERVER' && integration.variables.valueOfForEach.roles.toString().contains('Source Code Contributor')}",
+						"key": "${(integration.variables.valueOfForEach.roles.toString().contains('Source Code Contributor') || integration.variables.valueOfForEach.type != 'OBSERVER') && !(integration.variables.valueOfForEach.roles.toString().contains('Contributor') && integration.variables.valueOfForEach.type == 'RESPONSIBLE')}",
 						"forEach": {
 							"elementOf": "${lx.subscriptions}"
 						}
