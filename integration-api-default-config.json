@@ -33,6 +33,10 @@
 						{
 							"type": "RESPONSIBLE",
 							"roles": ["Contributor"]
+						},
+						{
+							"type": "OBSERVER",
+							"roles": ["Source Code Contributor"]
 						}
 					],
 					"scope": {
@@ -596,22 +600,6 @@
 				"run": 3
 			},
 			{
-				"processorType": "variableProcessor",
-				"processorName": "Store all repository ids",
-				"processorDescription": "Store all repository ids from the provided LDIF",
-				"filter": {
-					"exactType": "Repository"
-				},
-				"run": 3,
-				"enabled": true,
-				"variables": [
-					{
-						"key": "github_project_ids",
-						"value": "${content.id}"
-					}
-				]
-			},
-			{
 				"processorType": "inboundTag",
 				"processorName": "Add 'GitHub Repository' Data Source tag on Microservice Factsheets",
 				"processorDescription": "Adds 'GitHub Repository' Data Source tag on Software Artifact type FS for data source tracking",
@@ -664,10 +652,11 @@
 				"processorType": "inboundSubscription",
 				"processorName": "create-user-subscriptions-from-repo-contributors",
 				"processorDescription": "Creates repo contributors as MS subscriptions",
-				"run": 3,
+				"run": 4,
 				"type": "Microservice",
 				"filter": {
-					"exactType": "Repository"
+					"exactType": "Repository",
+					"advanced": "${helper:getFromMap(variables, content.id.concat('_').concat(integration.valueOfForEach)) == null || !helper:getFromMap(variables, content.id.concat('_').concat(integration.valueOfForEach)).contains('true')}"
 				},
 				"identifier": {
 					"external": {
@@ -697,7 +686,7 @@
 						},
 						"values": [
 							{
-								"expr": "RESPONSIBLE"
+								"expr": "OBSERVER"
 							}
 						]
 					},
@@ -710,7 +699,7 @@
 								"map": [
 									{
 										"key": "roleName",
-										"value": "Contributor"
+										"value": "Source Code Contributor"
 									},
 									{
 										"key": "comment",
@@ -741,6 +730,41 @@
 						]
 					}
 				]
+			},
+			{
+				"processorType": "inboundFactSheet",
+				"processorName": "Variable to read the existing subs on FS",
+				"processorDescription": "Variable to read the existing subs on FS",
+				"type": "Microservice",
+				"filter": {
+					"exactType": "Repository"
+				},
+				"identifier": {
+					"external": {
+						"id": {
+							"expr": "${content.id}"
+						},
+						"type": {
+							"expr": "githubId"
+						}
+					}
+				},
+				"run": 3,
+				"updates": [],
+				"variables": [
+					{
+						"key": "${content.id}_${integration.variables.valueOfForEach.user.email}",
+						"value": "${(integration.variables.valueOfForEach.roles.toString().contains('Source Code Contributor') || integration.variables.valueOfForEach.type != 'OBSERVER') && !(integration.variables.valueOfForEach.roles.toString().contains('Contributor') && integration.variables.valueOfForEach.type == 'RESPONSIBLE')}",
+						"forEach": {
+							"elementOf": "${lx.subscriptions}"
+						}
+					}
+				],
+				"read": {
+					"subscriptions": {
+						"types": ["ACCOUNTABLE", "RESPONSIBLE"]
+					}
+				}
 			}
 		],
 		"variables": {},
