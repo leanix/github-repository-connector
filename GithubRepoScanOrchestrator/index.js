@@ -8,6 +8,7 @@ const df = require('durable-functions');
 const iHubStatus = require('../Lib/IHubStatus');
 const { getLoggerInstanceFromContext } = require('../Lib/connectorLogger');
 const { DateTime } = require('luxon');
+const Util = require('../Lib/helper');
 
 function* processForLdif(context, logger) {
 	const {
@@ -139,13 +140,20 @@ function* fetchTeams(context, logger, repositoriesIds) {
 
 	try {
 		yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching organisation teams related data');
-		const teamResultsWithInitialRepos = yield context.df.callActivity('GetOrgTeamsData', {
+		var teamResultsWithInitialRepos = yield context.df.callActivity('GetOrgTeamsData', {
 			orgName,
 			ghToken,
 			orgRepositoriesIds: repositoriesIds,
 			metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
 		});
+	} catch (e) {
+		yield logger.logError(context, e.message);
+		return [];
+	}
 
+	Util.verifyTeamReposDataLimit(teamResultsWithInitialRepos);
+
+	try {
 		const finalTeamsResult = teamResultsWithInitialRepos.filter((team) => !team.hasMoreReposInitialSet);
 		if (finalTeamsResult.length !== teamResultsWithInitialRepos.length) {
 			// If there are teams which have more than initially fetched repositories set
