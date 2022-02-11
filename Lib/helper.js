@@ -53,7 +53,7 @@ class Util {
 		 * */
 		if (allTeamsReposToBeFetchedCount >= 400_000) {
 			throw new Error(
-				'Data processing limit exceeded. Please try again with less number of teams and repositories. Hint: turn off the "importTeams" flag'
+				`Data processing limit exceeded. Processed records for teams data: ${allTeamsReposToBeFetchedCount} exceeded processing limit: 400000 records. Please try again with less number of teams and repositories. Hint: Please turn off the "importTeams" flag`
 			);
 		}
 	}
