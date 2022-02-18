@@ -29,7 +29,11 @@ class LdifProcessor {
 			runId
 		} = this.context.bindingData.input;
 
-		yield this.logger.logInfoFromOrchestrator(this.context, this.context.df.isReplaying, 'Fetching ids of all the repos present in the org.');
+		yield this.logger.logInfoFromOrchestrator(
+			this.context,
+			this.context.df.isReplaying,
+			'Fetching ids of all the repos present in the org.'
+		);
 
 		const repoNamesExcludeListChecked = repoNamesExcludeList ? repoNamesExcludeList : [];
 		const repositoriesIds = yield this.context.df.callActivity('GetAllRepositoriesForOrg', {
@@ -39,8 +43,16 @@ class LdifProcessor {
 			metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
 		});
 
-		yield this.logger.logInfoFromOrchestrator(this.context, this.context.df.isReplaying, 'Successfully fetched ids of all repos present in the org');
-		yield this.logger.logInfoFromOrchestrator(this.context, this.context.df.isReplaying, 'Fetching complete repo information from collected repo ids.');
+		yield this.logger.logInfoFromOrchestrator(
+			this.context,
+			this.context.df.isReplaying,
+			'Successfully fetched ids of all repos present in the org'
+		);
+		yield this.logger.logInfoFromOrchestrator(
+			this.context,
+			this.context.df.isReplaying,
+			'Fetching complete repo information from collected repo ids.'
+		);
 
 		const partialResults = yield* this.fetchReposDataConcurrently(this.context, repositoriesIds);
 
@@ -74,7 +86,11 @@ class LdifProcessor {
 			message: 'Progress 40%'
 		});
 		const repoIdsVisibilityMap = yield* this.fetchRepoVisibility();
-		yield this.logger.logInfoFromOrchestrator(this.context, this.context.df.isReplaying, 'Starting to generate final LDIF and save into storage');
+		yield this.logger.logInfoFromOrchestrator(
+			this.context,
+			this.context.df.isReplaying,
+			'Starting to generate final LDIF and save into storage'
+		);
 		yield this.context.df.callActivity('UpdateProgressToIHub', {
 			progressCallbackUrl,
 			status: iHubStatus.IN_PROGRESS,
@@ -92,7 +108,11 @@ class LdifProcessor {
 				flags
 			}
 		});
-		yield this.logger.logInfoFromOrchestrator(this.context, this.context.df.isReplaying, 'Successfully generated LDIF and saved into storage');
+		yield this.logger.logInfoFromOrchestrator(
+			this.context,
+			this.context.df.isReplaying,
+			'Successfully generated LDIF and saved into storage'
+		);
 		return {
 			totalRepositories: repositoriesIds.length,
 			totalTeams: teamResults.length
@@ -230,7 +250,7 @@ class LdifProcessor {
 						this.context.df.isReplaying,
 						`GitHub GraphQL API rate limit exceeded. Attempting to automatically recover. Reset after: ${reset}`
 					);
-					yield* this.sleepWithTimelyIHubUpdate( `Progress 25%`);
+					yield* this.sleepWithTimelyIHubUpdate(`Progress 25%`);
 					workingGroups.push(workingGroup);
 				} else {
 					throw e;
@@ -265,7 +285,11 @@ class LdifProcessor {
 			yield this.logger.logError(this.context, e.message);
 			repoIdsVisibilityMap = {};
 		}
-		yield this.logger.logInfoFromOrchestrator(this.context, this.context.df.isReplaying, 'Successfully fetched repo visibility related data');
+		yield this.logger.logInfoFromOrchestrator(
+			this.context,
+			this.context.df.isReplaying,
+			'Successfully fetched repo visibility related data'
+		);
 		return repoIdsVisibilityMap;
 	}
 
