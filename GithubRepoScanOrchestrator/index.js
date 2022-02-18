@@ -54,7 +54,7 @@ class LdifProcessor {
 			'Fetching complete repo information from collected repo ids.'
 		);
 
-		const partialResults = yield* this.fetchReposDataConcurrently(this.context, repositoriesIds);
+		const partialResults = yield* this.fetchReposDataConcurrently(repositoriesIds);
 
 		yield this.context.df.callActivity('UpdateProgressToIHub', {
 			progressCallbackUrl,
@@ -119,13 +119,13 @@ class LdifProcessor {
 		};
 	}
 
-	*fetchReposDataConcurrently(context, repositoriesIds, maxConcurrentWorkers = 4) {
+	*fetchReposDataConcurrently(repositoriesIds, maxConcurrentWorkers = 4) {
 		const {
 			secretsConfiguration: { ghToken },
 			connectorLoggingUrl,
 			runId,
 			progressCallbackUrl
-		} = context.bindingData.input;
+		} = this.context.bindingData.input;
 
 		const scannerCapacity = MAX_CAPACITY;
 		const allReposSetOfCapacity = [];
@@ -143,14 +143,14 @@ class LdifProcessor {
 			const output = [];
 			for (const workingGroupElement of workingGroup) {
 				output.push(
-					context.df.callActivity('GetSubReposData', {
+					this.context.df.callActivity('GetSubReposData', {
 						repoIds: workingGroupElement,
 						ghToken,
 						metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
 					})
 				);
 			}
-			const partialResults = yield context.df.Task.all(output);
+			const partialResults = yield this.context.df.Task.all(output);
 			completePartialResults.push(...partialResults);
 		}
 
