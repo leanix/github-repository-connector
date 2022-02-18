@@ -12,283 +12,278 @@ const Util = require('../Lib/helper');
 
 const MAX_CAPACITY = 100;
 
-function* processForLdif(context, logger) {
-	const {
-		connectorConfiguration: { orgName, repoNamesExcludeList, flags },
-		secretsConfiguration: { ghToken },
-		ldifResultUrl,
-		progressCallbackUrl,
-		bindingKey,
-		connectorLoggingUrl,
-		runId
-	} = context.bindingData.input;
-
-	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching ids of all the repos present in the org.');
-
-	const repoNamesExcludeListChecked = repoNamesExcludeList ? repoNamesExcludeList : [];
-	const repositoriesIds = yield context.df.callActivity('GetAllRepositoriesForOrg', {
-		orgName,
-		repoNamesExcludeListChecked,
-		ghToken,
-		metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
-	});
-
-	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched ids of all repos present in the org');
-	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching complete repo information from collected repo ids.');
-
-	const partialResults = yield* fetchReposDataConcurrently(context, repositoriesIds);
-
-	yield context.df.callActivity('UpdateProgressToIHub', {
-		progressCallbackUrl,
-		status: iHubStatus.IN_PROGRESS,
-		message: 'Progress 20%'
-	});
-
-	yield logger.logInfoFromOrchestrator(
-		context,
-		context.df.isReplaying,
-		'Successfully fetched complete repo information from collected repo ids.'
-	);
-
-	// Default case is true. so, explicitly check for false(boolean)
-	let teamResults = [];
-	if (flags && flags.importTeams === false) {
-		yield logger.logInfoFromOrchestrator(
-			context,
-			context.df.isReplaying,
-			`Team data will not be processed. reason: 'importTeams' flag is false`
-		);
-	} else {
-		teamResults = yield* fetchTeams(context, logger, repositoriesIds);
+class LdifProcessor {
+	constructor(context, logger) {
+		this.context = context;
+		this.logger = logger;
 	}
 
-	yield context.df.callActivity('UpdateProgressToIHub', {
-		progressCallbackUrl,
-		status: iHubStatus.IN_PROGRESS,
-		message: 'Progress 40%'
-	});
-	const repoIdsVisibilityMap = yield* fetchRepoVisibility(context, logger);
-	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Starting to generate final LDIF and save into storage');
-	yield context.df.callActivity('UpdateProgressToIHub', {
-		progressCallbackUrl,
-		status: iHubStatus.IN_PROGRESS,
-		message: 'Progress: 90%: Successfully requested the data from GitHub'
-	});
-
-	yield context.df.callActivity('SaveLdifToStorage', {
-		partialResults,
-		teamResults,
-		repoIdsVisibilityMap,
-		blobStorageSasUrl: ldifResultUrl,
-		metadata: {
+	*processForLdif() {
+		const {
+			connectorConfiguration: { orgName, repoNamesExcludeList, flags },
+			secretsConfiguration: { ghToken },
+			ldifResultUrl,
+			progressCallbackUrl,
 			bindingKey,
+			connectorLoggingUrl,
+			runId
+		} = this.context.bindingData.input;
+
+		yield this.logger.logInfoFromOrchestrator(this.context, this.context.df.isReplaying, 'Fetching ids of all the repos present in the org.');
+
+		const repoNamesExcludeListChecked = repoNamesExcludeList ? repoNamesExcludeList : [];
+		const repositoriesIds = yield this.context.df.callActivity('GetAllRepositoriesForOrg', {
 			orgName,
-			flags
-		}
-	});
-	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully generated LDIF and saved into storage');
-	return {
-		totalRepositories: repositoriesIds.length,
-		totalTeams: teamResults.length
-	};
-}
-
-function* fetchReposDataConcurrently(context, repositoriesIds, maxConcurrentWorkers = 4) {
-	const {
-		secretsConfiguration: { ghToken },
-		connectorLoggingUrl,
-		runId,
-		progressCallbackUrl
-	} = context.bindingData.input;
-
-	const scannerCapacity = MAX_CAPACITY;
-	const allReposSetOfCapacity = [];
-	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
-		allReposSetOfCapacity.push(repositoriesIds.slice(i, i + scannerCapacity));
-	}
-
-	const completePartialResults = [];
-	const workingGroups = [];
-	for (let i = 0, j = allReposSetOfCapacity.length; i < j; i += maxConcurrentWorkers) {
-		workingGroups.push(allReposSetOfCapacity.slice(i, i + maxConcurrentWorkers));
-	}
-
-	for (const workingGroup of workingGroups) {
-		const output = [];
-		for (const workingGroupElement of workingGroup) {
-			output.push(
-				context.df.callActivity('GetSubReposData', {
-					repoIds: workingGroupElement,
-					ghToken,
-					metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
-				})
-			);
-		}
-		const partialResults = yield context.df.Task.all(output);
-		completePartialResults.push(...partialResults);
-	}
-
-	return completePartialResults;
-}
-
-function* fetchTeams(context, logger, repositoriesIds) {
-	const {
-		connectorConfiguration: { orgName },
-		secretsConfiguration: { ghToken },
-		connectorLoggingUrl,
-		runId,
-		progressCallbackUrl
-	} = context.bindingData.input;
-
-	try {
-		yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Fetching organisation teams related data');
-		var teamResultsWithInitialRepos = yield context.df.callActivity('GetOrgTeamsData', {
-			orgName,
+			repoNamesExcludeListChecked,
 			ghToken,
-			orgRepositoriesIds: repositoriesIds,
 			metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
 		});
-	} catch (e) {
-		yield logger.logError(context, e.message);
-		return [];
-	}
 
-	Util.verifyTeamReposDataLimit(teamResultsWithInitialRepos);
+		yield this.logger.logInfoFromOrchestrator(this.context, this.context.df.isReplaying, 'Successfully fetched ids of all repos present in the org');
+		yield this.logger.logInfoFromOrchestrator(this.context, this.context.df.isReplaying, 'Fetching complete repo information from collected repo ids.');
 
-	try {
-		const finalTeamsResult = teamResultsWithInitialRepos.filter((team) => !team.hasMoreReposInitialSet);
-		if (finalTeamsResult.length !== teamResultsWithInitialRepos.length) {
-			// If there are teams which have more than initially fetched repositories set
-			const teamsWithMoreRepos = teamResultsWithInitialRepos.filter((team) => team.hasMoreReposInitialSet);
-			const data = yield* fetchTeamReposConcurrently(context, logger, repositoriesIds, teamsWithMoreRepos);
-			finalTeamsResult.push(...data);
+		const partialResults = yield* this.fetchReposDataConcurrently(this.context, repositoriesIds);
+
+		yield this.context.df.callActivity('UpdateProgressToIHub', {
+			progressCallbackUrl,
+			status: iHubStatus.IN_PROGRESS,
+			message: 'Progress 20%'
+		});
+
+		yield this.logger.logInfoFromOrchestrator(
+			this.context,
+			this.context.df.isReplaying,
+			'Successfully fetched complete repo information from collected repo ids.'
+		);
+
+		// Default case is true. so, explicitly check for false(boolean)
+		let teamResults = [];
+		if (flags && flags.importTeams === false) {
+			yield this.logger.logInfoFromOrchestrator(
+				this.context,
+				this.context.df.isReplaying,
+				`Team data will not be processed. reason: 'importTeams' flag is false`
+			);
+		} else {
+			teamResults = yield* this.fetchTeams(repositoriesIds);
 		}
 
-		yield logger.logInfoFromOrchestrator(
-			context,
-			context.df.isReplaying,
-			`Successfully fetched organisation teams data. Result: ${finalTeamsResult.length}`
-		);
-		return finalTeamsResult;
-	} catch (e) {
-		yield logger.logError(context, e.message);
-		return [];
-	}
-}
+		yield this.context.df.callActivity('UpdateProgressToIHub', {
+			progressCallbackUrl,
+			status: iHubStatus.IN_PROGRESS,
+			message: 'Progress 40%'
+		});
+		const repoIdsVisibilityMap = yield* this.fetchRepoVisibility();
+		yield this.logger.logInfoFromOrchestrator(this.context, this.context.df.isReplaying, 'Starting to generate final LDIF and save into storage');
+		yield this.context.df.callActivity('UpdateProgressToIHub', {
+			progressCallbackUrl,
+			status: iHubStatus.IN_PROGRESS,
+			message: 'Progress: 90%: Successfully requested the data from GitHub'
+		});
 
-function isRateLimitExceededError(e) {
-	if (!e) {
-		return [false];
-	}
-	if (!e.headers) {
-		return [false];
-	}
-	const isExceeded =
-		e.name === 'GraphqlError' && (parseInt(e.headers['x-ratelimit-remaining']) === 0 || e.message.includes('API rate limit'));
-	return [isExceeded, e.headers['x-ratelimit-reset']];
-}
-
-function* fetchTeamReposConcurrently(context, logger, repositoriesIds, teams, maxConcurrentWorkers = 4) {
-	if (!teams || !teams.length) {
-		return [];
-	}
-
-	const {
-		connectorConfiguration: { orgName },
-		secretsConfiguration: { ghToken },
-		connectorLoggingUrl,
-		progressCallbackUrl,
-		runId
-	} = context.bindingData.input;
-
-	const result = [];
-	const workingGroups = [];
-	for (let i = 0, j = teams.length; i < j; i += maxConcurrentWorkers) {
-		workingGroups.push(teams.slice(i, i + maxConcurrentWorkers));
+		yield this.context.df.callActivity('SaveLdifToStorage', {
+			partialResults,
+			teamResults,
+			repoIdsVisibilityMap,
+			blobStorageSasUrl: ldifResultUrl,
+			metadata: {
+				bindingKey,
+				orgName,
+				flags
+			}
+		});
+		yield this.logger.logInfoFromOrchestrator(this.context, this.context.df.isReplaying, 'Successfully generated LDIF and saved into storage');
+		return {
+			totalRepositories: repositoriesIds.length,
+			totalTeams: teamResults.length
+		};
 	}
 
-	for (const workingGroup of workingGroups) {
-		const output = [];
-		try {
-			for (const workingGroupTeam of workingGroup) {
+	*fetchReposDataConcurrently(context, repositoriesIds, maxConcurrentWorkers = 4) {
+		const {
+			secretsConfiguration: { ghToken },
+			connectorLoggingUrl,
+			runId,
+			progressCallbackUrl
+		} = context.bindingData.input;
+
+		const scannerCapacity = MAX_CAPACITY;
+		const allReposSetOfCapacity = [];
+		for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
+			allReposSetOfCapacity.push(repositoriesIds.slice(i, i + scannerCapacity));
+		}
+
+		const completePartialResults = [];
+		const workingGroups = [];
+		for (let i = 0, j = allReposSetOfCapacity.length; i < j; i += maxConcurrentWorkers) {
+			workingGroups.push(allReposSetOfCapacity.slice(i, i + maxConcurrentWorkers));
+		}
+
+		for (const workingGroup of workingGroups) {
+			const output = [];
+			for (const workingGroupElement of workingGroup) {
 				output.push(
-					context.df.callActivity('GetOrgTeamReposData', {
-						orgName,
+					context.df.callActivity('GetSubReposData', {
+						repoIds: workingGroupElement,
 						ghToken,
-						orgRepositoriesIds: repositoriesIds,
-						team: workingGroupTeam,
 						metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
 					})
 				);
 			}
-			yield context.df.callActivity('UpdateProgressToIHub', {
-				progressCallbackUrl,
-				status: iHubStatus.IN_PROGRESS,
-				message: 'Progress 25%'
-			});
 			const partialResults = yield context.df.Task.all(output);
-			result.push(...partialResults);
-		} catch (e) {
-			let [limitExceeded, reset] = isRateLimitExceededError(e);
-			if (limitExceeded) {
-				yield logger.logInfoFromOrchestrator(
-					context,
-					context.df.isReplaying,
-					`GitHub GraphQL API rate limit exceeded. Attempting to automatically recover. Reset after: ${reset}`
-				);
-				yield* sleepWithTimelyIHubUpdate(context, logger, `Progress 25%`);
-				workingGroups.push(workingGroup);
-			} else {
-				throw e;
-			}
+			completePartialResults.push(...partialResults);
 		}
+
+		return completePartialResults;
 	}
-	return result;
-}
 
-function* fetchRepoVisibility(context, logger) {
-	const {
-		connectorConfiguration: { orgName },
-		secretsConfiguration: { ghToken },
-		connectorLoggingUrl,
-		runId,
-		progressCallbackUrl
-	} = context.bindingData.input;
+	*fetchTeams(repositoriesIds) {
+		const {
+			connectorConfiguration: { orgName },
+			secretsConfiguration: { ghToken },
+			connectorLoggingUrl,
+			runId,
+			progressCallbackUrl
+		} = this.context.bindingData.input;
 
-	let repoIdsVisibilityMap = {};
-	const repoVisibilities = ['private', 'public', 'internal'];
-	try {
-		for (let visibilityType of repoVisibilities) {
-			const visibilityRepoMap = yield context.df.callActivity('GetReposVisibilityData', {
+		try {
+			yield this.logger.logInfoFromOrchestrator(this.context, this.context.df.isReplaying, 'Fetching organisation teams related data');
+			var teamResultsWithInitialRepos = yield this.context.df.callActivity('GetOrgTeamsData', {
 				orgName,
-				visibilityType,
 				ghToken,
+				orgRepositoriesIds: repositoriesIds,
 				metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
 			});
-			repoIdsVisibilityMap = { ...repoIdsVisibilityMap, ...visibilityRepoMap };
+		} catch (e) {
+			yield this.logger.logError(this.context, e.message);
+			return [];
 		}
-	} catch (e) {
-		yield logger.logError(context, e.message);
-		repoIdsVisibilityMap = {};
+
+		Util.verifyTeamReposDataLimit(teamResultsWithInitialRepos);
+
+		try {
+			const finalTeamsResult = teamResultsWithInitialRepos.filter((team) => !team.hasMoreReposInitialSet);
+			if (finalTeamsResult.length !== teamResultsWithInitialRepos.length) {
+				// If there are teams which have more than initially fetched repositories set
+				const teamsWithMoreRepos = teamResultsWithInitialRepos.filter((team) => team.hasMoreReposInitialSet);
+				const data = yield* this.fetchTeamReposConcurrently(repositoriesIds, teamsWithMoreRepos);
+				finalTeamsResult.push(...data);
+			}
+
+			yield this.logger.logInfoFromOrchestrator(
+				this.context,
+				this.context.df.isReplaying,
+				`Successfully fetched organisation teams data. Result: ${finalTeamsResult.length}`
+			);
+			return finalTeamsResult;
+		} catch (e) {
+			yield this.logger.logError(this.context, e.message);
+			return [];
+		}
 	}
-	yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, 'Successfully fetched repo visibility related data');
-	return repoIdsVisibilityMap;
-}
 
-function* sleepWithTimelyIHubUpdate(context, logger, message, updateEveryMinutes = 10, waitForMinutes = 60) {
-	const { progressCallbackUrl } = context.bindingData.input;
+	*fetchTeamReposConcurrently(repositoriesIds, teams, maxConcurrentWorkers = 4) {
+		if (!teams || !teams.length) {
+			return [];
+		}
 
-	for (let i = 0; i < Math.ceil(waitForMinutes / updateEveryMinutes); i++) {
-		const elapse = (i + 1) * updateEveryMinutes;
-		const deadline = DateTime.fromJSDate(context.df.currentUtcDateTime, { zone: 'utc' }).plus({ minutes: elapse });
-		yield context.df.createTimer(deadline.toJSDate());
-		const msg = `Connector sleeping: ${message}`;
-		yield logger.logInfoFromOrchestrator(context, context.df.isReplaying, msg);
-		yield context.df.callActivity('UpdateProgressToIHub', {
+		const {
+			connectorConfiguration: { orgName },
+			secretsConfiguration: { ghToken },
+			connectorLoggingUrl,
 			progressCallbackUrl,
-			status: iHubStatus.IN_PROGRESS,
-			msg
-		});
+			runId
+		} = this.context.bindingData.input;
+
+		const result = [];
+		const workingGroups = [];
+		for (let i = 0, j = teams.length; i < j; i += maxConcurrentWorkers) {
+			workingGroups.push(teams.slice(i, i + maxConcurrentWorkers));
+		}
+
+		for (const workingGroup of workingGroups) {
+			const output = [];
+			try {
+				for (const workingGroupTeam of workingGroup) {
+					output.push(
+						this.context.df.callActivity('GetOrgTeamReposData', {
+							orgName,
+							ghToken,
+							orgRepositoriesIds: repositoriesIds,
+							team: workingGroupTeam,
+							metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
+						})
+					);
+				}
+				yield this.context.df.callActivity('UpdateProgressToIHub', {
+					progressCallbackUrl,
+					status: iHubStatus.IN_PROGRESS,
+					message: 'Progress 25%'
+				});
+				const partialResults = yield this.context.df.Task.all(output);
+				result.push(...partialResults);
+			} catch (e) {
+				let [limitExceeded, reset] = Util.isRateLimitExceededError(e);
+				if (limitExceeded) {
+					yield this.logger.logInfoFromOrchestrator(
+						this.context,
+						this.context.df.isReplaying,
+						`GitHub GraphQL API rate limit exceeded. Attempting to automatically recover. Reset after: ${reset}`
+					);
+					yield* this.sleepWithTimelyIHubUpdate( `Progress 25%`);
+					workingGroups.push(workingGroup);
+				} else {
+					throw e;
+				}
+			}
+		}
+		return result;
+	}
+
+	*fetchRepoVisibility() {
+		const {
+			connectorConfiguration: { orgName },
+			secretsConfiguration: { ghToken },
+			connectorLoggingUrl,
+			runId,
+			progressCallbackUrl
+		} = this.context.bindingData.input;
+
+		let repoIdsVisibilityMap = {};
+		const repoVisibilities = ['private', 'public', 'internal'];
+		try {
+			for (let visibilityType of repoVisibilities) {
+				const visibilityRepoMap = yield this.context.df.callActivity('GetReposVisibilityData', {
+					orgName,
+					visibilityType,
+					ghToken,
+					metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
+				});
+				repoIdsVisibilityMap = { ...repoIdsVisibilityMap, ...visibilityRepoMap };
+			}
+		} catch (e) {
+			yield this.logger.logError(this.context, e.message);
+			repoIdsVisibilityMap = {};
+		}
+		yield this.logger.logInfoFromOrchestrator(this.context, this.context.df.isReplaying, 'Successfully fetched repo visibility related data');
+		return repoIdsVisibilityMap;
+	}
+
+	*sleepWithTimelyIHubUpdate(message, updateEveryMinutes = 10, waitForMinutes = 60) {
+		const { progressCallbackUrl } = this.context.bindingData.input;
+
+		for (let i = 0; i < Math.ceil(waitForMinutes / updateEveryMinutes); i++) {
+			const elapse = (i + 1) * updateEveryMinutes;
+			const deadline = DateTime.fromJSDate(this.context.df.currentUtcDateTime, { zone: 'utc' }).plus({ minutes: elapse });
+			yield this.context.df.createTimer(deadline.toJSDate());
+			const msg = `Connector sleeping: ${message}`;
+			yield this.logger.logInfoFromOrchestrator(this.context, this.context.df.isReplaying, msg);
+			yield this.context.df.callActivity('UpdateProgressToIHub', {
+				progressCallbackUrl,
+				status: iHubStatus.IN_PROGRESS,
+				msg
+			});
+		}
 	}
 }
 
@@ -301,7 +296,8 @@ module.exports = df.orchestrator(function* (context) {
 	try {
 		const { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId } = context.bindingData.input;
 		yield context.df.callActivity('TestConnector', { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId });
-		const logDataMetricsInfo = yield* processForLdif(context, logger);
+		const processor = new LdifProcessor(context, logger);
+		const logDataMetricsInfo = yield* processor.processForLdif();
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, {
 			progressCallbackUrl,
 			status: iHubStatus.FINISHED,

@@ -57,6 +57,19 @@ class Util {
 			);
 		}
 	}
+
+	static isRateLimitExceededError(e) {
+		if (!e) {
+			return [false];
+		}
+		if (!e.headers) {
+			return [false];
+		}
+		const isExceeded =
+			e.name === 'GraphqlError' && (parseInt(e.headers['x-ratelimit-remaining']) === 0 || e.message.includes('API rate limit'));
+		return [isExceeded, e.headers['x-ratelimit-reset']];
+	}
+
 }
 
 module.exports = Util;
