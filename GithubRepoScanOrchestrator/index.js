@@ -10,6 +10,8 @@ const { getLoggerInstanceFromContext } = require('../Lib/connectorLogger');
 const { DateTime } = require('luxon');
 const Util = require('../Lib/helper');
 
+const MAX_CAPACITY = 100;
+
 function* processForLdif(context, logger) {
 	const {
 		connectorConfiguration: { orgName, repoNamesExcludeList, flags },
@@ -99,7 +101,7 @@ function* fetchReposDataConcurrently(context, repositoriesIds, maxConcurrentWork
 		progressCallbackUrl
 	} = context.bindingData.input;
 
-	const scannerCapacity = 100;
+	const scannerCapacity = MAX_CAPACITY;
 	const allReposSetOfCapacity = [];
 	for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
 		allReposSetOfCapacity.push(repositoriesIds.slice(i, i + scannerCapacity));
