@@ -2,9 +2,12 @@ const GitHubClient = require('../Lib/GitHubClient');
 const { getISODateStringOnFromToday } = require('../Lib/helper');
 const { getLoggerInstanceFromUrlAndRunId } = require('../Lib/connectorLogger');
 
-module.exports = async function (context, { repoIds, metadata: { connectorLoggingUrl, runId, progressCallbackUrl }, ghToken }) {
+module.exports = async function (
+	context,
+	{ repoIds, monoRepoConfig, metadata: { connectorLoggingUrl, runId, progressCallbackUrl }, ghToken }
+) {
 	const handler = new SubReposDataHandler(context, connectorLoggingUrl, progressCallbackUrl, runId, new GitHubClient(ghToken));
-	return await handler.getReposData(repoIds);
+	return await handler.getReposData(repoIds, monoRepoConfig);
 };
 
 class SubReposDataHandler {
@@ -66,7 +69,7 @@ class SubReposDataHandler {
 		return repoInfos;
 	}
 
-	async getReposData(repoIds) {
+	async getReposData(repoIds, { detectMonoRepos, manifestFileName }) {
 		const initialLanguagePageSize = 50;
 		const data = await this.graphqlClient.query({
 			query: `
@@ -115,6 +118,19 @@ class SubReposDataHandler {
 
 		const reposCommitHistoryData = await this.getReposCommitHistoryData(repoIds);
 		repoInfos = this.mapRepoInfoToCommitHistory(repoInfos, reposCommitHistoryData);
+
+		if (detectMonoRepos && manifestFileName) {
+			const monoRepoWithSubReposData = {};
+			for (let repoId of repoIds) {
+				monoRepoWithSubReposData[repoId] = await this.searchSubRepos(repoId, manifestFileName);
+			}
+			repoInfos = this.mapRepoInfoToMonoRepoInfo(repoInfos, monoRepoWithSubReposData);
+		} else {
+			await this.logger.logInfo(
+				this.context,
+				'Skipping mono repo detection. reason: detectMonoRepos is false or manifestFileName is not provided'
+			);
+		}
 
 		return repoInfos;
 	}
@@ -165,5 +181,83 @@ class SubReposDataHandler {
 			languages: data.node.languages.nodes,
 			pageInfo: data.node.languages.pageInfo
 		};
+	}
+
+	async searchSubRepos(repoId, manifestFileName) {
+		try {
+			let data = await this.graphqlClient.query({
+				query: `
+					 query getReposData($repoIds: [ID!]!) {
+						nodes(ids: $repoIds) {
+								id
+								... on Repository {
+									name
+									url
+									description
+									object(expression: "HEAD:") {
+										 ... on Tree {
+												 entries {
+														 name
+														 type
+														 object {
+																... on Tree {
+																		 entries {
+																				 name
+																				 type
+																		 }
+																}
+														 }
+												 }
+										 }
+									}
+								}
+						}
+				 }
+				`,
+				repoIds: [repoId]
+			});
+			const repoWithTree = data.nodes[0];
+			const firstLevelEntries = repoWithTree.object.entries;
+			let secondLevel = firstLevelEntries.filter((entry) => entry.type === 'tree');
+
+			const subRepos = [];
+			for (const e of secondLevel) {
+				const subRepoMarkerFound = e.object.entries.find((entry) => entry.name === manifestFileName && entry.type === 'blob');
+				if (subRepoMarkerFound) {
+					subRepos.push({
+						monoRepoHashId: repoId,
+						monoRepoName: repoWithTree.name,
+						name: e.name,
+						isSubRepo: true
+					});
+				}
+			}
+
+			return subRepos;
+		} catch (e) {
+			this.context.log(
+				`Failed to get repository tree structure data to detect sub-repos, falling back to empty list. Error - ${e.message}`
+			);
+			return {};
+		}
+	}
+
+	async mapRepoInfoToMonoRepoInfo(repoInfos, monoRepoWithSubReposData) {
+		for (const [repoId, subRepos] of Object.entries(monoRepoWithSubReposData)) {
+			const repoInfo = repoInfos.find((repoInfo) => repoInfo.id === repoId);
+			if (!repoInfo) {
+				await this.logger.logError(this.context, `Should not happen: Failed to find repo info for mono repo with sub-repos. Repository hash Id: ${repoId}`);
+				continue;
+			}
+			if(subRepos.length > 0) {
+				repoInfo.isMonoRepo = true;
+			}
+		}
+
+		for (let subRepos of Object.values(monoRepoWithSubReposData)) {
+			repoInfos.push(...subRepos);
+		}
+
+		return repoInfos;
 	}
 }

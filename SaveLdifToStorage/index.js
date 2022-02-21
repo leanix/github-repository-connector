@@ -35,7 +35,11 @@ class SaveLdifToStorageHandler {
 		const reposLanguagesMap = {};
 		const reposTopicsMap = {};
 		let contentArray = [];
-		for (let repoData of combinedResults) {
+
+		const mainRepoCombinedResults = combinedResults.filter((r) => !r.isSubRepo);
+		const subRepoCombinedResults = combinedResults.filter((r) => r.isSubRepo);
+
+		for (let repoData of mainRepoCombinedResults) {
 			for (let language of repoData.languages.edges) {
 				reposLanguagesMap[language.node.id] = language.node;
 			}
@@ -46,6 +50,11 @@ class SaveLdifToStorageHandler {
 
 			repoData.visibility = repoIdsVisibilityMap[repoData.id] ? repoIdsVisibilityMap[repoData.id] : null;
 			contentArray.push(this.convertToRepositoryContent(repoData));
+		}
+
+		for (let subRepoData of subRepoCombinedResults) {
+			const monoRepoResults = mainRepoCombinedResults.filter((r) => r.isMonoRepo);
+			contentArray.push(this.convertToSubRepositoryContent(monoRepoResults, subRepoData));
 		}
 
 		for (let langNode of Object.values(reposLanguagesMap)) {
@@ -85,12 +94,29 @@ class SaveLdifToStorageHandler {
 				languages: repoData.languages.edges.map(({ size, node }) => {
 					return {
 						langId: externalId().language(node),
-						size: (size / 1000).toFixed(2)
+						size: (size / 1000).toFixed(2),
+						unit: 'kbs'
 					};
 				}),
 				topics: repoData.repositoryTopics.nodes.map(({ topic }) => topic.id),
 				repoVisibility: repoData.visibility,
-				contributors: this.getTopContributorsFromCommitHistory()(repoData.defaultBranchRef)
+				contributors: this.getTopContributorsFromCommitHistory()(repoData.defaultBranchRef),
+				isMonoRepo: repoData.isMonoRepo
+			}
+		};
+	}
+
+	convertToSubRepositoryContent(monoReposData, repoData) {
+		const monoRepo = monoReposData.find((r) => r.id === repoData.monoRepoHashId);
+		return {
+			type: 'SubRepository',
+			id: externalId().subRepository(this.orgName, repoData),
+			data: {
+				name: repoData.name,
+				url: `${monoRepo.url}/tree/HEAD/${repoData.name}`,
+				description: monoRepo.description,
+				monoRepoId: externalId().repository(this.orgName, monoRepo),
+				monoRepoHashId: repoData.monoRepoHashId
 			}
 		};
 	}

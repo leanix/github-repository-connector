@@ -122,6 +122,10 @@ class LdifProcessor {
 	*fetchReposDataConcurrently(repositoriesIds, maxConcurrentWorkers = 4) {
 		const {
 			secretsConfiguration: { ghToken },
+			connectorConfiguration: {
+				flags: { detectMonoRepos },
+				monoRepoManifestFileName
+			},
 			connectorLoggingUrl,
 			runId,
 			progressCallbackUrl
@@ -145,6 +149,10 @@ class LdifProcessor {
 				output.push(
 					this.context.df.callActivity('GetSubReposData', {
 						repoIds: workingGroupElement,
+						monoRepoConfig: {
+							detectMonoRepos,
+							manifestFileName: monoRepoManifestFileName
+						},
 						ghToken,
 						metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
 					})

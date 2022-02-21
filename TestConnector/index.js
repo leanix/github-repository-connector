@@ -48,8 +48,21 @@ class TestConnectorValidator {
 		});
 	}
 
+	isValidManifestFileName(manifestFileName) {
+		if (!manifestFileName) {
+			return false;
+		}
+		const manifestFileNameRegex = /[a-zA-Z0-9-_]+\.ya?ml/gs;
+		return manifestFileNameRegex.test(manifestFileName);
+	}
+
 	async test() {
-		const { orgName, repoNamesExcludeList } = this.connectorConfiguration;
+		const {
+			orgName,
+			repoNamesExcludeList,
+			flags: { detectMonoRepos },
+			monoRepoManifestFileName
+		} = this.connectorConfiguration;
 		const { ghToken } = this.secretsConfiguration;
 		const logger = getLoggerInstanceFromContext(this.context);
 		await logger.logInfo(this.context, 'Checking input validity and correctness');
@@ -65,6 +78,13 @@ class TestConnectorValidator {
 
 		TestConnectorValidator.checkRegexExcludeList(repoNamesExcludeList);
 		await logger.logInfo(this.context, 'repoNamesExcludeList list is valid regex array');
+
+		if (detectMonoRepos && !this.isValidManifestFileName(monoRepoManifestFileName)) {
+			await logger.logError(this.context, `Manifest file name can't be invalid or empty if 'detectMonoRepos' is true`);
+			throw new Error(
+				`Manifest file name can't be invalid or empty if 'detectMonoRepos' is true. Given: ${monoRepoManifestFileName}; Valid examples: lx-manifest.yml, lx-manifest.yaml`
+			);
+		}
 
 		try {
 			await this.pingForRequiredDataAccess(orgName);
