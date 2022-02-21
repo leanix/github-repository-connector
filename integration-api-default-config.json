@@ -338,7 +338,7 @@
 					},
 					{
 						"key": {
-							"expr": "isMonoRepo"
+							"expr": "ghIsMonoRepo"
 						},
 						"values": [
 							{
