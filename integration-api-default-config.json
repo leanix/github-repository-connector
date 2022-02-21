@@ -474,6 +474,67 @@
 				]
 			},
 			{
+				"processorType": "inboundDocument",
+				"processorName": "Create sub repository link on SWA FS fact sheet",
+				"processorDescription": "Adds sub repository URL for SWA FS fact sheet",
+				"identifier": {
+					"external": {
+						"id": {
+							"expr": "${content.id}"
+						},
+						"type": {
+							"expr": "githubId"
+						}
+					}
+				},
+				"filter": {
+					"exactType": "SubRepository"
+				},
+				"run": 3,
+				"updates": [
+					{
+						"key": {
+							"expr": "url"
+						},
+						"values": [
+							{
+								"expr": "${data.url}"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "name"
+						},
+						"values": [
+							{
+								"expr": "Repository URL"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "documentType"
+						},
+						"values": [
+							{
+								"expr": "git-repo"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "description"
+						},
+						"values": [
+							{
+								"expr": "GitHub Sub-Repository related to the Software Artifact FactSheet"
+							}
+						]
+					}
+				]
+			},
+			{
 				"processorType": "inboundFactSheet",
 				"processorName": "create-tech-comp-fs",
 				"processorDescription": "This inboundFactSheet processor creates a technical component FS for every language content type",
@@ -866,67 +927,6 @@
 						"types": ["ACCOUNTABLE", "RESPONSIBLE"]
 					}
 				}
-			},
-			{
-				"processorType": "inboundDocument",
-				"processorName": "Create sub repository link on SWA FS fact sheet",
-				"processorDescription": "Adds sub repository URL for SWA FS fact sheet",
-				"identifier": {
-					"external": {
-						"id": {
-							"expr": "${content.id}"
-						},
-						"type": {
-							"expr": "githubId"
-						}
-					}
-				},
-				"filter": {
-					"exactType": "SubRepository"
-				},
-				"run": 4,
-				"updates": [
-					{
-						"key": {
-							"expr": "url"
-						},
-						"values": [
-							{
-								"expr": "${data.url}"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "name"
-						},
-						"values": [
-							{
-								"expr": "Repository URL"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "documentType"
-						},
-						"values": [
-							{
-								"expr": "git-repo"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "description"
-						},
-						"values": [
-							{
-								"expr": "GitHub Sub-Repository related to the Software Artifact FactSheet"
-							}
-						]
-					}
-				]
 			}
 		],
 		"variables": {},
