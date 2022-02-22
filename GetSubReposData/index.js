@@ -257,10 +257,11 @@ class SubReposDataHandler {
 			}
 		}
 
+		const combinedRepoInfos = [...repoInfos];
 		for (let subRepos of Object.values(monoRepoWithSubReposData)) {
-			repoInfos.push(...subRepos);
+			combinedRepoInfos.push(...subRepos);
 		}
 
-		return repoInfos;
+		return combinedRepoInfos;
 	}
 }
