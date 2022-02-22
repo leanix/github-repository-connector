@@ -53,8 +53,8 @@ class TestConnectorValidator {
 			return false;
 		}
 		/**
-		* Allow any valid file name with/without extension
-		* */
+		 * Allow any valid file name with/without extension
+		 * */
 		const manifestFileNameRegex = /[a-zA-Z0-9-_]+\.?\S+/gs;
 		return manifestFileNameRegex.test(manifestFileName);
 	}
