@@ -246,10 +246,13 @@ class SubReposDataHandler {
 		for (const [repoId, subRepos] of Object.entries(monoRepoWithSubReposData)) {
 			const repoInfo = repoInfos.find((repoInfo) => repoInfo.id === repoId);
 			if (!repoInfo) {
-				await this.logger.logError(this.context, `Should not happen: Failed to find repo info for mono repo with sub-repos. Repository hash Id: ${repoId}`);
+				await this.logger.logError(
+					this.context,
+					`Should not happen: Failed to find repo info for mono repo with sub-repos. Repository hash Id: ${repoId}`
+				);
 				continue;
 			}
-			if(subRepos.length > 0) {
+			if (subRepos.length > 0) {
 				repoInfo.isMonoRepo = true;
 			}
 		}

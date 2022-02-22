@@ -66,7 +66,7 @@ class SaveLdifToStorageHandler {
 		}
 
 		for (let teamNode of orgTeamsData) {
-			contentArray.push(this.convertToTeamContent(teamNode));
+			contentArray.push(this.convertToTeamContent(teamNode, subRepoCombinedResults));
 		}
 
 		return contentArray;
@@ -178,8 +178,14 @@ class SaveLdifToStorageHandler {
 	/**
 	 *
 	 * @param {Object} teamData contains team data as part of org
+	 * @param {Array} subReposData contains sub repo data with mono repo information
 	 */
-	convertToTeamContent(teamData) {
+	convertToTeamContent(teamData, subReposData) {
+		const subRepositories = teamData.repositories.nodes
+			.flatMap((repoNode) => subReposData.filter((subRepo) => subRepo.monoRepoHashId === repoNode.id))
+			.map((subRepo) => externalId().subRepository(this.orgName, subRepo));
+		const repositories = teamData.repositories.nodes.map((node) => externalId().repository(this.orgName, node));
+		const allRelatedRepos = [...repositories, ...subRepositories];
 		return {
 			type: 'Team',
 			id: externalId().team(this.orgName, teamData),
@@ -187,7 +193,7 @@ class SaveLdifToStorageHandler {
 				name: teamData.name,
 				gitHubHashId: teamData.id,
 				parent: teamData.parentTeam ? externalId().team(this.orgName, teamData.parentTeam) : null,
-				repositories: teamData.repositories.nodes.map((node) => externalId().repository(this.orgName, node))
+				repositories: allRelatedRepos
 			}
 		};
 	}
