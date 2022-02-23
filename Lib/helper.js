@@ -15,6 +15,9 @@ class Util {
 				}
 				return `${orgName}/${repoData.name}`;
 			},
+			subRepository: function (orgName, repoData) {
+				return `${orgName}/${repoData.monoRepoName}/${repoData.name}`;
+			},
 			team: function (orgName, teamData) {
 				if (!orgName || !teamData) {
 					throw new Error('Failed to generate team external ID');

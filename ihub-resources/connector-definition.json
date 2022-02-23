@@ -6,8 +6,10 @@
 	"connectorConfiguration": {
 		"orgName": "leanix",
 		"repoNamesExcludeList": [],
+		"monoRepoManifestFileName": "lx-manifest.yaml",
 		"flags": {
-			"importTeams": true
+			"importTeams": true,
+			"detectMonoRepos": false
 		}
 	},
 	"secretsConfiguration": {
