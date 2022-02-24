@@ -123,7 +123,7 @@ class LdifProcessor {
 		const {
 			secretsConfiguration: { ghToken },
 			connectorConfiguration: {
-				flags: { detectMonoRepos },
+				flags,
 				monoRepoManifestFileName
 			},
 			connectorLoggingUrl,
@@ -150,7 +150,7 @@ class LdifProcessor {
 					this.context.df.callActivity('GetSubReposData', {
 						repoIds: workingGroupElement,
 						monoRepoConfig: {
-							detectMonoRepos,
+							detectMonoRepos: flags ? flags.detectMonoRepos : false,
 							manifestFileName: monoRepoManifestFileName
 						},
 						ghToken,
