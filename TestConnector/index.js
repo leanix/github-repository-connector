@@ -63,7 +63,7 @@ class TestConnectorValidator {
 		const {
 			orgName,
 			repoNamesExcludeList,
-			flags: { detectMonoRepos },
+			flags,
 			monoRepoManifestFileName
 		} = this.connectorConfiguration;
 		const { ghToken } = this.secretsConfiguration;
@@ -82,7 +82,7 @@ class TestConnectorValidator {
 		TestConnectorValidator.checkRegexExcludeList(repoNamesExcludeList);
 		await logger.logInfo(this.context, 'repoNamesExcludeList list is valid regex array');
 
-		if (detectMonoRepos && !this.isValidManifestFileName(monoRepoManifestFileName)) {
+		if (flags && flags.detectMonoRepos && !this.isValidManifestFileName(monoRepoManifestFileName)) {
 			await logger.logError(this.context, `Manifest file name can't be invalid or empty if 'detectMonoRepos' is true`);
 			throw new Error(
 				`Manifest file name can't be invalid or empty if 'detectMonoRepos' is true. Given: ${monoRepoManifestFileName}; Valid examples: lx-manifest.yml, lx-manifest.yaml`
