@@ -42,7 +42,7 @@ jobs:
         with:
           creds: '{"clientId":"${{ env.ARM_FUNCTION_ID }}",
                     "clientSecret": "${{ env.ARM_FUNCTION_SECRET }}",
-                    "subscriptionId": "${{ env.ARM_SUBSCRIPTION_ID }}",
+                    "subscriptionId": "${{ env.ARM_FUNCTION_SUBSCRIPTION_ID }}",
                     "tenantId": "${{ env.ARM_TENANT_ID }}"
                   }'
 
