@@ -122,10 +122,7 @@ class LdifProcessor {
 	*fetchReposDataConcurrently(repositoriesIds, maxConcurrentWorkers = 4) {
 		const {
 			secretsConfiguration: { ghToken },
-			connectorConfiguration: {
-				flags,
-				monoRepoManifestFileName
-			},
+			connectorConfiguration: { flags, monoRepoManifestFileName },
 			connectorLoggingUrl,
 			runId,
 			progressCallbackUrl

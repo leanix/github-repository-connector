@@ -60,12 +60,7 @@ class TestConnectorValidator {
 	}
 
 	async test() {
-		const {
-			orgName,
-			repoNamesExcludeList,
-			flags,
-			monoRepoManifestFileName
-		} = this.connectorConfiguration;
+		const { orgName, repoNamesExcludeList, flags, monoRepoManifestFileName } = this.connectorConfiguration;
 		const { ghToken } = this.secretsConfiguration;
 		const logger = getLoggerInstanceFromContext(this.context);
 		await logger.logInfo(this.context, 'Checking input validity and correctness');

@@ -40,8 +40,11 @@ jobs:
         if: github.ref=='refs/heads/main'
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS_PROD }}
-
+          creds: '{"clientId":"${{ env.ARM_FUNCTION_ID }}",
+                    "clientSecret": "${{ env.ARM_FUNCTION_SECRET }}",
+                    "subscriptionId": "${{ env.ARM_FUNCTION_SUBSCRIPTION_ID }}",
+                    "tenantId": "${{ env.ARM_TENANT_ID }}"
+                  }'
 
       - name: 'Resolve Project Dependencies Using Npm'
         shell: bash
