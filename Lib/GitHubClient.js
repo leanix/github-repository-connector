@@ -2,6 +2,7 @@ const { graphql } = require('@octokit/graphql');
 const UpdateProgressToIHub = require('../UpdateProgressToIHub');
 const IHubStatus = require('../Lib/IHubStatus');
 const { DateTime } = require('luxon');
+const axios = require('axios');
 
 const RETRY_WAIT = 7 * 60; // 7 minutes
 
@@ -11,6 +12,10 @@ class GitHubClient {
 			headers: {
 				authorization: `token ${token}`
 			}
+		});
+		this.restAPIClient = axios.create({
+			baseURL: `https://api.github.com`,
+			headers: { Authorization: `Bearer ${token}` }
 		});
 		this.lastUpdated = DateTime.now();
 	}

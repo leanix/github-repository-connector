@@ -35,6 +35,8 @@ class LdifProcessor {
 			'Fetching ids of all the repos present in the org.'
 		);
 
+		yield this.context.df.callActivity('GetDeploymentFrequency',{ghToken, apiToken:'zCuE59eUgnvvBCSedtubkEhGkSmYASjTk5NDXL9A', host: 'demo-eu-1.leanix.net', repoName: 'github-repository-connector', defaultBranchName:'main'})
+
 		const repoNamesExcludeListChecked = repoNamesExcludeList ? repoNamesExcludeList : [];
 		const repositoriesIds = yield this.context.df.callActivity('GetAllRepositoriesForOrg', {
 			orgName,
