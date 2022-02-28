@@ -22,6 +22,16 @@ module.exports = async function (context, req) {
 
 	await logger.logInfo(context, 'Starting the connector');
 
+	const FLAG_DEFAULTS = Object.freeze({
+		importTeams: true,
+		detectMonoRepos: false
+	});
+
+	input.connectorConfiguration.flags = {
+		...FLAG_DEFAULTS,
+		...input.connectorConfiguration.flags
+	};
+
 	const instanceId = await client.startNew('GithubRepoScanOrchestrator', input.runId, input);
 
 	context.log(`Started orchestration with ID = '${instanceId}'. run ID = ${input.runId}`);
