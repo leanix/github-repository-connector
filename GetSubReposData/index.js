@@ -218,16 +218,22 @@ class SubReposDataHandler {
 			});
 			const repoWithTree = data.nodes[0];
 			const firstLevelEntries = repoWithTree.object ? repoWithTree.object.entries : [];
-			if(firstLevelEntries.length === 0) {
-				await this.logger.logInfo(this.context, `Monorepo detection warning: Skipping repository for sub repositories search. Reason: Empty repository. Repository Id: ${repoId}`);
+			if (firstLevelEntries.length === 0) {
+				await this.logger.logInfo(
+					this.context,
+					`Monorepo detection warning: Skipping repository for sub repositories search. Reason: Empty repository. Repository Id: ${repoId}`
+				);
 				return [];
 			}
 			let secondLevel = firstLevelEntries.filter((entry) => entry.type === 'tree');
 
 			const subRepos = [];
 			for (const e of secondLevel) {
-				if(!e.object || !e.object.entries) {
-					await this.logger.logInfo(this.context, `Monorepo detection warning: Skipping repository for sub repositories search. Reason: Invalid repository structure. Repository Id: ${repoId}`);
+				if (!e.object || !e.object.entries) {
+					await this.logger.logInfo(
+						this.context,
+						`Monorepo detection warning: Skipping repository for sub repositories search. Reason: Invalid repository structure. Repository Id: ${repoId}`
+					);
 					continue;
 				}
 				const subRepoMarkerFound = e.object.entries.find((entry) => entry.name === manifestFileName && entry.type === 'blob');
@@ -243,7 +249,8 @@ class SubReposDataHandler {
 
 			return subRepos;
 		} catch (e) {
-			await this.logger.logInfo(this.context,
+			await this.logger.logInfo(
+				this.context,
 				`Failed to get repository tree structure data to detect sub-repos, falling back to empty list. Repository Id: ${repoId}. Error: ${e.message}`
 			);
 			return [];
