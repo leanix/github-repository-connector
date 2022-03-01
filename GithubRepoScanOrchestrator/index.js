@@ -147,7 +147,7 @@ class LdifProcessor {
 					this.context.df.callActivity('GetSubReposData', {
 						repoIds: workingGroupElement,
 						monoRepoConfig: {
-							detectMonoRepos: flags ? flags.detectMonoRepos : false,
+							detectMonoRepos: flags.detectMonoRepos,
 							manifestFileName: monoRepoManifestFileName
 						},
 						ghToken,
