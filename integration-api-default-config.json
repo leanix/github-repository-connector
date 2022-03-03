@@ -204,7 +204,7 @@
 						},
 						"values": [
 							{
-								"expr": "${data.isMonoRepo}"
+								"expr": "${data.isMonoRepo ? 'Yes' : ''}"
 							}
 						]
 					}
