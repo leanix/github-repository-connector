@@ -134,11 +134,143 @@
 			},
 			{
 				"processorType": "inboundFactSheet",
+				"processorName": "Find microservice fact sheets ids",
+				"processorDescription": "Find the microservice fact sheets which are present in the WS and create variable",
+				"type": "Microservice",
+				"filter": {
+					"advanced": "${integration.contentIndex == 0}"
+				},
+				"identifier": {
+					"search": {
+						"scope": {
+							"ids": [],
+							"facetFilters": [
+								{
+									"keys": ["Microservice"],
+									"facetKey": "FactSheetTypes",
+									"operator": "AND"
+								},
+								{
+									"keys": ["${integration.tags.getTagId('Data Source','Github repository')}"],
+									"facetKey": "${integration.tags.getTagGroupId('Data Source')}",
+									"operator": "AND"
+								}
+							]
+						},
+						"filter": true,
+						"multipleMatchesAllowed": true
+					}
+				},
+				"run": 1,
+				"updates": [],
+				"variables": [
+					{
+						"key": "microservice_fs_ids",
+						"value": "${lx.factsheet.githubId}"
+					}
+				],
+				"read": {
+					"fields": ["name", "githubId"]
+				}
+			},
+			{
+				"processorType": "inboundFactSheet",
+				"processorName": "update-archived-microservice",
+				"processorDescription": "This inboundFactSheet updates a microservice FS which is archived in source system",
+				"type": "Microservice",
+				"filter": {
+					"advanced": "${content.type == 'Repository' && data.isArchived && helper:getFromMap(variables, 'microservice_fs_ids').contains(content.id)}"
+				},
+				"identifier": {
+					"external": {
+						"id": {
+							"expr": "${content.id}"
+						},
+						"type": {
+							"expr": "githubId"
+						}
+					}
+				},
+				"run": 2,
+				"updates": [
+					{
+						"key": {
+							"expr": "name"
+						},
+						"values": [
+							{
+								"expr": "${lx.factsheet.name}"
+							},
+							{
+								"expr": "${data.name}"
+							},
+							{
+								"expr": "${data.name} (Copy ${integration.now.getYear()}-${integration.now.getMonthValue()<10?'0':''}${integration.now.getMonthValue()}-${integration.now.getDayOfMonth()<10?'0':''}${integration.now.getDayOfMonth()} ${integration.now.getHour()<10?'0':''}${integration.now.getHour()}:${integration.now.getMinute()<10?'0':''}${integration.now.getMinute()})"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "description"
+						},
+						"values": [
+							{
+								"expr": "${data.description}"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "repositoryVisibility"
+						},
+						"values": [
+							{
+								"expr": "${data.repoVisibility}"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "category"
+						},
+						"values": [
+							{
+								"expr": "${lx.factsheet.category}"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "ghIsMonoRepo"
+						},
+						"values": [
+							{
+								"expr": "${data.isMonoRepo ? 'Yes' : ''}"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "ghIsArchived"
+						},
+						"values": [
+							{
+								"expr": "${data.isArchived ? 'Yes' : 'No'}"
+							}
+						]
+					}
+				],
+				"read": {
+					"fields": ["name", "category"]
+				}
+			},
+			{
+				"processorType": "inboundFactSheet",
 				"processorName": "create-microservice",
 				"processorDescription": "This inboundFactSheet creates a microservice FS for every repository content type",
 				"type": "Microservice",
 				"filter": {
-					"exactType": "Repository"
+					"advanced": "${content.type == 'Repository' && !data.isArchived}"
 				},
 				"identifier": {
 					"external": {
