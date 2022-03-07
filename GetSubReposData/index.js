@@ -80,6 +80,7 @@ class SubReposDataHandler {
                         name
                         url
                         description
+						isArchived
                         languages(first: $languagePageCount) {
                             pageInfo {
                                 endCursor

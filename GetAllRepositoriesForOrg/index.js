@@ -29,6 +29,7 @@ class GetAllRepositoriesForOrgHandler {
 					  nodes {
 						id
 						name
+						isArchived
 					  }
 					}
 				  }
