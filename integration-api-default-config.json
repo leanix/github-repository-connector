@@ -461,7 +461,7 @@
 				"processorDescription": "This inboundFactSheet creates a SWA FS for every SubRepository content type",
 				"type": "Microservice",
 				"filter": {
-					"advanced": "${data.isArchived == false && (content.type == 'SubRepository')}"
+					"advanced": "${content.type == 'SubRepository' && data.isArchived == false}"
 				},
 				"identifier": {
 					"external": {
