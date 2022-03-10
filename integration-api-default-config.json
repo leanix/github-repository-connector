@@ -357,8 +357,7 @@
 				],
 				"read": {
 					"fields": [
-						"name",
-						"category"
+						"githubId"
 					]
 				}
 			},
