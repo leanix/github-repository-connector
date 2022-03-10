@@ -518,7 +518,7 @@
 						},
 						"values": [
 							{
-								"expr": "${data.isArchived ? 'Yes' : 'No'}"
+								"expr": "No"
 							}
 						]
 					}
