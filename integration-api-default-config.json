@@ -1,7 +1,7 @@
 {
-	"externalId": "cider-github-repository-connector",
+	"externalId": "cider-vsm-github-repository-connector",
 	"config": {
-		"connectorType": "leanix-mi-connector",
+		"connectorType": "leanix-vsm-connector",
 		"connectorId": "leanix-github-repository-connector",
 		"connectorVersion": "1.0.0",
 		"processingDirection": "inbound",
@@ -11,10 +11,6 @@
 				{
 					"tagScopes": [
 						{
-							"group": "Data Quality",
-							"tag": "github-tracking-disabled"
-						},
-						{
 							"group": "Data Source",
 							"tag": "Github repository"
 						}
@@ -23,26 +19,41 @@
 						"ids": [],
 						"facetFilters": [
 							{
+								"keys": ["Team", "Microservice", "TechnicalComponent"],
+								"facetKey": "FactSheetTypes",
+								"operator": "OR"
+							}
+						]
+					}
+				}
+			],
+			"subscriptions": [
+				{
+					"subscriptionScopes": [
+						{
+							"type": "RESPONSIBLE",
+							"roles": ["Contributor"]
+						},
+						{
+							"type": "OBSERVER",
+							"roles": ["Source Code Contributor"]
+						}
+					],
+					"scope": {
+						"ids": [],
+						"facetFilters": [
+							{
 								"keys": ["Microservice"],
 								"facetKey": "FactSheetTypes",
-								"operator": "AND"
-							},
-							{
-								"keys": ["${integration.tags.getTagId('Data Quality','github-tracking-disabled')}"],
-								"facetKey": "${integration.tags.getTagGroupId('Data Quality')}",
-								"operator": "AND"
-							},
-							{
-								"keys": ["${integration.tags.getTagId('Data Source','Github repository')}"],
-								"facetKey": "${integration.tags.getTagGroupId('Data Source')}",
-								"operator": "AND"
+								"operator": "OR"
 							}
 						]
 					}
 				}
 			],
 			"maximumDeletionRatio": {
-				"factSheets": 60
+				"subscriptions": 100,
+				"tags": 100
 			}
 		},
 		"processors": [
