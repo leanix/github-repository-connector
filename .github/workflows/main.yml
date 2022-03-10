@@ -72,6 +72,6 @@ jobs:
         with:
           environment: 'prod'
 
-      - name: Microservice Intelligence Tracking
+      - name: Value Stream Management CI/CD Deployment Tracking
         if: github.ref=='refs/heads/main'
-        uses: leanix/microservice-intelligence-action@master
+        uses: leanix/github-actions-store-leanix-plugin@main

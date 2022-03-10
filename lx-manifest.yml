@@ -1,0 +1,14 @@
+id: github-repository-connector
+name: GitHub Repository Connector
+description: Converts and stores the scanned GitHub organisation repositories data into LDIF.
+self: https://github.com/leanix/github-repository-connector/blob/main/lx-manifest.yml
+owner: vincent.groves@leanix.net
+teams:
+  - Cider
+products:
+  - vsm
+domains:
+  - vsm_-_dev_integrations
+links:
+  - name: Repository URL
+    url: https://github.com/leanix/github-repository-connector
