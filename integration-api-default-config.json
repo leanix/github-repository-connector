@@ -973,9 +973,11 @@
 				"processorType": "inboundSubscription",
 				"processorName": "create-user-subscriptions-from-repo-contributors",
 				"processorDescription": "Creates repo contributors as MS subscriptions",
+				"run": 4,
+				"type": "Microservice",
 				"filter": {
-					"advanced": "${data.isArchived == false && (helper:getFromMap(variables, content.id.concat('_').concat(integration.valueOfForEach)) == null || !helper:getFromMap(variables, content.id.concat('_').concat(integration.valueOfForEach)).contains('true'))}",
-					"exactType": "Repository"
+					"exactType": "Repository",
+					"advanced": "${data.isArchived == false && (helper:getFromMap(variables, content.id.concat('_').concat(integration.valueOfForEach)) == null || !helper:getFromMap(variables, content.id.concat('_').concat(integration.valueOfForEach)).contains('true'))}"
 				},
 				"identifier": {
 					"external": {
@@ -987,7 +989,7 @@
 						}
 					}
 				},
-				"run": 4,
+				"forEach": "${data.contributors}",
 				"updates": [
 					{
 						"key": {
@@ -1048,8 +1050,7 @@
 							}
 						]
 					}
-				],
-				"forEach": "${data.contributors}"
+				]
 			},
 			{
 				"processorType": "inboundFactSheet",
@@ -1096,15 +1097,15 @@
 		},
 		"visibleIf": [
 			{
-				"featureFlags": [""]
+				"featureFlags": ["integration.vsm.githubrepository"]
 			}
 		],
 		"readOnly": true,
-		"executionGroups": ["miGitHubInbound"]
+		"executionGroups": ["vsmGitHubInbound"]
 	},
 	"availableIf": [
 		{
-			"featureFlags": ["integration.integrationapi", "integration.githubrepository"]
+			"featureFlags": ["integration.integrationapi", "integration.vsm.githubrepository"]
 		}
 	]
 }
