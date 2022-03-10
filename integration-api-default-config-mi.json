@@ -1,570 +1,570 @@
 {
 	"externalId": "cider-github-repository-connector",
 	"config": {
-		"connectorType": "leanix-mi-connector",
-		"connectorId": "leanix-github-repository-connector",
-		"connectorVersion": "1.0.0",
-		"processingDirection": "inbound",
-		"processingMode": "full",
-		"deletionScope": {
-			"tags": [
-				{
-					"tagScopes": [
-						{
-							"group": "Data Quality",
-							"tag": "github-tracking-disabled"
-						},
-						{
-							"group": "Data Source",
-							"tag": "Github repository"
-						}
-					],
-					"scope": {
-						"ids": [],
-						"facetFilters": [
-							{
-								"keys": ["Microservice"],
-								"facetKey": "FactSheetTypes",
-								"operator": "AND"
-							},
-							{
-								"keys": ["${integration.tags.getTagId('Data Quality','github-tracking-disabled')}"],
-								"facetKey": "${integration.tags.getTagGroupId('Data Quality')}",
-								"operator": "AND"
-							},
-							{
-								"keys": ["${integration.tags.getTagId('Data Source','Github repository')}"],
-								"facetKey": "${integration.tags.getTagGroupId('Data Source')}",
-								"operator": "AND"
-							}
-						]
-					}
-				}
+	  "connectorType": "leanix-mi-connector",
+	  "connectorId": "leanix-github-repository-connector",
+	  "connectorVersion": "1.0.0",
+	  "processingDirection": "inbound",
+	  "processingMode": "full",
+	  "deletionScope": {
+		"tags": [
+		  {
+			"tagScopes": [
+			  {
+				"group": "Data Quality",
+				"tag": "github-tracking-disabled"
+			  },
+			  {
+				"group": "Data Source",
+				"tag": "Github repository"
+			  }
 			],
-			"maximumDeletionRatio": {
-				"factSheets": 60
-			}
-		},
-		"processors": [
-			{
-				"processorType": "variableProcessor",
-				"processorName": "repository-topics-map",
-				"processorDescription": "This variable processor creates a map of each repository against its topic ids ",
-				"filter": {
-					"exactType": "Repository"
+			"scope": {
+			  "ids": [],
+			  "facetFilters": [
+				{
+				  "keys": ["Microservice"],
+				  "facetKey": "FactSheetTypes",
+				  "operator": "AND"
 				},
-				"run": 2,
-				"forEach": "${data.topics}",
-				"variables": [
-					{
-						"key": "topic_${integration.valueOfForEach}",
-						"value": "${content.id.toString()}"
-					}
-				]
-			},
-			{
-				"processorType": "inboundTag",
-				"processorName": "repository-topic-tags-creation",
-				"processorDescription": "This inboundTag processor creates a tag group and adds tags in it. Also assigns tags to FS fetching from variable",
-				"filter": {
-					"advanced": "${content.type == 'Topic'}"
+				{
+				  "keys": ["${integration.tags.getTagId('Data Quality','github-tracking-disabled')}"],
+				  "facetKey": "${integration.tags.getTagGroupId('Data Quality')}",
+				  "operator": "AND"
 				},
-				"factSheets": {
-					"external": {
-						"ids": "${helper:getFromMap(variables,'topic_'.concat(content.id))}",
-						"type": {
-							"expr": "githubId"
-						}
-					}
-				},
-				"run": 3,
-				"updates": [
-					{
-						"key": {
-							"expr": "name"
-						},
-						"values": [
-							{
-								"expr": "${data.name}"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "group.name"
-						},
-						"values": [
-							{
-								"expr": "Github Topics"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "group.mode"
-						},
-						"values": [
-							{
-								"expr": "MULTIPLE"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "group.restrictToFactSheetTypes"
-						},
-						"values": [
-							{
-								"expr": "Microservice"
-							}
-						]
-					}
-				]
-			},
-			{
-				"processorType": "inboundFactSheet",
-				"processorName": "create-microservice",
-				"processorDescription": "This inboundFactSheet creates a microservice FS for every repository content type",
-				"type": "Microservice",
-				"filter": {
-					"exactType": "Repository"
-				},
-				"identifier": {
-					"external": {
-						"id": {
-							"expr": "${content.id}"
-						},
-						"type": {
-							"expr": "githubId"
-						}
-					}
-				},
-				"run": 2,
-				"updates": [
-					{
-						"key": {
-							"expr": "name"
-						},
-						"values": [
-							{
-								"expr": "${data.name}"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "description"
-						},
-						"values": [
-							{
-								"expr": "${data.description}"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "repositoryVisibility"
-						},
-						"values": [
-							{
-								"expr": "${data.repoVisibility}"
-							}
-						]
-					}
-				]
-			},
-			{
-				"processorType": "inboundDocument",
-				"processorName": "Link Resources to Microservice",
-				"processorDescription": "this processor helps in creating resources on the microservice FS to link repository URL",
-				"identifier": {
-					"external": {
-						"id": {
-							"expr": "${content.id}"
-						},
-						"type": {
-							"expr": "githubId"
-						}
-					}
-				},
-				"filter": {
-					"exactType": "Repository"
-				},
-				"run": 3,
-				"updates": [
-					{
-						"key": {
-							"expr": "name"
-						},
-						"values": [
-							{
-								"expr": "Repository URL"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "url"
-						},
-						"values": [
-							{
-								"expr": "${data.url}"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "documentType"
-						},
-						"values": [
-							{
-								"expr": "git-repo"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "description"
-						},
-						"values": [
-							{
-								"expr": "GitHub repository related to the Microservice FactSheet"
-							}
-						]
-					}
-				]
-			},
-			{
-				"processorType": "inboundFactSheet",
-				"processorName": "create-tech-comp-fs",
-				"processorDescription": "This inboundFactSheet processor creates a technical component FS for every language content type",
-				"type": "TechnicalComponent",
-				"filter": {
-					"exactType": "Language"
-				},
-				"identifier": {
-					"external": {
-						"id": {
-							"expr": "${content.id}"
-						},
-						"type": {
-							"expr": "githubId"
-						}
-					}
-				},
-				"run": 2,
-				"updates": [
-					{
-						"key": {
-							"expr": "name"
-						},
-						"values": [
-							{
-								"expr": "${data.name}"
-							}
-						]
-					}
-				]
-			},
-			{
-				"processorType": "inboundFactSheet",
-				"processorName": "create-team",
-				"processorDescription": "This inboundFactSheet creates a team FS for every team content type",
-				"type": "Team",
-				"filter": {
-					"exactType": "Team"
-				},
-				"identifier": {
-					"external": {
-						"id": {
-							"expr": "${content.id}"
-						},
-						"type": {
-							"expr": "githubId"
-						}
-					}
-				},
-				"run": 2,
-				"updates": [
-					{
-						"key": {
-							"expr": "name"
-						},
-						"values": [
-							{
-								"expr": "${data.name}"
-							}
-						]
-					}
-				]
-			},
-			{
-				"processorType": "inboundRelation",
-				"processorName": "create-rel-ms-tc",
-				"processorDescription": "This inboundRelation creates a relation b/w microservice and tech comp FS and adds attribute code size on rel",
-				"type": "relMicroserviceToTechnicalComponent",
-				"filter": {
-					"exactType": "Repository"
-				},
-				"from": {
-					"external": {
-						"id": {
-							"expr": "${content.id}"
-						},
-						"type": {
-							"expr": "githubId"
-						}
-					}
-				},
-				"to": {
-					"external": {
-						"id": {
-							"expr": "${integration.valueOfForEach.langId}"
-						},
-						"type": {
-							"expr": "githubId"
-						}
-					}
-				},
-				"run": 3,
-				"updates": [
-					{
-						"key": {
-							"expr": "codeSizeInKBytes"
-						},
-						"values": [
-							{
-								"expr": "${integration.valueOfForEach.size}"
-							}
-						]
-					}
-				],
-				"forEach": "${data.languages}"
-			},
-			{
-				"processorType": "inboundRelation",
-				"processorName": "create-rel-team-ms",
-				"processorDescription": "This inboundRelation creates a relation b/w team and microservice FS",
-				"type": "relTeamToMicroservice",
-				"filter": {
-					"exactType": "Team"
-				},
-				"from": {
-					"external": {
-						"id": {
-							"expr": "${content.id}"
-						},
-						"type": {
-							"expr": "githubId"
-						}
-					}
-				},
-				"to": {
-					"external": {
-						"id": {
-							"expr": "${integration.valueOfForEach}"
-						},
-						"type": {
-							"expr": "githubId"
-						}
-					}
-				},
-				"run": 3,
-				"updates": [],
-				"forEach": "${data.repositories}"
-			},
-			{
-				"processorType": "inboundRelation",
-				"processorName": "create-rel-team-parent",
-				"processorDescription": "This inboundRelation creates a relation b/w team and it's parent team FS iff parent exists",
-				"type": "relToParent",
-				"filter": {
-					"advanced": "${content.type == 'Team' && content.data.parent != null }"
-				},
-				"from": {
-					"external": {
-						"id": {
-							"expr": "${content.id}"
-						},
-						"type": {
-							"expr": "githubId"
-						}
-					}
-				},
-				"to": {
-					"external": {
-						"id": {
-							"expr": "${data.parent}"
-						},
-						"type": {
-							"expr": "githubId"
-						}
-					}
-				},
-				"run": 3
-			},
-			{
-				"processorType": "variableProcessor",
-				"processorName": "Store all repository ids",
-				"processorDescription": "Store all repository ids from the provided LDIF",
-				"filter": {
-					"exactType": "Repository"
-				},
-				"run": 3,
-				"enabled": true,
-				"variables": [
-					{
-						"key": "github_project_ids",
-						"value": "${content.id}"
-					}
-				]
-			},
-			{
-				"processorType": "inboundFactSheet",
-				"processorName": "Find excluded fact sheets",
-				"processorDescription": "Find the fact sheets that were created by a former github-connector run but are now excluded/not existing",
-				"type": "Microservice",
-				"filter": {
-					"advanced": "${integration.contentIndex == 0}"
-				},
-				"identifier": {
-					"search": {
-						"scope": {
-							"ids": [],
-							"facetFilters": [
-								{
-									"keys": ["Microservice"],
-									"facetKey": "FactSheetTypes",
-									"operator": "AND"
-								},
-								{
-									"keys": ["${integration.tags.getTagId('Data Source','Github repository')}"],
-									"facetKey": "${integration.tags.getTagGroupId('Data Source')}",
-									"operator": "AND"
-								}
-							]
-						},
-						"filter": "${!variables['github_project_ids'].contains(lx.factsheet.githubId)}",
-						"multipleMatchesAllowed": true
-					}
-				},
-				"run": 4,
-				"updates": [],
-				"variables": [
-					{
-						"key": "fs_to_be_tagged",
-						"value": "${lx.factsheet.githubId}"
-					}
-				],
-				"read": {
-					"fields": ["name", "githubId"]
+				{
+				  "keys": ["${integration.tags.getTagId('Data Source','Github repository')}"],
+				  "facetKey": "${integration.tags.getTagGroupId('Data Source')}",
+				  "operator": "AND"
 				}
-			},
-			{
-				"processorType": "inboundTag",
-				"processorName": "add 'github-tracking-disabled' tag",
-				"processorDescription": "adds 'github-tracking-disabled' tag to the microservice that was created by github-connector but not included in the scan anymore",
-				"factSheets": {
-					"external": {
-						"ids": "${integration.valueOfForEach}",
-						"type": {
-							"expr": "githubId"
-						}
-					}
-				},
-				"filter": {
-					"advanced": "${integration.contentIndex == 0}"
-				},
-				"run": 7,
-				"updates": [
-					{
-						"key": {
-							"expr": "name"
-						},
-						"values": [
-							{
-								"expr": "github-tracking-disabled"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "group.name"
-						},
-						"values": [
-							{
-								"expr": "Data Quality"
-							}
-						]
-					}
-				],
-				"forEach": "${integration.processing.distinct(variables['fs_to_be_tagged'])}"
-			},
-			{
-				"processorType": "inboundTag",
-				"processorName": "Add 'Github repository' Data Source tag on Microservice Factsheets",
-				"processorDescription": "Adds 'Github repository' Data Source tag on Software Artifact type FS for data source tracking",
-				"filter": {
-					"advanced": "${content.type == 'Repository' || content.type == 'Language' || content.type == 'Team'}"
-				},
-				"factSheets": {
-					"external": {
-						"ids": "${content.id}",
-						"type": {
-							"expr": "githubId"
-						}
-					}
-				},
-				"run": 4,
-				"updates": [
-					{
-						"key": {
-							"expr": "name"
-						},
-						"values": [
-							{
-								"expr": "Github repository"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "group.name"
-						},
-						"values": [
-							{
-								"expr": "Data Source"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "group.mode"
-						},
-						"values": [
-							{
-								"expr": "SINGLE"
-							}
-						]
-					}
-				]
+			  ]
 			}
+		  }
 		],
-		"variables": {},
-		"dataProvider": {
-			"url": "${header.customFields.resultUrl}"
+		"maximumDeletionRatio": {
+		  "factSheets": 60
+		}
+	  },
+	  "processors": [
+		{
+		  "processorType": "variableProcessor",
+		  "processorName": "repository-topics-map",
+		  "processorDescription": "This variable processor creates a map of each repository against its topic ids ",
+		  "filter": {
+			"exactType": "Repository"
+		  },
+		  "run": 2,
+		  "forEach": "${data.topics}",
+		  "variables": [
+			{
+			  "key": "topic_${integration.valueOfForEach}",
+			  "value": "${content.id.toString()}"
+			}
+		  ]
 		},
-		"visibleIf": [
-			{
-				"featureFlags": [""]
+		{
+		  "processorType": "inboundTag",
+		  "processorName": "repository-topic-tags-creation",
+		  "processorDescription": "This inboundTag processor creates a tag group and adds tags in it. Also assigns tags to FS fetching from variable",
+		  "filter": {
+			"advanced": "${content.type == 'Topic'}"
+		  },
+		  "factSheets": {
+			"external": {
+			  "ids": "${helper:getFromMap(variables,'topic_'.concat(content.id))}",
+			  "type": {
+				"expr": "githubId"
+			  }
 			}
-		],
-		"readOnly": true,
-		"executionGroups": ["miGitHubInbound"]
+		  },
+		  "run": 3,
+		  "updates": [
+			{
+			  "key": {
+				"expr": "name"
+			  },
+			  "values": [
+				{
+				  "expr": "${data.name}"
+				}
+			  ]
+			},
+			{
+			  "key": {
+				"expr": "group.name"
+			  },
+			  "values": [
+				{
+				  "expr": "Github Topics"
+				}
+			  ]
+			},
+			{
+			  "key": {
+				"expr": "group.mode"
+			  },
+			  "values": [
+				{
+				  "expr": "MULTIPLE"
+				}
+			  ]
+			},
+			{
+			  "key": {
+				"expr": "group.restrictToFactSheetTypes"
+			  },
+			  "values": [
+				{
+				  "expr": "Microservice"
+				}
+			  ]
+			}
+		  ]
+		},
+		{
+		  "processorType": "inboundFactSheet",
+		  "processorName": "create-microservice",
+		  "processorDescription": "This inboundFactSheet creates a microservice FS for every repository content type",
+		  "type": "Microservice",
+		  "filter": {
+			"exactType": "Repository"
+		  },
+		  "identifier": {
+			"external": {
+			  "id": {
+				"expr": "${content.id}"
+			  },
+			  "type": {
+				"expr": "githubId"
+			  }
+			}
+		  },
+		  "run": 2,
+		  "updates": [
+			{
+			  "key": {
+				"expr": "name"
+			  },
+			  "values": [
+				{
+				  "expr": "${data.name}"
+				}
+			  ]
+			},
+			{
+			  "key": {
+				"expr": "description"
+			  },
+			  "values": [
+				{
+				  "expr": "${data.description}"
+				}
+			  ]
+			},
+			{
+			  "key": {
+				"expr": "repositoryVisibility"
+			  },
+			  "values": [
+				{
+				  "expr": "${data.repoVisibility}"
+				}
+			  ]
+			}
+		  ]
+		},
+		{
+		  "processorType": "inboundDocument",
+		  "processorName": "Link Resources to Microservice",
+		  "processorDescription": "this processor helps in creating resources on the microservice FS to link repository URL",
+		  "identifier": {
+			"external": {
+			  "id": {
+				"expr": "${content.id}"
+			  },
+			  "type": {
+				"expr": "githubId"
+			  }
+			}
+		  },
+		  "filter": {
+			"exactType": "Repository"
+		  },
+		  "run": 3,
+		  "updates": [
+			{
+			  "key": {
+				"expr": "name"
+			  },
+			  "values": [
+				{
+				  "expr": "Repository URL"
+				}
+			  ]
+			},
+			{
+			  "key": {
+				"expr": "url"
+			  },
+			  "values": [
+				{
+				  "expr": "${data.url}"
+				}
+			  ]
+			},
+			{
+			  "key": {
+				"expr": "documentType"
+			  },
+			  "values": [
+				{
+				  "expr": "git-repo"
+				}
+			  ]
+			},
+			{
+			  "key": {
+				"expr": "description"
+			  },
+			  "values": [
+				{
+				  "expr": "GitHub repository related to the Microservice FactSheet"
+				}
+			  ]
+			}
+		  ]
+		},
+		{
+		  "processorType": "inboundFactSheet",
+		  "processorName": "create-tech-comp-fs",
+		  "processorDescription": "This inboundFactSheet processor creates a technical component FS for every language content type",
+		  "type": "TechnicalComponent",
+		  "filter": {
+			"exactType": "Language"
+		  },
+		  "identifier": {
+			"external": {
+			  "id": {
+				"expr": "${content.id}"
+			  },
+			  "type": {
+				"expr": "githubId"
+			  }
+			}
+		  },
+		  "run": 2,
+		  "updates": [
+			{
+			  "key": {
+				"expr": "name"
+			  },
+			  "values": [
+				{
+				  "expr": "${data.name}"
+				}
+			  ]
+			}
+		  ]
+		},
+		{
+		  "processorType": "inboundFactSheet",
+		  "processorName": "create-team",
+		  "processorDescription": "This inboundFactSheet creates a team FS for every team content type",
+		  "type": "Team",
+		  "filter": {
+			"exactType": "Team"
+		  },
+		  "identifier": {
+			"external": {
+			  "id": {
+				"expr": "${content.id}"
+			  },
+			  "type": {
+				"expr": "githubId"
+			  }
+			}
+		  },
+		  "run": 2,
+		  "updates": [
+			{
+			  "key": {
+				"expr": "name"
+			  },
+			  "values": [
+				{
+				  "expr": "${data.name}"
+				}
+			  ]
+			}
+		  ]
+		},
+		{
+		  "processorType": "inboundRelation",
+		  "processorName": "create-rel-ms-tc",
+		  "processorDescription": "This inboundRelation creates a relation b/w microservice and tech comp FS and adds attribute code size on rel",
+		  "type": "relMicroserviceToTechnicalComponent",
+		  "filter": {
+			"exactType": "Repository"
+		  },
+		  "from": {
+			"external": {
+			  "id": {
+				"expr": "${content.id}"
+			  },
+			  "type": {
+				"expr": "githubId"
+			  }
+			}
+		  },
+		  "to": {
+			"external": {
+			  "id": {
+				"expr": "${integration.valueOfForEach.langId}"
+			  },
+			  "type": {
+				"expr": "githubId"
+			  }
+			}
+		  },
+		  "run": 3,
+		  "updates": [
+			{
+			  "key": {
+				"expr": "codeSizeInKBytes"
+			  },
+			  "values": [
+				{
+				  "expr": "${integration.valueOfForEach.size}"
+				}
+			  ]
+			}
+		  ],
+		  "forEach": "${data.languages}"
+		},
+		{
+		  "processorType": "inboundRelation",
+		  "processorName": "create-rel-team-ms",
+		  "processorDescription": "This inboundRelation creates a relation b/w team and microservice FS",
+		  "type": "relTeamToMicroservice",
+		  "filter": {
+			"exactType": "Team"
+		  },
+		  "from": {
+			"external": {
+			  "id": {
+				"expr": "${content.id}"
+			  },
+			  "type": {
+				"expr": "githubId"
+			  }
+			}
+		  },
+		  "to": {
+			"external": {
+			  "id": {
+				"expr": "${integration.valueOfForEach}"
+			  },
+			  "type": {
+				"expr": "githubId"
+			  }
+			}
+		  },
+		  "run": 3,
+		  "updates": [],
+		  "forEach": "${data.repositories}"
+		},
+		{
+		  "processorType": "inboundRelation",
+		  "processorName": "create-rel-team-parent",
+		  "processorDescription": "This inboundRelation creates a relation b/w team and it's parent team FS iff parent exists",
+		  "type": "relToParent",
+		  "filter": {
+			"advanced": "${content.type == 'Team' && content.data.parent != null }"
+		  },
+		  "from": {
+			"external": {
+			  "id": {
+				"expr": "${content.id}"
+			  },
+			  "type": {
+				"expr": "githubId"
+			  }
+			}
+		  },
+		  "to": {
+			"external": {
+			  "id": {
+				"expr": "${data.parent}"
+			  },
+			  "type": {
+				"expr": "githubId"
+			  }
+			}
+		  },
+		  "run": 3
+		},
+		{
+		  "processorType": "variableProcessor",
+		  "processorName": "Store all repository ids",
+		  "processorDescription": "Store all repository ids from the provided LDIF",
+		  "filter": {
+			"exactType": "Repository"
+		  },
+		  "run": 3,
+		  "enabled": true,
+		  "variables": [
+			{
+			  "key": "github_project_ids",
+			  "value": "${content.id}"
+			}
+		  ]
+		},
+		{
+		  "processorType": "inboundFactSheet",
+		  "processorName": "Find excluded fact sheets",
+		  "processorDescription": "Find the fact sheets that were created by a former github-connector run but are now excluded/not existing",
+		  "type": "Microservice",
+		  "filter": {
+			"advanced": "${integration.contentIndex == 0}"
+		  },
+		  "identifier": {
+			"search": {
+			  "scope": {
+				"ids": [],
+				"facetFilters": [
+				  {
+					"keys": ["Microservice"],
+					"facetKey": "FactSheetTypes",
+					"operator": "AND"
+				  },
+				  {
+					"keys": ["${integration.tags.getTagId('Data Source','Github repository')}"],
+					"facetKey": "${integration.tags.getTagGroupId('Data Source')}",
+					"operator": "AND"
+				  }
+				]
+			  },
+			  "filter": "${!variables['github_project_ids'].contains(lx.factsheet.githubId)}",
+			  "multipleMatchesAllowed": true
+			}
+		  },
+		  "run": 4,
+		  "updates": [],
+		  "variables": [
+			{
+			  "key": "fs_to_be_tagged",
+			  "value": "${lx.factsheet.githubId}"
+			}
+		  ],
+		  "read": {
+			"fields": ["name", "githubId"]
+		  }
+		},
+		{
+		  "processorType": "inboundTag",
+		  "processorName": "add 'github-tracking-disabled' tag",
+		  "processorDescription": "adds 'github-tracking-disabled' tag to the microservice that was created by github-connector but not included in the scan anymore",
+		  "factSheets": {
+			"external": {
+			  "ids": "${integration.valueOfForEach}",
+			  "type": {
+				"expr": "githubId"
+			  }
+			}
+		  },
+		  "filter": {
+			"advanced": "${integration.contentIndex == 0}"
+		  },
+		  "run": 7,
+		  "updates": [
+			{
+			  "key": {
+				"expr": "name"
+			  },
+			  "values": [
+				{
+				  "expr": "github-tracking-disabled"
+				}
+			  ]
+			},
+			{
+			  "key": {
+				"expr": "group.name"
+			  },
+			  "values": [
+				{
+				  "expr": "Data Quality"
+				}
+			  ]
+			}
+		  ],
+		  "forEach": "${integration.processing.distinct(variables['fs_to_be_tagged'])}"
+		},
+		{
+		  "processorType": "inboundTag",
+		  "processorName": "Add 'Github repository' Data Source tag on Microservice Factsheets",
+		  "processorDescription": "Adds 'Github repository' Data Source tag on Software Artifact type FS for data source tracking",
+		  "filter": {
+			"advanced": "${content.type == 'Repository' || content.type == 'Language' || content.type == 'Team'}"
+		  },
+		  "factSheets": {
+			"external": {
+			  "ids": "${content.id}",
+			  "type": {
+				"expr": "githubId"
+			  }
+			}
+		  },
+		  "run": 4,
+		  "updates": [
+			{
+			  "key": {
+				"expr": "name"
+			  },
+			  "values": [
+				{
+				  "expr": "Github repository"
+				}
+			  ]
+			},
+			{
+			  "key": {
+				"expr": "group.name"
+			  },
+			  "values": [
+				{
+				  "expr": "Data Source"
+				}
+			  ]
+			},
+			{
+			  "key": {
+				"expr": "group.mode"
+			  },
+			  "values": [
+				{
+				  "expr": "SINGLE"
+				}
+			  ]
+			}
+		  ]
+		}
+	  ],
+	  "variables": {},
+	  "dataProvider": {
+		"url": "${header.customFields.resultUrl}"
+	  },
+	  "visibleIf": [
+		{
+		  "featureFlags": [""]
+		}
+	  ],
+	  "readOnly": true,
+	  "executionGroups": ["miGitHubInbound"]
 	},
 	"availableIf": [
-		{
-			"featureFlags": ["integration.integrationapi", "integration.githubrepository"]
-		}
+	  {
+		"featureFlags": ["integration.integrationapi", "integration.githubrepository"]
+	  }
 	]
-}
+  }
