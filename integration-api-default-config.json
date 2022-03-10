@@ -326,7 +326,7 @@
 			},
 			{
 				"processorType": "inboundFactSheet",
-				"processorName": "update-archived-microservice",
+				"processorName": "update-archived-swa",
 				"processorDescription": "This inboundFactSheet updates a SWA FS which is archived in source system",
 				"type": "Microservice",
 				"filter": {
