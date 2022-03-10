@@ -925,7 +925,7 @@
 				"processorName": "Add 'GitHub Repository' Data Source tag on Microservice Factsheets",
 				"processorDescription": "Adds 'GitHub Repository' Data Source tag on Software Artifact type FS for data source tracking",
 				"filter": {
-					"advanced": "${(content.type == 'Repository' || content.type == 'SubRepository' || content.type == 'Language' || (content.type == 'Team' && header.customFields.flags.importTeams != false))}"
+					"advanced": "${(content.type == 'Repository' || content.type == 'SubRepository' || content.type == 'Language' || (content.type == 'Team' && header.customFields.flags.importTeams != false)) && helper:getFromMap(variables, 'ws_swa_fs_ids').contains(content.id)}"
 				},
 				"factSheets": {
 					"external": {
