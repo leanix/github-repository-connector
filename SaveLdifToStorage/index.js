@@ -117,7 +117,8 @@ class SaveLdifToStorageHandler {
 				url: `${monoRepo.url}/tree/HEAD/${repoData.name}`,
 				description: monoRepo.description,
 				monoRepoId: externalId().repository(this.orgName, monoRepo),
-				monoRepoHashId: repoData.monoRepoHashId
+				monoRepoHashId: repoData.monoRepoHashId,
+				isArchived: repoData.isArchived
 			}
 		};
 	}

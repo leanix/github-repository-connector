@@ -192,6 +192,7 @@ class SubReposDataHandler {
 						nodes(ids: $repoIds) {
 								id
 								... on Repository {
+									isArchived
 									name
 									url
 									description
