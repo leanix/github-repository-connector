@@ -327,7 +327,7 @@
 			{
 				"processorType": "inboundFactSheet",
 				"processorName": "update-archived-microservice",
-				"processorDescription": "This inboundFactSheet updates a microservice FS which is archived in source system",
+				"processorDescription": "This inboundFactSheet updates a SWA FS which is archived in source system",
 				"type": "Microservice",
 				"filter": {
 					"advanced": "${content.type == 'Repository' && helper:getFromMap(variables, 'ws_swa_fs_ids').contains(content.id)}"
