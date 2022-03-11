@@ -367,7 +367,7 @@
 				"processorDescription": "This inboundFactSheet creates a microservice FS for every repository content type",
 				"type": "Microservice",
 				"filter": {
-					"advanced": "${content.type == 'Repository' && !data.isArchived}"
+					"advanced": "${content.type == 'Repository' && data.isArchived == false}"
 				},
 				"identifier": {
 					"external": {
@@ -581,7 +581,7 @@
 					}
 				},
 				"filter": {
-					"advanced": "${content.type == 'Repository' && !data.isArchived}"
+					"advanced": "${content.type == 'Repository' && data.isArchived == false}"
 				},
 				"run": 3,
 				"updates": [
@@ -642,7 +642,7 @@
 					}
 				},
 				"filter": {
-					"advanced": "${content.type == 'SubRepository' && !data.isArchived}"
+					"advanced": "${content.type == 'SubRepository' && data.isArchived == false}"
 				},
 				"run": 3,
 				"updates": [
@@ -790,7 +790,7 @@
 				"processorDescription": "This inboundRelation creates a relation b/w microservice and tech comp FS and adds attribute code size on rel",
 				"type": "relMicroserviceToTechnicalComponent",
 				"filter": {
-					"advanced": "${content.type == 'Repository' && !data.isArchived}"
+					"advanced": "${content.type == 'Repository' && data.isArchived == false}"
 				},
 				"from": {
 					"external": {
@@ -895,7 +895,7 @@
 				"processorDescription": "This inboundRelation creates a relation b/w SWA fs SubRepo and it's SWA MonoRepo",
 				"type": "relToParent",
 				"filter": {
-					"advanced": "${header.customFields.flags.detectMonoRepos != false && content.type == 'SubRepository' && !data.isArchived}"
+					"advanced": "${header.customFields.flags.detectMonoRepos != false && content.type == 'SubRepository' && data.isArchived == false}"
 				},
 				"from": {
 					"external": {
@@ -924,7 +924,7 @@
 				"processorName": "Add 'GitHub Repository' Data Source tag on Microservice Factsheets",
 				"processorDescription": "Adds 'GitHub Repository' Data Source tag on Software Artifact type FS for data source tracking",
 				"filter": {
-					"advanced": "${(content.type == 'Repository' || content.type == 'SubRepository' || content.type == 'Language' || (content.type == 'Team' && header.customFields.flags.importTeams != false)) && helper:getFromMap(variables, 'ws_swa_fs_ids').contains(content.id)}"
+					"advanced": "${((content.type == 'Repository' && helper:getFromMap(variables, 'ws_swa_fs_ids').contains(content.id)) || (content.type == 'SubRepository' && helper:getFromMap(variables, 'ws_swa_fs_ids').contains(content.id)) || content.type == 'Language' || (content.type == 'Team' && header.customFields.flags.importTeams != false))}"
 				},
 				"factSheets": {
 					"external": {
