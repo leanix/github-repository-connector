@@ -21,7 +21,15 @@ jobs:
   deploy-processors:
     runs-on: ubuntu-latest
     steps:
-      - name: Provision default config to Prod
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@main
+
+      - name: Get credentials
+        uses: leanix/secrets-action@master
+        with:
+          secret-store-credentials: ${{ secrets.INJECTED_SECRET_STORE_CREDENTIALS }}
+
+      - name: Provision default config
         if: github.ref!='refs/heads/main'
         uses: leanix/integration-api-default-config-action@main
         with:
@@ -146,12 +154,7 @@ jobs:
           secret-store-credentials: ${{ secrets.INJECTED_SECRET_STORE_CREDENTIALS }}
 
       - name: Send CI/CD pipeline success message
-        if: >
-          ${{
-            needs.deploy.result == 'success' &&
-            needs.deploy-processors.result == 'success' &&
-            needs.register-ihub-connector-template.result == 'success'
-          }}
+        if: ${{ needs.deploy.result == 'success' && needs.deploy-processors.result == 'success' && needs.register-ihub-connector-template.result == 'success' }}
         uses: archive/github-actions-slack@v1.0.0
         with:
           slack-bot-user-oauth-access-token: ${{ env.SLACK_TOKEN }}
