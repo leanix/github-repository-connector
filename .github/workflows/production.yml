@@ -134,6 +134,7 @@ jobs:
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
 
   post-deploy:
+    name: Post deploy metrics & tracking
     runs-on: ubuntu-latest
     needs: [ deploy ]
     if: always()
@@ -162,6 +163,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ deploy, deploy-processors, register-ihub-connector-template ]
     if: always()
+    continue-on-error: true
     steps:
       - name: Inject secret store credentials
         uses: leanix/secrets-action@master
