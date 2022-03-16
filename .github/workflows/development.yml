@@ -16,6 +16,7 @@ env:
   NODE_VERSION: '14.x'
   TEST_FUNCTIONAPP_NAME: githubrepositoryconnector
   IHUB_RESOURCES_PATH: ihub-resources
+  SLACK-CHANNEL: '#mi-connectors-notifications'
 
 jobs:
   deploy-processors:
