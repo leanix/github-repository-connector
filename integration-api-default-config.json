@@ -78,7 +78,7 @@
 				"processorName": "repository-topic-tags-creation",
 				"processorDescription": "This inboundTag processor creates a tag group and adds tags in it. Also assigns tags to FS fetching from variable",
 				"filter": {
-					"advanced": "${content.type == 'Topic'}"
+					"advanced": "${content.type == 'Topic' && helper:getFromMap(variables, 'ws_swa_fs_ids').contains(helper:getFromMap(variables,'topic_'.concat(content.id)))}"
 				},
 				"factSheets": {
 					"external": {
@@ -134,7 +134,7 @@
 			},
 			{
 				"processorType": "inboundFactSheet",
-				"processorName": "Find microservice fact sheets ids",
+				"processorName": "Find swa fact sheets ids",
 				"processorDescription": "Find the microservice fact sheets which are present in the WS and create variable",
 				"type": "Microservice",
 				"filter": {
@@ -151,13 +151,13 @@
 									"operator": "AND"
 								},
 								{
-									"keys": ["${integration.tags.getTagId('Data Source','Github repository')}"],
+									"keys": ["${integration.tags.getTagId('Data Source','GitHub Repository')}"],
 									"facetKey": "${integration.tags.getTagGroupId('Data Source')}",
 									"operator": "AND"
 								}
 							]
 						},
-						"filter": true,
+						"filter": "true",
 						"multipleMatchesAllowed": true
 					}
 				},
@@ -165,7 +165,7 @@
 				"updates": [],
 				"variables": [
 					{
-						"key": "microservice_fs_ids",
+						"key": "ws_swa_fs_ids",
 						"value": "${lx.factsheet.githubId}"
 					}
 				],
@@ -179,7 +179,42 @@
 				"processorDescription": "This inboundFactSheet updates a SWA FS which is archived in source system",
 				"type": "Microservice",
 				"filter": {
-					"advanced": "${content.type == 'Repository' && data.isArchived && helper:getFromMap(variables, 'microservice_fs_ids').contains(content.id)}"
+					"advanced": "${content.type == 'Repository' && helper:getFromMap(variables, 'ws_swa_fs_ids').contains(content.id)}"
+				},
+				"identifier": {
+					"external": {
+						"id": {
+							"expr": "${content.id}"
+						},
+						"type": {
+							"expr": "githubId"
+						}
+					}
+				},
+				"run": 2,
+				"updates": [
+					{
+						"key": {
+							"expr": "ghIsArchived"
+						},
+						"values": [
+							{
+								"expr": "${data.isArchived ? 'Yes' : 'No'}"
+							}
+						]
+					}
+				],
+				"read": {
+					"fields": ["githubId"]
+				}
+			},
+			{
+				"processorType": "inboundFactSheet",
+				"processorName": "create-microservice",
+				"processorDescription": "This inboundFactSheet creates a microservice FS for every repository content type",
+				"type": "Microservice",
+				"filter": {
+					"advanced": "${content.type == 'Repository' && data.isArchived == false}"
 				},
 				"identifier": {
 					"external": {
@@ -266,11 +301,11 @@
 			},
 			{
 				"processorType": "inboundFactSheet",
-				"processorName": "create-microservice",
-				"processorDescription": "This inboundFactSheet creates a microservice FS for every repository content type",
+				"processorName": "create-subrepository",
+				"processorDescription": "This inboundFactSheet creates a SWA FS for every SubRepository content type",
 				"type": "Microservice",
 				"filter": {
-					"advanced": "${content.type == 'Repository' && !data.isArchived}"
+					"advanced": "${content.type == 'SubRepository' && data.isArchived == false}"
 				},
 				"identifier": {
 					"external": {
@@ -312,16 +347,6 @@
 					},
 					{
 						"key": {
-							"expr": "repositoryVisibility"
-						},
-						"values": [
-							{
-								"expr": "${data.repoVisibility}"
-							}
-						]
-					},
-					{
-						"key": {
 							"expr": "category"
 						},
 						"values": [
@@ -332,11 +357,11 @@
 					},
 					{
 						"key": {
-							"expr": "ghIsMonoRepo"
+							"expr": "ghIsArchived"
 						},
 						"values": [
 							{
-								"expr": "${data.isMonoRepo ? 'Yes' : ''}"
+								"expr": "No"
 							}
 						]
 					}
@@ -347,11 +372,11 @@
 			},
 			{
 				"processorType": "inboundFactSheet",
-				"processorName": "create-subrepository",
-				"processorDescription": "This inboundFactSheet creates a SWA FS for every SubRepository content type",
+				"processorName": "update-isArchived-subRepository",
+				"processorDescription": "This inboundFactSheet updates a SWA gitHub Archived field for every SubRepository, when it becomes archived",
 				"type": "Microservice",
 				"filter": {
-					"exactType": "SubRepository"
+					"advanced": "${content.type == 'SubRepository' && helper:getFromMap(variables, 'ws_swa_fs_ids').contains(content.id)}"
 				},
 				"identifier": {
 					"external": {
@@ -367,37 +392,11 @@
 				"updates": [
 					{
 						"key": {
-							"expr": "name"
+							"expr": "ghIsArchived"
 						},
 						"values": [
 							{
-								"expr": "${lx.factsheet.name}"
-							},
-							{
-								"expr": "${data.name}"
-							},
-							{
-								"expr": "${data.name} (Copy ${integration.now.getYear()}-${integration.now.getMonthValue()<10?'0':''}${integration.now.getMonthValue()}-${integration.now.getDayOfMonth()<10?'0':''}${integration.now.getDayOfMonth()} ${integration.now.getHour()<10?'0':''}${integration.now.getHour()}:${integration.now.getMinute()<10?'0':''}${integration.now.getMinute()})"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "description"
-						},
-						"values": [
-							{
-								"expr": "${data.description}"
-							}
-						]
-					},
-					{
-						"key": {
-							"expr": "category"
-						},
-						"values": [
-							{
-								"expr": "${lx.factsheet.category}"
+								"expr": "${data.isArchived ? 'Yes' : 'No'}"
 							}
 						]
 					}
@@ -421,7 +420,7 @@
 					}
 				},
 				"filter": {
-					"exactType": "Repository"
+					"advanced": "${content.type == 'Repository' && data.isArchived == false}"
 				},
 				"run": 3,
 				"updates": [
@@ -482,7 +481,7 @@
 					}
 				},
 				"filter": {
-					"exactType": "SubRepository"
+					"advanced": "${content.type == 'SubRepository' && data.isArchived == false}"
 				},
 				"run": 3,
 				"updates": [
@@ -626,7 +625,7 @@
 				"processorDescription": "This inboundRelation creates a relation b/w microservice and tech comp FS and adds attribute code size on rel",
 				"type": "relMicroserviceToTechnicalComponent",
 				"filter": {
-					"exactType": "Repository"
+					"advanced": "${content.type == 'Repository' && data.isArchived == false}"
 				},
 				"from": {
 					"external": {
@@ -669,7 +668,7 @@
 				"processorDescription": "This inboundRelation creates a relation b/w team and microservice FS",
 				"type": "relTeamToMicroservice",
 				"filter": {
-					"advanced": "${header.customFields.flags.importTeams != false && content.type == 'Team'}"
+					"advanced": "${header.customFields.flags.importTeams != false && content.type == 'Team' && helper:getFromMap(variables, 'ws_swa_fs_ids').contains(integration.valueOfForEach)}"
 				},
 				"from": {
 					"external": {
@@ -731,7 +730,7 @@
 				"processorDescription": "This inboundRelation creates a relation b/w SWA fs SubRepo and it's SWA MonoRepo",
 				"type": "relToParent",
 				"filter": {
-					"advanced": "${header.customFields.flags.detectMonoRepos != false && content.type == 'SubRepository'}"
+					"advanced": "${header.customFields.flags.detectMonoRepos != false && content.type == 'SubRepository' && data.isArchived == false}"
 				},
 				"from": {
 					"external": {
@@ -760,7 +759,7 @@
 				"processorName": "Add 'GitHub Repository' Data Source tag on Microservice Factsheets",
 				"processorDescription": "Adds 'GitHub Repository' Data Source tag on Software Artifact type FS for data source tracking",
 				"filter": {
-					"advanced": "${content.type == 'Repository' || content.type == 'SubRepository' || content.type == 'Language' || (content.type == 'Team' && header.customFields.flags.importTeams != false)}"
+					"advanced": "${((content.type == 'Repository' && helper:getFromMap(variables, 'ws_swa_fs_ids').contains(content.id)) || (content.type == 'SubRepository' && helper:getFromMap(variables, 'ws_swa_fs_ids').contains(content.id)) || content.type == 'Language' || (content.type == 'Team' && header.customFields.flags.importTeams != false))}"
 				},
 				"factSheets": {
 					"external": {
@@ -812,7 +811,7 @@
 				"type": "Microservice",
 				"filter": {
 					"exactType": "Repository",
-					"advanced": "${helper:getFromMap(variables, content.id.concat('_').concat(integration.valueOfForEach)) == null || !helper:getFromMap(variables, content.id.concat('_').concat(integration.valueOfForEach)).contains('true')}"
+					"advanced": "${data.isArchived == false && (helper:getFromMap(variables, content.id.concat('_').concat(integration.valueOfForEach)) == null || !helper:getFromMap(variables, content.id.concat('_').concat(integration.valueOfForEach)).contains('true'))}"
 				},
 				"identifier": {
 					"external": {
@@ -893,7 +892,7 @@
 				"processorDescription": "Variable to read the existing subs on FS",
 				"type": "Microservice",
 				"filter": {
-					"exactType": "Repository"
+					"advanced": "${data.isArchived == false && (content.type == 'Repository')}"
 				},
 				"identifier": {
 					"external": {
