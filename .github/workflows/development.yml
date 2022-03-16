@@ -1,0 +1,183 @@
+name: Deploy to Development
+
+on:
+  repository_dispatch:
+    types: [ trigger-workflow ]
+  push:
+    branches:
+      - feature/**
+    paths-ignore:
+      - 'README.md'
+  workflow_dispatch:
+
+env:
+  AZURE_FUNCTIONAPP_NAME: githubrepositoryconnector
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
+  NODE_VERSION: '14.x'
+  TEST_FUNCTIONAPP_NAME: githubrepositoryconnector
+  IHUB_RESOURCES_PATH: ihub-resources
+
+jobs:
+  deploy-processors:
+    runs-on: ubuntu-latest
+    outputs:
+      triggered: ${{ steps.set-var.outputs.triggered }}
+    steps:
+      - name: Provision default config to Prod
+        if: github.ref!='refs/heads/main'
+        uses: leanix/integration-api-default-config-action@main
+        with:
+          environment: 'test'
+
+      - name: Set variable
+        id: set-var
+        if: ${{ always() }}
+        run: echo "::set-output name=triggered::YES"
+
+  register-ihub-connector-template:
+    name: register connector template on test
+    runs-on: ubuntu-latest
+    outputs:
+      triggered: ${{ steps.set-var.outputs.triggered }}
+    if: github.ref!='refs/heads/main'
+    steps:
+      - name: Set variable
+        id: set-var
+        if: ${{ always() }}
+        run: echo "::set-output name=triggered::YES"
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get credentials
+        uses: leanix/secrets-action@master
+        with:
+          secret-store-credentials: ${{ secrets.INJECTED_SECRET_STORE_CREDENTIALS }}
+
+      - name: Login via Az module
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          enable-AzPSSession: true
+
+      - name: Install az tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y azure-functions-core-tools-3
+
+      - name: Find azure function URL
+        id: func-url
+        shell: bash
+        run: echo "::set-output name=FUNCTION_URL::$(func azure functionapp list-functions ${{env.TEST_FUNCTIONAPP_NAME}} --show-keys | grep -i 'Invoke url' | awk '{print $3}')"
+
+      - name: Check fetched function URL
+        if: ${{steps.func-url.outputs.FUNCTION_URL == ''}}
+        run: |
+          echo Connector function URL cannot be empty for standard connectors
+          exit 1
+
+      - name: Update connector definition file and shows the URL of the connector function
+        run: |
+          jq '.connectorUrl = "${{steps.func-url.outputs.FUNCTION_URL}}"' ${{env.IHUB_RESOURCES_PATH}}/connector-definition.json > connector-definition-test.json
+
+      - name: Register GitHub Connector on test
+        uses: leanix/integration-hub-connector-register-action@main
+        with:
+          environment: 'test'
+          connector_definition_file: 'connector-definition-test.json'
+          connector_icon: 'ihub-resources/connector-github-icon.png'
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [ deploy-processors, register-ihub-connector-template ]
+    steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@main
+
+      - name: Get credentials
+        uses: leanix/secrets-action@master
+        with:
+          secret-store-credentials: ${{ secrets.INJECTED_SECRET_STORE_CREDENTIALS }}
+
+      - name: Setup Node ${{ env.NODE_VERSION }} Environment
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 'Login to Test Env via Azure CLI'
+        if: github.ref!='refs/heads/main'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: 'Resolve Project Dependencies Using Npm'
+        shell: bash
+        run: |
+          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+          npm install
+          npm run build --if-present
+          npm run test --if-present
+          popd
+
+      - name: 'Deploy Azure Function to Test'
+        if: github.ref!='refs/heads/main'
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME}}
+          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
+  post-deploy:
+    runs-on: ubuntu-latest
+    needs: [ deploy ]
+    if: always()
+    steps:
+      - name: Checkout git repository
+        uses: actions/checkout@v2
+
+      - name: Inject secret store credentials
+        uses: leanix/secrets-action@master
+        with:
+          secret-store-credentials: ${{ secrets.INJECTED_SECRET_STORE_CREDENTIALS }}
+
+      - name: LeanIX Jira release tracking
+        if: needs.deploy.result == 'success' && github.ref!='refs/heads/main'
+        uses: leanix/jira-action@master
+        with:
+          environment: 'test'
+
+  post-deploy-notifications:
+    name: Post Deployment
+    runs-on: ubuntu-latest
+    needs: [ deploy, deploy-processors, register-ihub-connector-template ]
+    if: always()
+    steps:
+      - name: Checkout git repository
+        uses: actions/checkout@v2
+
+      - name: Inject secret store credentials
+        uses: leanix/secrets-action@master
+        with:
+          secret-store-credentials: ${{ secrets.INJECTED_SECRET_STORE_CREDENTIALS }}
+
+      - name: Send CI/CD pipeline success message
+        if: >
+          ${{
+            needs.deploy.result == 'success' &&
+            (needs.deploy-processors.outputs.triggered == 'YES' ? needs.deploy-processors.result == 'success' : true)
+            (needs.register-ihub-connector-template.outputs.triggered == 'YES' ? needs.register-ihub-connector-template.result == 'success' : true)
+          }}
+        uses: archive/github-actions-slack@v1.0.0
+        with:
+          slack-bot-user-oauth-access-token: ${{ env.SLACK_TOKEN }}
+          slack-channel: ${{ env.SLACK-CHANNEL }}
+          slack-text: |
+            (test notification) :beers: ${{ github.repository }} successfully deployed! More information@ ${{ github.event.workflow_run.html_url }}
+
+      - name: Send CI/CD pipeline failure message
+        if: ${{ failure() || cancelled() }}
+        uses: archive/github-actions-slack@v1.0.0
+        with:
+          slack-bot-user-oauth-access-token: ${{ env.SLACK_TOKEN }}
+          slack-channel: ${{ env.SLACK-CHANNEL }}
+          slack-text: |
+            (test notification) :no_entry_sign: ${{ github.repository }} failed to deploy! More information@ ${{ github.event.workflow_run.html_url }}
