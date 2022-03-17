@@ -297,7 +297,13 @@
 				],
 				"read": {
 					"fields": ["name", "category"]
-				}
+				},
+				"variables": [
+					{
+						"key": "ws_swa_fs_ids",
+						"value": "${content.id}"
+					}
+				]
 			},
 			{
 				"processorType": "inboundFactSheet",
@@ -368,7 +374,13 @@
 				],
 				"read": {
 					"fields": ["name", "category"]
-				}
+				},
+				"variables": [
+					{
+						"key": "ws_swa_fs_ids",
+						"value": "${content.id}"
+					}
+				]
 			},
 			{
 				"processorType": "inboundFactSheet",
