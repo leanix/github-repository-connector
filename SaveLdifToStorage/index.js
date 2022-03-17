@@ -5,7 +5,7 @@ const { BlobClient, AnonymousCredential } = require('@azure/storage-blob');
 const { externalId } = require('../Lib/helper');
 
 const ldifHeader = {
-	description: 'Map organization github repos to LeanIX Fact Sheets'
+	description: 'Map organisation github repos to LeanIX Fact Sheets'
 };
 
 module.exports = async function (
@@ -101,8 +101,7 @@ class SaveLdifToStorageHandler {
 				topics: repoData.repositoryTopics.nodes.map(({ topic }) => topic.id),
 				repoVisibility: repoData.visibility,
 				contributors: this.getTopContributorsFromCommitHistory()(repoData.defaultBranchRef),
-				isMonoRepo: repoData.isMonoRepo,
-				isArchived: repoData.isArchived
+				isMonoRepo: repoData.isMonoRepo
 			}
 		};
 	}
@@ -117,8 +116,7 @@ class SaveLdifToStorageHandler {
 				url: `${monoRepo.url}/tree/HEAD/${repoData.name}`,
 				description: monoRepo.description,
 				monoRepoId: externalId().repository(this.orgName, monoRepo),
-				monoRepoHashId: repoData.monoRepoHashId,
-				isArchived: repoData.isArchived
+				monoRepoHashId: repoData.monoRepoHashId
 			}
 		};
 	}

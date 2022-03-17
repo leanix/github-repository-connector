@@ -80,7 +80,6 @@ class SubReposDataHandler {
                         name
                         url
                         description
-                        isArchived
                         languages(first: $languagePageCount) {
                             pageInfo {
                                 endCursor
@@ -192,7 +191,6 @@ class SubReposDataHandler {
 						nodes(ids: $repoIds) {
 								id
 								... on Repository {
-									isArchived
 									name
 									url
 									description
