@@ -24,6 +24,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Get credentials
+        uses: leanix/secrets-action@master
+        with:
+          secret-store-credentials: ${{ secrets.INJECTED_SECRET_STORE_CREDENTIALS }}
+
       - name: Provision default config
         if: github.ref=='refs/heads/main'
         uses: leanix/integration-api-default-config-action@main
