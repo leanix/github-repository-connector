@@ -179,7 +179,7 @@ jobs:
           secret-store-credentials: ${{ secrets.INJECTED_SECRET_STORE_CREDENTIALS }}
 
       - name: Send CI/CD pipeline success message
-        if: ${{ needs.deploy.result == 'success' && needs.deploy-processors.result == 'success' && needs.register-ihub-connector-template.result == 'success' }}
+        if: ${{ needs.deploy.result == 'success' }}
         uses: archive/github-actions-slack@v1.0.0
         with:
           slack-bot-user-oauth-access-token: ${{ env.SLACK_TOKEN }}
@@ -188,7 +188,7 @@ jobs:
             :beers: ${{ github.repository }} successfully deployed! More information@ ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: Send CI/CD pipeline failure message
-        if: ${{ failure() || cancelled() }}
+        if: ${{ needs.deploy.result != 'success' }}
         uses: archive/github-actions-slack@v1.0.0
         with:
           slack-bot-user-oauth-access-token: ${{ env.SLACK_TOKEN }}
