@@ -21,6 +21,9 @@ jobs:
   deploy-processors:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
       - name: Provision default config
         if: github.ref=='refs/heads/main'
         uses: leanix/integration-api-default-config-action@main
@@ -159,9 +162,9 @@ jobs:
           environment: "prod"
 
   post-deploy-notifications:
-    name: Post Deployment
+    name: Notify
     runs-on: ubuntu-latest
-    needs: [ deploy, deploy-processors, register-ihub-connector-template ]
+    needs: [ deploy ]
     if: always()
     continue-on-error: true
     steps:
