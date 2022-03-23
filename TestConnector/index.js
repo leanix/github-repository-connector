@@ -21,13 +21,13 @@ class TestConnectorValidator {
 		});
 	}
 
-	static checkRegexExcludeList(regexExcludeList) {
-		if (regexExcludeList) {
+	static checkRegexFilterList(regexFilterList) {
+		if (regexFilterList) {
 			try {
 				// checking the provided regurlar expressions for errors
-				regexExcludeList.map((regexString) => new RegExp(regexString));
+				regexFilterList.map((regexString) => new RegExp(regexString));
 			} catch (error) {
-				throw new Error('A regular expression provided in the input field repoNamesExcludeList is invalid.');
+				throw new Error('A regular expression provided in the input field repoNamesFilterList is invalid.');
 			}
 		}
 	}
@@ -60,7 +60,7 @@ class TestConnectorValidator {
 	}
 
 	async test() {
-		const { orgName, repoNamesExcludeList, flags, monoRepoManifestFileName } = this.connectorConfiguration;
+		const { orgName, repoNamesFilterList, flags, monoRepoManifestFileName } = this.connectorConfiguration;
 		const { ghToken } = this.secretsConfiguration;
 		const logger = getLoggerInstanceFromContext(this.context);
 		await logger.logInfo(this.context, 'Checking input validity and correctness');
@@ -74,8 +74,8 @@ class TestConnectorValidator {
 			throw new Error('GitHub token cannot be empty');
 		}
 
-		TestConnectorValidator.checkRegexExcludeList(repoNamesExcludeList);
-		await logger.logInfo(this.context, 'repoNamesExcludeList list is valid regex array');
+		TestConnectorValidator.checkRegexFilterList(repoNamesFilterList);
+		await logger.logInfo(this.context, 'repoNamesFilterList list is valid regex array');
 
 		if (flags && flags.detectMonoRepos && !this.isValidManifestFileName(monoRepoManifestFileName)) {
 			await logger.logError(this.context, `Manifest file name can't be invalid or empty if 'detectMonoRepos' is true`);
