@@ -12,7 +12,11 @@ class GetAllRepositoriesForOrgHandler {
 	filterListedRepositoriesIDsList(repositoriesData, repoNamesFilterListChecked, repoNamesFilterStrategy) {
 		const regexExcludeListArray = repoNamesFilterListChecked.map((regexString) => new RegExp(regexString));
 		return repositoriesData
-			.filter((repoData) => repoNamesFilterStrategy === 'Exclude' ? !regexExcludeListArray.find((regex) => repoData.name.match(regex)) : regexExcludeListArray.find((regex) => repoData.name.match(regex)))
+			.filter((repoData) =>
+				repoNamesFilterStrategy === 'Exclude'
+					? !regexExcludeListArray.find((regex) => repoData.name.match(regex))
+					: regexExcludeListArray.find((regex) => repoData.name.match(regex))
+			)
 			.map((repoData) => repoData.id);
 	}
 
@@ -39,7 +43,11 @@ class GetAllRepositoriesForOrgHandler {
 			cursor
 		});
 
-		const idList = this.filterListedRepositoriesIDsList(data.organization.repositories.nodes, repoNamesFilterListChecked, repoNamesFilterStrategy);
+		const idList = this.filterListedRepositoriesIDsList(
+			data.organization.repositories.nodes,
+			repoNamesFilterListChecked,
+			repoNamesFilterStrategy
+		);
 
 		return {
 			ids: idList,
