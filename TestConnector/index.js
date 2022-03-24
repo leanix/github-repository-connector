@@ -75,7 +75,7 @@ class TestConnectorValidator {
 		}
 
 		if (repoNamesFilterStrategy && !(repoNamesFilterStrategy === 'Exclude' || repoNamesFilterStrategy === 'Include')) {
-			await logger.logError(this.context, `Invalid Filter strategy selection, repoNamesFilterStrategy - ${repoNamesFilterStrategy}`);
+			await logger.logError(this.context, `Invalid Filter strategy selection. repoNamesFilterStrategy provided: ${repoNamesFilterStrategy}. Hint: Accepted value for repoNamesFilterStrategy is Exclude / Include`);
 			throw new Error(`Filter strategy selected is Invalid, choose either Exclude or Include`);
 		}
 
