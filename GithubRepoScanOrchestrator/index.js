@@ -20,7 +20,7 @@ class LdifProcessor {
 
 	*processForLdif() {
 		const {
-			connectorConfiguration: { orgName, repoNamesFilterList, flags, repoNamesFilterStrategy },
+			connectorConfiguration: { orgName, repoNamesExcludeList, repoNamesIncludeList, flags, repoNamesFilterStrategy },
 			secretsConfiguration: { ghToken },
 			ldifResultUrl,
 			progressCallbackUrl,
@@ -34,6 +34,8 @@ class LdifProcessor {
 			this.context.df.isReplaying,
 			'Fetching ids of all the repos present in the org.'
 		);
+
+		const repoNamesFilterList = repoNamesFilterStrategy === 'Exclude' ? repoNamesExcludeList : repoNamesIncludeList
 
 		const repoNamesFilterListChecked = repoNamesFilterList ? repoNamesFilterList : [];
 		const repositoriesIds = yield this.context.df.callActivity('GetAllRepositoriesForOrg', {

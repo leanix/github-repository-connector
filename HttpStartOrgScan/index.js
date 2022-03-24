@@ -25,7 +25,7 @@ module.exports = async function (context, req) {
 	const FLAG_DEFAULTS = Object.freeze({
 		importTeams: true,
 		detectMonoRepos: false,
-		filterRepoNamesStrategy: 'Exclude'
+		repoNamesFilterStrategy: 'Exclude'
 	});
 
 	input.connectorConfiguration.flags = {

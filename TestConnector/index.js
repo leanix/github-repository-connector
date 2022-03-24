@@ -60,9 +60,11 @@ class TestConnectorValidator {
 	}
 
 	async test() {
-		const { orgName, repoNamesFilterList, flags, monoRepoManifestFileName, repoNamesFilterStrategy } = this.connectorConfiguration;
+		const { orgName, repoNamesExcludeList, repoNamesIncludeList, flags, monoRepoManifestFileName, repoNamesFilterStrategy } =
+			this.connectorConfiguration;
 		const { ghToken } = this.secretsConfiguration;
 		const logger = getLoggerInstanceFromContext(this.context);
+		let repoNamesFilterList;
 		await logger.logInfo(this.context, 'Checking input validity and correctness');
 		if (!orgName) {
 			await logger.logError(this.context, 'GitHub organisation name cannot be empty');
@@ -80,6 +82,12 @@ class TestConnectorValidator {
 				`Invalid Filter strategy selection. repoNamesFilterStrategy provided: ${repoNamesFilterStrategy}. Hint: Accepted value for repoNamesFilterStrategy is Exclude / Include`
 			);
 			throw new Error(`Filter strategy selected is Invalid, choose either Exclude or Include`);
+		}
+
+		if (repoNamesFilterStrategy === 'Exclude') {
+			repoNamesFilterList = repoNamesExcludeList;
+		} else {
+			repoNamesFilterList = repoNamesIncludeList;
 		}
 
 		TestConnectorValidator.checkRegexFilterList(repoNamesFilterList);
