@@ -35,7 +35,7 @@ class LdifProcessor {
 			'Fetching ids of all the repos present in the org.'
 		);
 
-		const repoNamesFilterList = repoNamesFilterStrategy === 'Exclude' ? repoNamesExcludeList : repoNamesIncludeList
+		const repoNamesFilterList = repoNamesFilterStrategy === 'Exclude' ? repoNamesExcludeList : repoNamesIncludeList;
 
 		const repoNamesFilterListChecked = repoNamesFilterList ? repoNamesFilterList : [];
 		const repositoriesIds = yield this.context.df.callActivity('GetAllRepositoriesForOrg', {
