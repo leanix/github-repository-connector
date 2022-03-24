@@ -5,7 +5,9 @@
 	"documentationUrl": "https://docs-vsm.leanix.net/docs/github",
 	"connectorConfiguration": {
 		"orgName": "leanix",
-		"repoNamesFilterList": [],
+		"repoNamesExcludeList": [],
+		"repoNamesIncludeList": [],
+		"repoNamesFilterStrategy": "Exclude",
 		"monoRepoManifestFileName": "lx-manifest.yaml",
 		"flags": {
 			"importTeams": true,
