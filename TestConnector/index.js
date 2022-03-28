@@ -1,22 +1,23 @@
 ﻿const { graphql } = require('@octokit/graphql');
+const Util = require('../Lib/helper');
+const jwt_decode = require('jwt-decode');
 const { getLoggerInstanceFromContext } = require('../Lib/connectorLogger');
 
-module.exports = async function (context, { connectorConfiguration, secretsConfiguration }) {
+module.exports = async function (context, input) {
 	if (process.env.LX_DEV_SKIP_TEST_CONNECTOR_CHECKS) {
 		context.log('Skipping test connector checks. reason: LX_DEV_SKIP_TEST_CONNECTOR_CHECKS flag is enabled');
 		return;
 	}
-	await new TestConnectorValidator(context, { connectorConfiguration, secretsConfiguration }).test();
+	await new TestConnectorValidator(context, input).test();
 };
 
 class TestConnectorValidator {
-	constructor(context, { connectorConfiguration, secretsConfiguration }) {
+	constructor(context, input) {
 		this.context = context;
-		this.connectorConfiguration = connectorConfiguration;
-		this.secretsConfiguration = secretsConfiguration;
+		this.input = input;
 		this.graphqlClient = graphql.defaults({
 			headers: {
-				authorization: `token ${this.secretsConfiguration.ghToken}`
+				authorization: `token ${this.input.secretsConfiguration.ghToken}`
 			}
 		});
 	}
@@ -48,6 +49,19 @@ class TestConnectorValidator {
 		});
 	}
 
+	async isValidWorkspaceToken({ host, lxToken, workspaceId }) {
+		try {
+			var bearerToken = await Util.getAccessToken(host, lxToken);
+			var decoded = jwt_decode(bearerToken);
+			if (decoded.principal.permission.workspaceId != workspaceId) {
+				return false;
+			}
+		} catch (error) {
+			throw new Error(`Failed! Hint: Check if lxToken is not expired, and if host is valid. error: ${error.message}`);
+		}
+		return true;
+	}
+
 	isValidManifestFileName(manifestFileName) {
 		if (!manifestFileName) {
 			return false;
@@ -60,8 +74,9 @@ class TestConnectorValidator {
 	}
 
 	async test() {
-		const { orgName, repoNamesExcludeList, flags, monoRepoManifestFileName } = this.connectorConfiguration;
-		const { ghToken } = this.secretsConfiguration;
+		const { orgName, repoNamesExcludeList, flags, monoRepoManifestFileName, host } = this.input.connectorConfiguration;
+		const { ghToken, lxToken } = this.input.secretsConfiguration;
+		const { workspaceId } = this.bindingKey.lxWorkspace;
 		const logger = getLoggerInstanceFromContext(this.context);
 		await logger.logInfo(this.context, 'Checking input validity and correctness');
 		if (!orgName) {
@@ -81,6 +96,16 @@ class TestConnectorValidator {
 			await logger.logError(this.context, `Manifest file name can't be invalid or empty if 'detectMonoRepos' is true`);
 			throw new Error(
 				`Manifest file name can't be invalid or empty if 'detectMonoRepos' is true. Given: ${monoRepoManifestFileName}; Valid examples: lx-manifest.yml, lx-manifest.yaml`
+			);
+		}
+
+		if (flags && flags.sendEventsForDORA && !this.isValidWorkspaceToken(host, lxToken, workspaceId)) {
+			await logger.logError(
+				this.context,
+				`Failed! Error: lxToken provided belongs to a different workspace. Hint: Please provide lxToken belonging to current workspace Id = ${workspaceId} `
+			);
+			throw new Error(
+				`Failed! Error: lxToken provided belongs to a different workspace. Hint: Please provide lxToken belonging to current workspace Id = ${workspaceId} `
 			);
 		}
 

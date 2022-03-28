@@ -7,13 +7,16 @@
 		"orgName": "leanix",
 		"repoNamesExcludeList": [],
 		"monoRepoManifestFileName": "lx-manifest.yaml",
+		"host": "",
 		"flags": {
 			"importTeams": true,
-			"detectMonoRepos": false
+			"detectMonoRepos": false,
+			"sendEventsForDORA": false
 		}
 	},
 	"secretsConfiguration": {
-		"ghToken": ""
+		"ghToken": "",
+		"lxToken": ""
 	},
 	"bindingKey": {
 		"connectorType": "leanix-vsm-connector",

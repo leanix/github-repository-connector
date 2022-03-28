@@ -1,3 +1,5 @@
+const axios = require('axios');
+const querystring = require('querystring');
 class Util {
 	static getISODateStringOnFromToday(daysBack = 30) {
 		const today = new Date();
@@ -72,6 +74,21 @@ class Util {
 			e.name === 'GraphqlError' && (parseInt(e.headers['x-ratelimit-remaining']) === 0 || e.message.includes('API rate limit'));
 		return [isExceeded, e.headers['x-ratelimit-reset']];
 	}
+
+	static getAccessToken(host, lxToken) {
+		const encodedToken = Buffer.from(`apitoken:${lxToken}`).toString('base64');
+
+		return axios
+			.post(`https://${host}/services/mtm/v1/oauth2/token`, querystring.stringify({ grant_type: 'client_credentials' }), {
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+					Authorization: `Basic ${encodedToken}`
+				}
+			})
+			.then((axiosResponse) => axiosResponse.data)
+			.then((response) => response.access_token);
+	}
+
 }
 
 module.exports = Util;

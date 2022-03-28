@@ -24,7 +24,8 @@ module.exports = async function (context, req) {
 
 	const FLAG_DEFAULTS = Object.freeze({
 		importTeams: true,
-		detectMonoRepos: false
+		detectMonoRepos: false,
+		sendEventsForDORA: false
 	});
 
 	input.connectorConfiguration.flags = {

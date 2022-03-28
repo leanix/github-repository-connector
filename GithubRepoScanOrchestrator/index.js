@@ -20,8 +20,8 @@ class LdifProcessor {
 
 	*processForLdif() {
 		const {
-			connectorConfiguration: { orgName, repoNamesExcludeList, flags },
-			secretsConfiguration: { ghToken },
+			connectorConfiguration: { orgName, repoNamesExcludeList, flags, host },
+			secretsConfiguration: { ghToken, lxToken },
 			ldifResultUrl,
 			progressCallbackUrl,
 			bindingKey,
@@ -113,6 +113,24 @@ class LdifProcessor {
 			this.context.df.isReplaying,
 			'Successfully generated LDIF and saved into storage'
 		);
+
+		if (flags && flags.sendEventsForDORA === false) {
+			yield this.logger.logInfoFromOrchestrator(
+				this.context,
+				this.context.df.isReplaying,
+				`Events will not be processed. reason: 'sendEventsForDORA' flag is false`
+			);
+		} else {
+			yield this.context.df.callActivity('SendEventsForDORA', {
+				repositoriesIds,
+				host,
+				ghToken,
+				lxToken,
+				orgName,
+				metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
+			});
+		}
+
 		return {
 			totalRepositories: repositoriesIds.length,
 			totalTeams: teamResults.length
