@@ -39,7 +39,7 @@ module.exports = async function (context, req) {
 	input.connectorConfiguration = {
 		...CONFIG_DEFAULTS,
 		...input.connectorConfiguration
-	}
+	};
 
 	const instanceId = await client.startNew('GithubRepoScanOrchestrator', input.runId, input);
 
