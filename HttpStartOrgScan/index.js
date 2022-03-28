@@ -24,7 +24,10 @@ module.exports = async function (context, req) {
 
 	const FLAG_DEFAULTS = Object.freeze({
 		importTeams: true,
-		detectMonoRepos: false,
+		detectMonoRepos: false
+	});
+
+	const CONFIG_DEFAULTS = Object.freeze({
 		repoNamesFilterStrategy: 'Exclude'
 	});
 
@@ -32,6 +35,11 @@ module.exports = async function (context, req) {
 		...FLAG_DEFAULTS,
 		...input.connectorConfiguration.flags
 	};
+
+	input.connectorConfiguration = {
+		...CONFIG_DEFAULTS,
+		...input.connectorConfiguration
+	}
 
 	const instanceId = await client.startNew('GithubRepoScanOrchestrator', input.runId, input);
 
