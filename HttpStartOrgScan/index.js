@@ -27,9 +27,18 @@ module.exports = async function (context, req) {
 		detectMonoRepos: false
 	});
 
+	const CONFIG_DEFAULTS = Object.freeze({
+		repoNamesFilterStrategy: 'Exclude'
+	});
+
 	input.connectorConfiguration.flags = {
 		...FLAG_DEFAULTS,
 		...input.connectorConfiguration.flags
+	};
+
+	input.connectorConfiguration = {
+		...CONFIG_DEFAULTS,
+		...input.connectorConfiguration
 	};
 
 	const instanceId = await client.startNew('GithubRepoScanOrchestrator', input.runId, input);

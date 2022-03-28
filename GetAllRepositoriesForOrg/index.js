@@ -9,14 +9,18 @@ class GetAllRepositoriesForOrgHandler {
 		this.graphqlClient.setLogger(this.logger, this.context, progressCallbackUrl);
 	}
 
-	excludeListedRepositoriesIDsList(repositoriesData, repoNamesExcludeListChecked) {
-		const regexExcludeListArray = repoNamesExcludeListChecked.map((regexString) => new RegExp(regexString));
+	filterListedRepositoriesIDsList(repositoriesData, repoNamesFilterListChecked, repoNamesFilterStrategy) {
+		const regexExcludeListArray = repoNamesFilterListChecked.map((regexString) => new RegExp(regexString));
 		return repositoriesData
-			.filter((repoData) => !regexExcludeListArray.find((regex) => repoData.name.match(regex)))
+			.filter((repoData) =>
+				repoNamesFilterStrategy === 'Exclude'
+					? !regexExcludeListArray.find((regex) => repoData.name.match(regex))
+					: regexExcludeListArray.find((regex) => repoData.name.match(regex))
+			)
 			.map((repoData) => repoData.id);
 	}
 
-	async getRepositoriesIds({ orgName, pageCount, cursor }, repoNamesExcludeListChecked) {
+	async getRepositoriesIds({ orgName, pageCount, cursor }, repoNamesFilterListChecked, repoNamesFilterStrategy) {
 		const data = await this.graphqlClient.query({
 			query: `
 				query getOrgRepositories($orgName: String!, $pageCount: Int!, $cursor: String) {
@@ -39,7 +43,11 @@ class GetAllRepositoriesForOrgHandler {
 			cursor
 		});
 
-		const idList = this.excludeListedRepositoriesIDsList(data.organization.repositories.nodes, repoNamesExcludeListChecked);
+		const idList = this.filterListedRepositoriesIDsList(
+			data.organization.repositories.nodes,
+			repoNamesFilterListChecked,
+			repoNamesFilterStrategy
+		);
 
 		return {
 			ids: idList,
@@ -47,7 +55,7 @@ class GetAllRepositoriesForOrgHandler {
 		};
 	}
 
-	async getAllRepositoryIds(orgName, repoNamesExcludeListChecked) {
+	async getAllRepositoryIds(orgName, repoNamesFilterListChecked, repoNamesFilterStrategy) {
 		let cursor = null;
 		let finalResult = [];
 
@@ -58,7 +66,8 @@ class GetAllRepositoriesForOrgHandler {
 					pageCount: 100,
 					cursor
 				},
-				repoNamesExcludeListChecked
+				repoNamesFilterListChecked,
+				repoNamesFilterStrategy
 			);
 			finalResult = finalResult.concat(ids);
 			cursor = pageInfo.endCursor;
@@ -77,8 +86,8 @@ class GetAllRepositoriesForOrgHandler {
 
 module.exports = async function (
 	context,
-	{ orgName, repoNamesExcludeListChecked, ghToken, metadata: { connectorLoggingUrl, runId, progressCallbackUrl } }
+	{ orgName, repoNamesFilterListChecked, repoNamesFilterStrategy, ghToken, metadata: { connectorLoggingUrl, runId, progressCallbackUrl } }
 ) {
 	let handler = new GetAllRepositoriesForOrgHandler(context, connectorLoggingUrl, progressCallbackUrl, runId, new GitHubClient(ghToken));
-	return await handler.getAllRepositoryIds(orgName, repoNamesExcludeListChecked);
+	return await handler.getAllRepositoryIds(orgName, repoNamesFilterListChecked, repoNamesFilterStrategy);
 };
