@@ -88,7 +88,6 @@ class Util {
 			.then((axiosResponse) => axiosResponse.data)
 			.then((response) => response.access_token);
 	}
-
 }
 
 module.exports = Util;

@@ -7,10 +7,9 @@ module.exports = async function (
 	{ repositoriesIds, host, ghToken, lxToken, orgName, metadata: { connectorLoggingUrl, runId, progressCallbackUrl } }
 ) {
 	const handler = new EventsDataHandler(context, connectorLoggingUrl, progressCallbackUrl, runId, new GitHubClient(ghToken));
-	for(let repoId of repositoriesIds) {
+	for (let repoId of repositoriesIds) {
 		await handler.sendEventsForRepo(repoId, null);
 	}
-	
 };
 
 class EventsDataHandler {
@@ -21,9 +20,10 @@ class EventsDataHandler {
 		this.graphqlClient.setLogger(this.logger, this.context, progressCallbackUrl);
 	}
 
-	async sendEventsForRepo(repoId, cursor){
-		let initialPullRequestPageCount = 100
-		const data = await this.graphqlClient.query({ query: `
+	async sendEventsForRepo(repoId, cursor) {
+		let initialPullRequestPageCount = 100;
+		const data = await this.graphqlClient.query({
+			query: `
 		query getReposPullRequestsData($repoIds: [ID!]!, $pullReqPageCount: Int!, $cursor: String) {
 			nodes(ids: $repoIds) {
 			  id
@@ -49,12 +49,10 @@ class EventsDataHandler {
 			}
 		  }
 		`,
-		repoIds: [repoId],
-		pullReqPageCount: initialPullRequestPageCount,
-		cursor: cursor,
-
-	})
-
+			repoIds: [repoId],
+			pullReqPageCount: initialPullRequestPageCount,
+			cursor: cursor
+		});
 	}
 	async getReposCommitHistoryData(repoIds) {
 		try {
