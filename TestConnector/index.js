@@ -76,7 +76,7 @@ class TestConnectorValidator {
 	async test() {
 		const { orgName, repoNamesExcludeList, flags, monoRepoManifestFileName, host } = this.input.connectorConfiguration;
 		const { ghToken, lxToken } = this.input.secretsConfiguration;
-		const { workspaceId } = this.bindingKey.lxWorkspace;
+		const { workspaceId } = this.input.bindingKey.lxWorkspace;
 		const logger = getLoggerInstanceFromContext(this.context);
 		await logger.logInfo(this.context, 'Checking input validity and correctness');
 		if (!orgName) {
