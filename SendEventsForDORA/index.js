@@ -59,7 +59,7 @@ class EventsDataHandler {
 			cursor: null
 		});
 		let repoPullRequestInfo = data.nodes;
-		let last30day = new Date(getISODateStringOnFromToday(30));
+		let last30day = new Date(getISODateStringOnFromToday(90));
 		if (repoPullRequestInfo[0].pullRequests.nodes && repoPullRequestInfo[0].pullRequests.nodes.length > 0) {
 			let lastPRInListMergeDate = new Date(
 				repoPullRequestInfo[0].pullRequests.nodes[repoPullRequestInfo[0].pullRequests.nodes.length - 1].mergedAt
@@ -99,7 +99,7 @@ class EventsDataHandler {
 	async getAllPRsForRepo(repoInfo) {
 		let prCursor = null;
 		let finalResult = [];
-		let last30day = new Date(getISODateStringOnFromToday(30));
+		let last30day = new Date(getISODateStringOnFromToday(90));
 		do {
 			var { pullRequests, pageInfo } = await this.getPagedPullRequests({ repoId: repoInfo.id, cursor: prCursor });
 			finalResult = finalResult.concat(pullRequests);
