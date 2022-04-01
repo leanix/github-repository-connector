@@ -70,7 +70,7 @@ class EventsDataHandler {
 		}
 
 		// filter only those pullReqs which are less than 30 days
-		let pullRequestsBelow30Days = repoPullRequestInfo[0].pullRequests.nodes.filter((pullReq) => new Date(pullReq.mergedAt) >= last30day);
+		let pullRequestsBelow30Days = repoPullRequestInfo[0].pullRequests.nodes.filter((pullReq) => new Date(pullReq.mergedAt) >= last30day && repoPullRequestInfo[0].defaultBranchRef.name == pullReq.baseRefName);
 		for (let pullReq of pullRequestsBelow30Days) {
 			let commits = await this.getAllCommitsForPullRequest(pullReq.id);
 			let changeIds = [];
@@ -145,8 +145,8 @@ class EventsDataHandler {
 			cursor: cursor
 		});
 		return {
-			pullRequests: data.node.pullRequests.nodes,
-			pageInfo: data.node.pullRequests.pageInfo
+			pullRequests: data.nodes[0].pullRequests.nodes,
+			pageInfo: data.node[0].pullRequests.pageInfo
 		};
 	}
 
