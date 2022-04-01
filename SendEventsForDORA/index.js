@@ -146,7 +146,7 @@ class EventsDataHandler {
 		});
 		return {
 			pullRequests: data.nodes[0].pullRequests.nodes,
-			pageInfo: data.node[0].pullRequests.pageInfo
+			pageInfo: data.nodes[0].pullRequests.pageInfo
 		};
 	}
 
