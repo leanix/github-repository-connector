@@ -71,6 +71,11 @@ class EventsDataHandler {
 
 		// filter only those pullReqs which are less than 30 days
 		let pullRequestsBelow30Days = repoPullRequestInfo[0].pullRequests.nodes.filter((pullReq) => new Date(pullReq.mergedAt) >= last30day && repoPullRequestInfo[0].defaultBranchRef.name == pullReq.baseRefName);
+		if(pullRequestsBelow30Days.length > 0) {
+			await this.logger.logInfo(this.context, `Started sending events for repo : ${repoPullRequestInfo[0].name}`)
+		} else {
+			await this.logger.logInfo(this.context, `NO valid events for repo: ${repoPullRequestInfo[0].name}`)
+		}
 		for (let pullReq of pullRequestsBelow30Days) {
 			let commits = await this.getAllCommitsForPullRequest(pullReq.id);
 			let changeIds = [];
@@ -93,6 +98,7 @@ class EventsDataHandler {
 				pullReq.mergedAt,
 				changeIds
 			);
+			await this.logger.logInfo(this.context, `Completed sending events for repo : ${repoPullRequestInfo[0].name}`)
 		}
 	}
 
