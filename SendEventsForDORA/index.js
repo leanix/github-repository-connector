@@ -8,9 +8,12 @@ module.exports = async function (
 	{ repositoriesIds, host, ghToken, lxToken, orgName, metadata: { connectorLoggingUrl, runId, progressCallbackUrl } }
 ) {
 	const handler = new EventsDataHandler(context, connectorLoggingUrl, progressCallbackUrl, runId, new GitHubClient(ghToken));
+	let result = [];
 	for (let repoId of repositoriesIds) {
-		await handler.sendEventsForRepo(repoId, host, lxToken, orgName);
+		let eventsSent = await handler.sendEventsForRepo(repoId, host, lxToken, orgName);
+		result.push(eventsSent);
 	}
+	return result;
 };
 
 class EventsDataHandler {
@@ -25,6 +28,7 @@ class EventsDataHandler {
 		let baseUrl = `https://${host}/services/valuestreams/v1/api`;
 		let bearerToken = await getAccessToken(host, lxToken);
 		let initialPullRequestPageCount = 100;
+		let eventsCount = 0;
 		const data = await this.graphqlClient.query({
 			query: `
 		query getReposPullRequestsData($repoIds: [ID!]!, $pullReqPageCount: Int!, $cursor: String) {
@@ -59,7 +63,7 @@ class EventsDataHandler {
 			cursor: null
 		});
 		let repoPullRequestInfo = data.nodes;
-		let last30day = new Date(getISODateStringOnFromToday(90));
+		let last30day = new Date(getISODateStringOnFromToday(30));
 		if (repoPullRequestInfo[0].pullRequests.nodes && repoPullRequestInfo[0].pullRequests.nodes.length > 0) {
 			let lastPRInListMergeDate = new Date(
 				repoPullRequestInfo[0].pullRequests.nodes[repoPullRequestInfo[0].pullRequests.nodes.length - 1].mergedAt
@@ -70,11 +74,17 @@ class EventsDataHandler {
 		}
 
 		// filter only those pullReqs which are less than 30 days
-		let pullRequestsBelow30Days = repoPullRequestInfo[0].pullRequests.nodes.filter((pullReq) => new Date(pullReq.mergedAt) >= last30day && repoPullRequestInfo[0].defaultBranchRef.name == pullReq.baseRefName);
-		if(pullRequestsBelow30Days.length > 0) {
-			await this.logger.logInfo(this.context, `Started sending events for repo : ${repoPullRequestInfo[0].name}`)
+		let pullRequestsBelow30Days = repoPullRequestInfo[0].pullRequests.nodes.filter(
+			(pullReq) => new Date(pullReq.mergedAt) >= last30day && repoPullRequestInfo[0].defaultBranchRef.name == pullReq.baseRefName
+		);
+		if (pullRequestsBelow30Days.length > 0) {
+			await this.logger.logInfo(this.context, `Started sending events for repo : ${repoPullRequestInfo[0].name}`);
 		} else {
-			await this.logger.logInfo(this.context, `NO valid events for repo: ${repoPullRequestInfo[0].name}`)
+			await this.logger.logInfo(this.context, `NO valid events for repo: ${repoPullRequestInfo[0].name}`);
+			return {
+				repoName: repoPullRequestInfo[0].name,
+				eventsCount: eventsCount
+			}; 
 		}
 		for (let pullReq of pullRequestsBelow30Days) {
 			let commits = await this.getAllCommitsForPullRequest(pullReq.id);
@@ -89,6 +99,7 @@ class EventsDataHandler {
 					commit.author.email
 				);
 				changeIds.push(commit.oid);
+				eventsCount += 1;
 			}
 			await this.registerReleaseEventInVSM(
 				baseUrl,
@@ -98,14 +109,19 @@ class EventsDataHandler {
 				pullReq.mergedAt,
 				changeIds
 			);
-			await this.logger.logInfo(this.context, `Completed sending events for repo : ${repoPullRequestInfo[0].name}`)
+			eventsCount += 1;
 		}
+		await this.logger.logInfo(this.context, `Completed sending events for repo : ${repoPullRequestInfo[0].name} events sent is ${eventsCount}`);
+		return {
+			repoName: repoPullRequestInfo[0].name,
+			eventsCount: eventsCount
+		};
 	}
 
 	async getAllPRsForRepo(repoInfo) {
 		let prCursor = null;
 		let finalResult = [];
-		let last30day = new Date(getISODateStringOnFromToday(90));
+		let last30day = new Date(getISODateStringOnFromToday(30));
 		do {
 			var { pullRequests, pageInfo } = await this.getPagedPullRequests({ repoId: repoInfo.id, cursor: prCursor });
 			finalResult = finalResult.concat(pullRequests);
@@ -224,7 +240,7 @@ class EventsDataHandler {
 		});
 		try {
 			await changeEventClient.post('/events', {
-				"author": author
+				author: author
 			});
 		} catch (e) {
 			this.logger.logError(this.context, `Error while registerig change event: ${e.message}`);
@@ -247,7 +263,7 @@ class EventsDataHandler {
 		});
 		try {
 			await releaseEventClient.post('/events', {
-				"changeIds": changeIds
+				changeIds: changeIds
 			});
 		} catch (e) {
 			this.logger.logError(this.context, `Error while registerig release event: ${e.message}`);

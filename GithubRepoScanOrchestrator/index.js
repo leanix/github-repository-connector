@@ -11,7 +11,7 @@ const { DateTime } = require('luxon');
 const Util = require('../Lib/helper');
 
 const MAX_CAPACITY = 100;
-
+const MAX_EVENT_REGISTER_CAPACITY = 20;
 class LdifProcessor {
 	constructor(context, logger) {
 		this.context = context;
@@ -20,8 +20,8 @@ class LdifProcessor {
 
 	*processForLdif() {
 		const {
-			connectorConfiguration: { orgName, repoNamesExcludeList, flags, host },
-			secretsConfiguration: { ghToken, lxToken },
+			connectorConfiguration: { orgName, repoNamesExcludeList, flags },
+			secretsConfiguration: { ghToken },
 			ldifResultUrl,
 			progressCallbackUrl,
 			bindingKey,
@@ -53,7 +53,8 @@ class LdifProcessor {
 			this.context.df.isReplaying,
 			'Fetching complete repo information from collected repo ids.'
 		);
-
+		
+		let eventsSent = {}
 		if (flags && flags.sendEventsForDORA === false) {
 			yield this.logger.logInfoFromOrchestrator(
 				this.context,
@@ -61,16 +62,8 @@ class LdifProcessor {
 				`Events will not be processed. reason: 'sendEventsForDORA' flag is false`
 			);
 		} else {
-			yield this.context.df.callActivity('SendEventsForDORA', {
-				repositoriesIds,
-				host,
-				ghToken,
-				lxToken,
-				orgName,
-				metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
-			});
+			eventsSent = yield* this.sendEventsForDORA(repositoriesIds)
 		}
-		
 		const partialResults = yield* this.fetchReposDataConcurrently(repositoriesIds);
 
 		yield this.context.df.callActivity('UpdateProgressToIHub', {
@@ -125,6 +118,7 @@ class LdifProcessor {
 			partialResults,
 			teamResults,
 			repoIdsVisibilityMap,
+			eventsSent,
 			blobStorageSasUrl: ldifResultUrl,
 			metadata: {
 				bindingKey,
@@ -137,6 +131,47 @@ class LdifProcessor {
 			totalRepositories: repositoriesIds.length,
 			totalTeams: teamResults.length
 		};
+	}
+
+	*sendEventsForDORA(repositoriesIds, maxConcurrentWorkers = 3) {
+		const {
+			secretsConfiguration: { ghToken, lxToken },
+			connectorConfiguration: { host, orgName },
+			connectorLoggingUrl,
+			runId,
+			progressCallbackUrl
+		} = this.context.bindingData.input;
+
+		const scannerCapacity = MAX_EVENT_REGISTER_CAPACITY;
+		const allRepoIdsSetToRegisterEvents = [];
+		for (let i = 0, j = repositoriesIds.length; i < j; i += scannerCapacity) {
+			allRepoIdsSetToRegisterEvents.push(repositoriesIds.slice(i, i + scannerCapacity));
+		}
+
+		const completePartialResults = [];
+		const workingGroups = [];
+		for (let i = 0, j = allRepoIdsSetToRegisterEvents.length; i < j; i += maxConcurrentWorkers) {
+			workingGroups.push(allRepoIdsSetToRegisterEvents.slice(i, i + maxConcurrentWorkers));
+		}
+
+		for (const workingGroup of workingGroups) {
+			const output = [];
+			for (const workingGroupElement of workingGroup) {
+				output.push( this.context.df.callActivity('SendEventsForDORA', {
+					repositoriesIds: workingGroupElement,
+					host,
+					ghToken,
+					lxToken,
+					orgName,
+					metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
+				})
+				);
+			}
+			const partialResults = yield this.context.df.Task.all(output);
+			completePartialResults.push(...partialResults);
+		}
+
+		return completePartialResults;
 	}
 
 	*fetchReposDataConcurrently(repositoriesIds, maxConcurrentWorkers = 4) {
