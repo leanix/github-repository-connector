@@ -10,11 +10,11 @@ const ldifHeader = {
 
 module.exports = async function (
 	context,
-	{ partialResults, teamResults, repoIdsVisibilityMap, eventsSent, blobStorageSasUrl, metadata: { bindingKey, orgName, flags } }
+	{ partialResults, teamResults, repoIdsVisibilityMap, blobStorageSasUrl, metadata: { bindingKey, orgName, flags } }
 ) {
 	let handler = new SaveLdifToStorageHandler(context, orgName, flags);
 	const contentArray = handler.handleLdifCreation(partialResults, teamResults, repoIdsVisibilityMap);
-	return await handler.uploadToBlob(handler.getFinalLdif(contentArray, bindingKey, eventsSent), blobStorageSasUrl);
+	return await handler.uploadToBlob(handler.getFinalLdif(contentArray, bindingKey), blobStorageSasUrl);
 };
 
 class SaveLdifToStorageHandler {
@@ -205,7 +205,7 @@ class SaveLdifToStorageHandler {
 	 * @param {Array} contentArray array containing respository info
 	 * @param bindingKey
 	 */
-	getFinalLdif(contentArray, bindingKey, eventsSent) {
+	getFinalLdif(contentArray, bindingKey) {
 		ldifHeader.connectorType = bindingKey.connectorType;
 		ldifHeader.connectorId = bindingKey.connectorId;
 		ldifHeader.connectorVersion = bindingKey.connectorVersion;
@@ -223,8 +223,7 @@ class SaveLdifToStorageHandler {
 				orgName: this.orgName,
 				flags: {
 					...this.flags
-				},
-				eventsData: eventsSent
+				}
 			},
 			...ldifContent
 		};

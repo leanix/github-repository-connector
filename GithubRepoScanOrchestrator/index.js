@@ -53,17 +53,7 @@ class LdifProcessor {
 			this.context.df.isReplaying,
 			'Fetching complete repo information from collected repo ids.'
 		);
-		
-		let eventsSent = {}
-		if (flags && flags.sendEventsForDORA === false) {
-			yield this.logger.logInfoFromOrchestrator(
-				this.context,
-				this.context.df.isReplaying,
-				`Events will not be processed. reason: 'sendEventsForDORA' flag is false`
-			);
-		} else {
-			eventsSent = yield* this.sendEventsForDORA(repositoriesIds)
-		}
+
 		const partialResults = yield* this.fetchReposDataConcurrently(repositoriesIds);
 
 		yield this.context.df.callActivity('UpdateProgressToIHub', {
@@ -96,6 +86,27 @@ class LdifProcessor {
 			message: 'Progress 40%'
 		});
 		const repoIdsVisibilityMap = yield* this.fetchRepoVisibility();
+
+		if (flags && flags.sendEventsForDORA === false) {
+			yield this.logger.logInfoFromOrchestrator(
+				this.context,
+				this.context.df.isReplaying,
+				`Events will not be processed. reason: 'sendEventsForDORA' flag is false`
+			);
+		} else {
+			yield this.logger.logInfoFromOrchestrator(
+				this.context,
+				this.context.df.isReplaying,
+				`Starting events processing to send required data for DORA metrics calculation. reason: 'sendEventsForDORA' flag is true`
+			);
+			yield* this.sendEventsForDORA(repositoriesIds);
+			yield this.logger.logInfoFromOrchestrator(
+				this.context,
+				this.context.df.isReplaying,
+				'Successfully processed and sent events data required for DORA metrics calculation.'
+			);
+		}
+
 		yield this.logger.logInfoFromOrchestrator(
 			this.context,
 			this.context.df.isReplaying,
@@ -107,18 +118,10 @@ class LdifProcessor {
 			message: 'Progress: 90%: Successfully requested the data from GitHub'
 		});
 
-		
-		yield this.logger.logInfoFromOrchestrator(
-			this.context,
-			this.context.df.isReplaying,
-			'Successfully generated LDIF and saved into storage'
-		);
-
 		yield this.context.df.callActivity('SaveLdifToStorage', {
 			partialResults,
 			teamResults,
 			repoIdsVisibilityMap,
-			eventsSent,
 			blobStorageSasUrl: ldifResultUrl,
 			metadata: {
 				bindingKey,
@@ -126,6 +129,12 @@ class LdifProcessor {
 				flags
 			}
 		});
+
+		yield this.logger.logInfoFromOrchestrator(
+			this.context,
+			this.context.df.isReplaying,
+			'Successfully generated LDIF and saved into storage'
+		);
 
 		return {
 			totalRepositories: repositoriesIds.length,
@@ -157,14 +166,15 @@ class LdifProcessor {
 		for (const workingGroup of workingGroups) {
 			const output = [];
 			for (const workingGroupElement of workingGroup) {
-				output.push( this.context.df.callActivity('SendEventsForDORA', {
-					repositoriesIds: workingGroupElement,
-					host,
-					ghToken,
-					lxToken,
-					orgName,
-					metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
-				})
+				output.push(
+					this.context.df.callActivity('SendEventsForDORA', {
+						repositoriesIds: workingGroupElement,
+						host,
+						ghToken,
+						lxToken,
+						orgName,
+						metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
+					})
 				);
 			}
 			const partialResults = yield this.context.df.Task.all(output);
@@ -379,7 +389,13 @@ module.exports = df.orchestrator(function* (context) {
 
 	try {
 		const { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId, bindingKey } = context.bindingData.input;
-		yield context.df.callActivity('TestConnector', { connectorConfiguration, secretsConfiguration, connectorLoggingUrl, runId, bindingKey });
+		yield context.df.callActivity('TestConnector', {
+			connectorConfiguration,
+			secretsConfiguration,
+			connectorLoggingUrl,
+			runId,
+			bindingKey
+		});
 		const processor = new LdifProcessor(context, logger);
 		const logDataMetricsInfo = yield* processor.processForLdif();
 		yield context.df.callActivityWithRetry('UpdateProgressToIHub', retryOptions, {

@@ -99,7 +99,7 @@ class TestConnectorValidator {
 			);
 		}
 
-		if (flags && flags.sendEventsForDORA && !this.isValidWorkspaceToken(host, lxToken, workspaceId)) {
+		if (flags && flags.sendEventsForDORA && !(await this.isValidWorkspaceToken(host, lxToken, workspaceId))) {
 			await logger.logError(
 				this.context,
 				`Failed! Error: lxToken provided belongs to a different workspace. Hint: Please provide lxToken belonging to current workspace Id = ${workspaceId} `

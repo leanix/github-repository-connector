@@ -36,7 +36,6 @@ class EventsDataHandler {
 			  id
 			  ... on Repository {
 				name
-				description
 				defaultBranchRef {
 				  name
 				}
@@ -84,7 +83,7 @@ class EventsDataHandler {
 			return {
 				repoName: repoPullRequestInfo[0].name,
 				eventsCount: eventsCount
-			}; 
+			};
 		}
 		for (let pullReq of pullRequestsBelow30Days) {
 			let commits = await this.getAllCommitsForPullRequest(pullReq.id);
@@ -111,7 +110,10 @@ class EventsDataHandler {
 			);
 			eventsCount += 1;
 		}
-		await this.logger.logInfo(this.context, `Completed sending events for repo : ${repoPullRequestInfo[0].name} events sent is ${eventsCount}`);
+		await this.logger.logInfo(
+			this.context,
+			`Completed sending events for repo : ${repoPullRequestInfo[0].name} events sent is ${eventsCount}`
+		);
 		return {
 			repoName: repoPullRequestInfo[0].name,
 			eventsCount: eventsCount
