@@ -68,7 +68,7 @@ class TestConnectorValidator {
 		});
 	}
 
-	async isValidWorkspaceToken({ host, lxToken, workspaceId }) {
+	async isValidWorkspaceToken(host, lxToken, workspaceId) {
 		try {
 			var bearerToken = await Util.getAccessToken(host, lxToken);
 			var decoded = jwt_decode(bearerToken);
@@ -95,9 +95,9 @@ class TestConnectorValidator {
 	async test() {
 		const { orgName, repoNamesExcludeList, flags, monoRepoManifestFileName, host } = this.input.connectorConfiguration;
 		const { ghToken, lxToken } = this.input.secretsConfiguration;
-		const { workspaceId } = this.input.bindingKey.lxWorkspace;
+		const workspaceId = this.input.bindingKey.lxWorkspace;
 		const logger = getLoggerInstanceFromContext(this.context);
-		const DORA_FEATURE_FLAG = 'vsm.integrations.dora';
+		const DORA_FEATURE_FLAG = 'integration.vsm.dora';
 		await logger.logInfo(this.context, 'Checking input validity and correctness');
 		if (!orgName) {
 			await logger.logError(this.context, 'GitHub organisation name cannot be empty');
@@ -119,21 +119,24 @@ class TestConnectorValidator {
 			);
 		}
 
-		if (flags && flags.sendEventsForDORA && !(await this.isValidWorkspaceToken(host, lxToken, workspaceId))) {
-			await logger.logError(
-				this.context,
-				`Failed! Error: lxToken provided belongs to a different workspace. Hint: Please provide lxToken belonging to current workspace Id = ${workspaceId} `
-			);
-			throw new Error(
-				`Failed! Error: lxToken provided belongs to a different workspace. Hint: Please provide lxToken belonging to current workspace Id = ${workspaceId} `
-			);
-		}
-
-		const isDoraFeatureFlagEnabled = await this.isFeatureFlagEnabled(await Util.getAccessToken(host, lxToken), DORA_FEATURE_FLAG);
-
-		if (flags && flags.sendEventsForDORA && !isDoraFeatureFlagEnabled) {
-			await logger.logInfo(this.context, `${DORA_FEATURE_FLAG} Feature flag is not ENABLED on workspace ${workspaceId}`);
-			throw new Error(`Failed! Error: Feature Flag for Dora is not Enabled. Hint: Please contact your CSM to Enable ${DORA_FEATURE_FLAG} `);
+		if (flags && flags.sendEventsForDORA) {
+			const isDoraFeatureFlagEnabled = await this.isFeatureFlagEnabled(await Util.getAccessToken(host, lxToken), DORA_FEATURE_FLAG);
+			if (!isDoraFeatureFlagEnabled) {
+				await logger.logError(this.context, `${DORA_FEATURE_FLAG} Feature flag is not ENABLED on workspace ${workspaceId}`);
+				throw new Error(
+					`Failed! Error: Feature Flag for Dora is not Enabled. Hint: Please enable activate DORA integration from 'Integrations' tab. You could also contact your CSM to enable ${DORA_FEATURE_FLAG} `
+				);
+			}
+			const isValidWorkspaceToken = await this.isValidWorkspaceToken(host, lxToken, workspaceId);
+			if (!isValidWorkspaceToken) {
+				await logger.logError(
+					this.context,
+					`Failed! Error: lxToken provided belongs to a different workspace. Hint: Please provide lxToken belonging to current workspace Id = ${workspaceId} `
+				);
+				throw new Error(
+					`Failed! Error: lxToken provided belongs to a different workspace. Hint: Please provide lxToken belonging to current workspace Id = ${workspaceId} `
+				);
+			}
 		}
 
 		try {

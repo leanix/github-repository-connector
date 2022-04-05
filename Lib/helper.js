@@ -88,6 +88,10 @@ class Util {
 			.then((axiosResponse) => axiosResponse.data)
 			.then((response) => response.access_token);
 	}
+
+	static getEventsServiceBaseUrl(host) {
+		return `https://${host}/services/valuestreams/v1/api`;
+	}
 }
 
 module.exports = Util;

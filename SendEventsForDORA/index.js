@@ -1,5 +1,5 @@
 const GitHubClient = require('../Lib/GitHubClient');
-const { getISODateStringOnFromToday, getAccessToken } = require('../Lib/helper');
+const { getISODateStringOnFromToday, getAccessToken, getEventsServiceBaseUrl } = require('../Lib/helper');
 const { getLoggerInstanceFromUrlAndRunId } = require('../Lib/connectorLogger');
 const axios = require('axios');
 
@@ -7,7 +7,7 @@ module.exports = async function (
 	context,
 	{ repositoriesIds, host, ghToken, lxToken, orgName, metadata: { connectorLoggingUrl, runId, progressCallbackUrl } }
 ) {
-	const handler = new EventsDataHandler(context, connectorLoggingUrl, progressCallbackUrl, runId, new GitHubClient(ghToken));
+	const handler = new EventsDataHandler(context, connectorLoggingUrl, progressCallbackUrl, runId, new GitHubClient(ghToken), host);
 	let result = [];
 	for (let repoId of repositoriesIds) {
 		let eventsSent = await handler.sendEventsForRepo(repoId, host, lxToken, orgName);
@@ -17,15 +17,15 @@ module.exports = async function (
 };
 
 class EventsDataHandler {
-	constructor(context, connectorLoggingUrl, progressCallbackUrl, runId, graphqlClient) {
+	constructor(context, connectorLoggingUrl, progressCallbackUrl, runId, graphqlClient, host) {
 		this.context = context;
 		this.graphqlClient = graphqlClient;
 		this.logger = getLoggerInstanceFromUrlAndRunId(connectorLoggingUrl, runId);
 		this.graphqlClient.setLogger(this.logger, this.context, progressCallbackUrl);
+		this.baseUrl = getEventsServiceBaseUrl(host);
 	}
 
 	async sendEventsForRepo(repoId, host, lxToken, orgName) {
-		let baseUrl = `https://${host}/services/valuestreams/v1/api`;
 		let bearerToken = await getAccessToken(host, lxToken);
 		let initialPullRequestPageCount = 100;
 		let eventsCount = 0;
@@ -90,7 +90,6 @@ class EventsDataHandler {
 			let changeIds = [];
 			for (let commit of commits) {
 				await this.registerChangeEventInVSM(
-					baseUrl,
 					bearerToken,
 					commit.oid,
 					`${orgName}/${repoPullRequestInfo[0].name}`,
@@ -101,7 +100,6 @@ class EventsDataHandler {
 				eventsCount += 1;
 			}
 			await this.registerReleaseEventInVSM(
-				baseUrl,
 				bearerToken,
 				pullReq.headRefOid,
 				`${orgName}/${repoPullRequestInfo[0].name}`,
@@ -226,9 +224,9 @@ class EventsDataHandler {
 		};
 	}
 
-	async registerChangeEventInVSM(baseUrl, bearerToken, ceId, ceSource, ceTime, author) {
+	async registerChangeEventInVSM(bearerToken, ceId, ceSource, ceTime, author) {
 		let changeEventClient = axios.create({
-			baseURL: baseUrl,
+			baseURL: this.baseUrl,
 			headers: {
 				'Ce-Specversion': '1.0',
 				'Ce-Type': 'net.leanix.valuestreams.change',
@@ -249,9 +247,9 @@ class EventsDataHandler {
 		}
 	}
 
-	async registerReleaseEventInVSM(baseUrl, bearerToken, ceId, ceSource, ceTime, changeIds) {
+	async registerReleaseEventInVSM(bearerToken, ceId, ceSource, ceTime, changeIds) {
 		let releaseEventClient = axios.create({
-			baseURL: baseUrl,
+			baseURL: this.baseUrl,
 			headers: {
 				'Ce-Specversion': '1.0',
 				'Ce-Type': 'net.leanix.valuestreams.release',
