@@ -95,7 +95,7 @@ class TestConnectorValidator {
 	async test() {
 		const { orgName, repoNamesExcludeList, flags, monoRepoManifestFileName, host } = this.input.connectorConfiguration;
 		const { ghToken, lxToken } = this.input.secretsConfiguration;
-		const { workspaceId } = this.bindingKey.lxWorkspace;
+		const { workspaceId } = this.input.bindingKey.lxWorkspace;
 		const logger = getLoggerInstanceFromContext(this.context);
 		const DORA_FEATURE_FLAG = 'vsm.integrations.dora';
 		await logger.logInfo(this.context, 'Checking input validity and correctness');
@@ -119,7 +119,7 @@ class TestConnectorValidator {
 			);
 		}
 
-		if (flags && flags.sendEventsForDORA && !this.isValidWorkspaceToken(host, lxToken, workspaceId)) {
+		if (flags && flags.sendEventsForDORA && !(await this.isValidWorkspaceToken(host, lxToken, workspaceId))) {
 			await logger.logError(
 				this.context,
 				`Failed! Error: lxToken provided belongs to a different workspace. Hint: Please provide lxToken belonging to current workspace Id = ${workspaceId} `

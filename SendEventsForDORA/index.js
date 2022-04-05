@@ -1,15 +1,19 @@
 const GitHubClient = require('../Lib/GitHubClient');
-const { getISODateStringOnFromToday } = require('../Lib/helper');
+const { getISODateStringOnFromToday, getAccessToken } = require('../Lib/helper');
 const { getLoggerInstanceFromUrlAndRunId } = require('../Lib/connectorLogger');
+const axios = require('axios');
 
 module.exports = async function (
 	context,
 	{ repositoriesIds, host, ghToken, lxToken, orgName, metadata: { connectorLoggingUrl, runId, progressCallbackUrl } }
 ) {
 	const handler = new EventsDataHandler(context, connectorLoggingUrl, progressCallbackUrl, runId, new GitHubClient(ghToken));
+	let result = [];
 	for (let repoId of repositoriesIds) {
-		await handler.sendEventsForRepo(repoId, null);
+		let eventsSent = await handler.sendEventsForRepo(repoId, host, lxToken, orgName);
+		result.push(eventsSent);
 	}
+	return result;
 };
 
 class EventsDataHandler {
@@ -20,8 +24,11 @@ class EventsDataHandler {
 		this.graphqlClient.setLogger(this.logger, this.context, progressCallbackUrl);
 	}
 
-	async sendEventsForRepo(repoId, cursor) {
+	async sendEventsForRepo(repoId, host, lxToken, orgName) {
+		let baseUrl = `https://${host}/services/valuestreams/v1/api`;
+		let bearerToken = await getAccessToken(host, lxToken);
 		let initialPullRequestPageCount = 100;
+		let eventsCount = 0;
 		const data = await this.graphqlClient.query({
 			query: `
 		query getReposPullRequestsData($repoIds: [ID!]!, $pullReqPageCount: Int!, $cursor: String) {
@@ -29,7 +36,6 @@ class EventsDataHandler {
 			  id
 			  ... on Repository {
 				name
-				description
 				defaultBranchRef {
 				  name
 				}
@@ -40,9 +46,11 @@ class EventsDataHandler {
 					hasNextPage
 				  }
 				  nodes {
+					id
 					baseRefName
 					headRefName
 					mergedAt
+					headRefOid
 				  }
 				}
 			  }
@@ -51,270 +59,216 @@ class EventsDataHandler {
 		`,
 			repoIds: [repoId],
 			pullReqPageCount: initialPullRequestPageCount,
-			cursor: cursor
+			cursor: null
 		});
-	}
-	async getReposCommitHistoryData(repoIds) {
-		try {
-			let data = await this.graphqlClient.query({
-				query: `
-							query getReposData($repoIds:[ID!]!, $contributorHistorySince: GitTimestamp!){
-									nodes(ids: $repoIds){
-											id
-											... on Repository {
-													defaultBranchRef {
-															name
-															target {
-																	... on Commit {
-																			id
-																			history(since: $contributorHistorySince) {
-																					edges {
-																							node {
-																								 committer {
-																								 user {
-																										name
-																								 }
-																								 email
-																								 }
-																							}
-																					}
-																			}
-																	}
-															}
-														}    
-													}
-											}
-									}
-					`,
-				repoIds,
-				contributorHistorySince: getISODateStringOnFromToday()
-			});
-			return data.nodes;
-		} catch (e) {
-			this.context.log(`Failed to get repository commit history data, falling back to empty list. Error - ${e.message}`);
-			return [];
-		}
-	}
-
-	mapRepoInfoToCommitHistory(repoInfos, reposCommitHistory) {
-		for (const repoInfo of repoInfos) {
-			let history = reposCommitHistory.find((history) => history.id === repoInfo.id);
-			repoInfo.defaultBranchRef = history ? history.defaultBranchRef : null;
-		}
-
-		return repoInfos;
-	}
-
-	async getReposData(repoIds, { detectMonoRepos, manifestFileName }) {
-		const initialLanguagePageSize = 50;
-		const data = await this.graphqlClient.query({
-			query: `
-            query getReposData($repoIds:[ID!]!, $languagePageCount: Int!){
-                nodes(ids: $repoIds){
-                    id
-                    ... on Repository {
-                        name
-                        url
-                        description
-                        isArchived
-                        languages(first: $languagePageCount) {
-                            pageInfo {
-                                endCursor
-                                hasNextPage
-                            }
-                            edges{
-                                size
-                                node{
-                                    id
-                                    name
-                                }
-                            }
-                        }
-                        repositoryTopics(first: 10) {
-                            nodes {
-                                topic {
-                                    id
-                                    name
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-        `,
-			repoIds,
-			languagePageCount: initialLanguagePageSize
-		});
-
-		let repoInfos = data.nodes;
-		for (let repoInfo of repoInfos) {
-			if (repoInfo.languages.pageInfo.hasNextPage) {
-				repoInfo.languages.nodes = await this.getAllLanguagesForRepo(repoInfo);
-			}
-		}
-
-		const reposCommitHistoryData = await this.getReposCommitHistoryData(repoIds);
-		repoInfos = this.mapRepoInfoToCommitHistory(repoInfos, reposCommitHistoryData);
-
-		if (detectMonoRepos && manifestFileName) {
-			const monoRepoWithSubReposData = {};
-			for (let repoId of repoIds) {
-				monoRepoWithSubReposData[repoId] = await this.searchSubRepos(repoId, manifestFileName);
-			}
-			repoInfos = this.mapRepoInfoToMonoRepoInfo(repoInfos, monoRepoWithSubReposData);
-		} else {
-			await this.logger.logInfo(
-				this.context,
-				'Skipping mono repo detection. reason: detectMonoRepos is false or manifestFileName is not provided'
+		let repoPullRequestInfo = data.nodes;
+		let last30day = new Date(getISODateStringOnFromToday(30));
+		if (repoPullRequestInfo[0].pullRequests.nodes && repoPullRequestInfo[0].pullRequests.nodes.length > 0) {
+			let lastPRInListMergeDate = new Date(
+				repoPullRequestInfo[0].pullRequests.nodes[repoPullRequestInfo[0].pullRequests.nodes.length - 1].mergedAt
 			);
+			if (lastPRInListMergeDate >= last30day && repoPullRequestInfo[0].pullRequests.pageInfo.hasNextPage) {
+				repoPullRequestInfo[0].pullRequests.nodes = await this.getAllPRsForRepo(repoPullRequestInfo[0]);
+			}
 		}
 
-		return repoInfos;
+		// filter only those pullReqs which are less than 30 days
+		let pullRequestsBelow30Days = repoPullRequestInfo[0].pullRequests.nodes.filter(
+			(pullReq) => new Date(pullReq.mergedAt) >= last30day && repoPullRequestInfo[0].defaultBranchRef.name == pullReq.baseRefName
+		);
+		if (pullRequestsBelow30Days.length > 0) {
+			await this.logger.logInfo(this.context, `Started sending events for repo : ${repoPullRequestInfo[0].name}`);
+		} else {
+			await this.logger.logInfo(this.context, `NO valid events for repo: ${repoPullRequestInfo[0].name}`);
+			return {
+				repoName: repoPullRequestInfo[0].name,
+				eventsCount: eventsCount
+			};
+		}
+		for (let pullReq of pullRequestsBelow30Days) {
+			let commits = await this.getAllCommitsForPullRequest(pullReq.id);
+			let changeIds = [];
+			for (let commit of commits) {
+				await this.registerChangeEventInVSM(
+					baseUrl,
+					bearerToken,
+					commit.oid,
+					`${orgName}/${repoPullRequestInfo[0].name}`,
+					commit.committedDate,
+					commit.author.email
+				);
+				changeIds.push(commit.oid);
+				eventsCount += 1;
+			}
+			await this.registerReleaseEventInVSM(
+				baseUrl,
+				bearerToken,
+				pullReq.headRefOid,
+				`${orgName}/${repoPullRequestInfo[0].name}`,
+				pullReq.mergedAt,
+				changeIds
+			);
+			eventsCount += 1;
+		}
+		await this.logger.logInfo(
+			this.context,
+			`Completed sending events for repo : ${repoPullRequestInfo[0].name} events sent is ${eventsCount}`
+		);
+		return {
+			repoName: repoPullRequestInfo[0].name,
+			eventsCount: eventsCount
+		};
 	}
 
-	async getAllLanguagesForRepo(repoInfo) {
-		let languageCursor = null;
+	async getAllPRsForRepo(repoInfo) {
+		let prCursor = null;
 		let finalResult = [];
-
+		let last30day = new Date(getISODateStringOnFromToday(30));
 		do {
-			var { languages, pageInfo } = await this.getPagedLanguages({ repoId: repoInfo.id, cursor: languageCursor });
-			finalResult = finalResult.concat(languages);
-			languageCursor = pageInfo.endCursor;
+			var { pullRequests, pageInfo } = await this.getPagedPullRequests({ repoId: repoInfo.id, cursor: prCursor });
+			finalResult = finalResult.concat(pullRequests);
+			let lastPRInListMergeDate = new Date(pullRequests[pullRequests.length - 1].mergedAt);
+			if (lastPRInListMergeDate >= last30day) {
+				return finalResult;
+			}
+			prCursor = pageInfo.endCursor;
 		} while (pageInfo.hasNextPage);
 
 		return finalResult;
 	}
 
-	async getPagedLanguages({ repoId, cursor }) {
-		const languagePageSize = 100;
+	async getPagedPullRequests({ repoId, cursor }) {
+		const pullReqPageSize = 100;
 		const data = await this.graphqlClient.query({
 			query: `
-            query getLanguagesForRepo($repoId: ID!, $pageCount: Int!, $cursor: String) {
-                node(id: $repoId) {
-                    id
-                    ... on Repository {
-                        languages(first: $pageCount, after: $cursor) {
-                            pageInfo {
-                                endCursor
-                                hasNextPage
-                            }
-                            edges{
-                                size
-                                node{
-                                    id
-                                    name
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        `,
-			repoId,
-			cursor,
-			pageCount: languagePageSize
+		query getReposPullRequestsData($repoIds: [ID!]!, $pullReqPageCount: Int!, $cursor: String) {
+			nodes(ids: $repoIds) {
+			  id
+			  ... on Repository {
+				name
+				pullRequests(first: $pullReqPageCount, states: [MERGED], after: $cursor,  orderBy: {direction: DESC, field: UPDATED_AT}) {
+				  totalCount
+				  pageInfo {
+					endCursor
+					hasNextPage
+				  }
+				  nodes {
+					id
+					baseRefName
+					headRefName
+					mergedAt
+					headRefOid
+				  }
+				}
+			  }
+			}
+		  }
+		`,
+			repoIds: [repoId],
+			pullReqPageCount: pullReqPageSize,
+			cursor: cursor
 		});
 		return {
-			languages: data.node.languages.nodes,
-			pageInfo: data.node.languages.pageInfo
+			pullRequests: data.nodes[0].pullRequests.nodes,
+			pageInfo: data.nodes[0].pullRequests.pageInfo
 		};
 	}
 
-	async searchSubRepos(repoId, manifestFileName) {
-		try {
-			let data = await this.graphqlClient.query({
-				query: `
-					 query getReposData($repoIds: [ID!]!) {
-						nodes(ids: $repoIds) {
-								id
-								... on Repository {
-									isArchived
-									name
-									url
-									description
-									object(expression: "HEAD:") {
-										 ... on Tree {
-												 entries {
-														 name
-														 type
-														 object {
-																... on Tree {
-																		 entries {
-																				 name
-																				 type
-																		 }
-																}
-														 }
-												 }
-										 }
-									}
-								}
+	async getAllCommitsForPullRequest(pullReqId) {
+		let commitCursor = null;
+		let finalResult = [];
+		do {
+			var { commits, pageInfo } = await this.getPagedCommitsForPullRequest(pullReqId, commitCursor);
+			finalResult = finalResult.concat(commits);
+			commitCursor = pageInfo.endCursor;
+		} while (pageInfo.hasNextPage);
+
+		return finalResult;
+	}
+
+	async getPagedCommitsForPullRequest(pullReqId, cursor) {
+		let initialCommitPageCount = 100;
+		const data = await this.graphqlClient.query({
+			query: `query getPullRequestCommits($pullReqIds: [ID!]!, $initialCommitPageCount: Int!, $cursor: String) {
+				nodes(ids: $pullReqIds) {
+				  id
+				  ... on PullRequest {
+					headRefName
+					commits(first:$initialCommitPageCount, after: $cursor) {
+					  totalCount
+					  pageInfo{
+						hasNextPage
+						endCursor
+					  }
+					  nodes {
+						commit {
+						  changedFiles
+						  committedDate
+						  oid
+						  id
+						  author {
+							name
+							email
+						  }
 						}
-				 }
-				`,
-				repoIds: [repoId]
+					  }
+					}
+				  }
+				}
+			  }`,
+			pullReqIds: pullReqId,
+			initialCommitPageCount: initialCommitPageCount,
+			cursor: cursor
+		});
+		return {
+			commits: data.nodes[0].commits.nodes.map((node) => node.commit),
+			pageInfo: data.nodes[0].commits.pageInfo
+		};
+	}
+
+	async registerChangeEventInVSM(baseUrl, bearerToken, ceId, ceSource, ceTime, author) {
+		let changeEventClient = axios.create({
+			baseURL: baseUrl,
+			headers: {
+				'Ce-Specversion': '1.0',
+				'Ce-Type': 'net.leanix.valuestreams.change',
+				'Ce-Id': ceId,
+				'Ce-Source': ceSource,
+				'Ce-Time': ceTime,
+				'Ce-Datacontenttype': 'application/json',
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${bearerToken}`
+			}
+		});
+		try {
+			await changeEventClient.post('/events', {
+				author: author
 			});
-			const repoWithTree = data.nodes[0];
-			const firstLevelEntries = repoWithTree.object ? repoWithTree.object.entries : [];
-			if (firstLevelEntries.length === 0) {
-				await this.logger.logInfo(
-					this.context,
-					`Monorepo detection warning: Skipping repository for sub repositories search. Reason: Empty repository. Repository Id: ${repoId}`
-				);
-				return [];
-			}
-			let secondLevel = firstLevelEntries.filter((entry) => entry.type === 'tree');
-
-			const subRepos = [];
-			for (const e of secondLevel) {
-				if (!e.object || !e.object.entries) {
-					await this.logger.logInfo(
-						this.context,
-						`Monorepo detection warning: Skipping repository for sub repositories search. Reason: Invalid repository structure. Repository Id: ${repoId}`
-					);
-					continue;
-				}
-				const subRepoMarkerFound = e.object.entries.find((entry) => entry.name === manifestFileName && entry.type === 'blob');
-				if (subRepoMarkerFound) {
-					subRepos.push({
-						monoRepoHashId: repoId,
-						monoRepoName: repoWithTree.name,
-						name: e.name,
-						isSubRepo: true
-					});
-				}
-			}
-
-			return subRepos;
 		} catch (e) {
-			await this.logger.logInfo(
-				this.context,
-				`Failed to get repository tree structure data to detect sub-repos, falling back to empty list. Repository Id: ${repoId}. Error: ${e.message}`
-			);
-			return [];
+			this.logger.logError(this.context, `Error while registerig change event: ${e.message}`);
 		}
 	}
 
-	async mapRepoInfoToMonoRepoInfo(repoInfos, monoRepoWithSubReposData) {
-		for (const [repoId, subRepos] of Object.entries(monoRepoWithSubReposData)) {
-			const repoInfo = repoInfos.find((repoInfo) => repoInfo.id === repoId);
-			if (!repoInfo) {
-				await this.logger.logError(
-					this.context,
-					`Should not happen: Failed to find repo info for mono repo with sub-repos. Repository hash Id: ${repoId}`
-				);
-				continue;
+	async registerReleaseEventInVSM(baseUrl, bearerToken, ceId, ceSource, ceTime, changeIds) {
+		let releaseEventClient = axios.create({
+			baseURL: baseUrl,
+			headers: {
+				'Ce-Specversion': '1.0',
+				'Ce-Type': 'net.leanix.valuestreams.release',
+				'Ce-Id': ceId,
+				'Ce-Source': ceSource,
+				'Ce-Time': ceTime,
+				'Ce-Datacontenttype': 'application/json',
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${bearerToken}`
 			}
-			if (subRepos.length > 0) {
-				repoInfo.isMonoRepo = true;
-			}
+		});
+		try {
+			await releaseEventClient.post('/events', {
+				changeIds: changeIds
+			});
+		} catch (e) {
+			this.logger.logError(this.context, `Error while registerig release event: ${e.message}`);
 		}
-
-		const combinedRepoInfos = [...repoInfos];
-		for (let subRepos of Object.values(monoRepoWithSubReposData)) {
-			combinedRepoInfos.push(...subRepos);
-		}
-
-		return combinedRepoInfos;
 	}
 }

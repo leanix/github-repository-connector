@@ -246,6 +246,16 @@
 					},
 					{
 						"key": {
+							"expr": "vsmEventId.externalId"
+						},
+						"values": [
+							{
+								"expr": "${content.id}"
+							}
+						]
+					},
+					{
+						"key": {
 							"expr": "description"
 						},
 						"values": [
@@ -338,6 +348,16 @@
 							},
 							{
 								"expr": "${data.name} (Copy ${integration.now.getYear()}-${integration.now.getMonthValue()<10?'0':''}${integration.now.getMonthValue()}-${integration.now.getDayOfMonth()<10?'0':''}${integration.now.getDayOfMonth()} ${integration.now.getHour()<10?'0':''}${integration.now.getHour()}:${integration.now.getMinute()<10?'0':''}${integration.now.getMinute()})"
+							}
+						]
+					},
+					{
+						"key": {
+							"expr": "vsmEventId.externalId"
+						},
+						"values": [
+							{
+								"expr": "${content.id}"
 							}
 						]
 					},
