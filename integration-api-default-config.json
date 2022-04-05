@@ -56,6 +56,9 @@
 				"tags": 100
 			}
 		},
+		"credentials": {
+			"useTechnicalUser": true
+		},
 		"processors": [
 			{
 				"processorType": "variableProcessor",
