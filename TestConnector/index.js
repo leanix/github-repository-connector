@@ -2,6 +2,7 @@
 const Util = require('../Lib/helper');
 const jwt_decode = require('jwt-decode');
 const { getLoggerInstanceFromContext } = require('../Lib/connectorLogger');
+const axios = require('axios');
 
 module.exports = async function (context, input) {
 	if (process.env.LX_DEV_SKIP_TEST_CONNECTOR_CHECKS) {
@@ -31,6 +32,24 @@ class TestConnectorValidator {
 				throw new Error('A regular expression provided in the input field repoNamesExcludeList is invalid.');
 			}
 		}
+	}
+
+	async isFeatureFlagEnabled(bearerToken, featureFlag) {
+		const workspaceId = this.input.bindingKey.lxWorkspace;
+		const host = this.input.connectorConfiguration.host;
+		return await axios
+			.get(`https://${host}/services/mtm/v1/workspaces/${workspaceId}/featureBundle`, {
+				headers: { Authorization: `Bearer ${bearerToken}` }
+			})
+			.then((axiosResponse) => axiosResponse.data.data)
+			.then((featureBundle) => featureBundle.features.find((f) => f.id === featureFlag))
+			.then((vsmFeature) => {
+				this.context.log(`Test connector: Find result for ${featureFlag} feature in feature bundle - ${JSON.stringify(vsmFeature)}`);
+				return !!(vsmFeature.status && vsmFeature.status === 'ENABLED');
+			})
+			.catch((e) => {
+				throw new Error(`Failed to perform data sync direction check. Error: ${e.message}`);
+			});
 	}
 
 	async pingForRequiredDataAccess(orgName) {
@@ -78,6 +97,7 @@ class TestConnectorValidator {
 		const { ghToken, lxToken } = this.input.secretsConfiguration;
 		const { workspaceId } = this.input.bindingKey.lxWorkspace;
 		const logger = getLoggerInstanceFromContext(this.context);
+		const DORA_FEATURE_FLAG = 'vsm.integrations.dora';
 		await logger.logInfo(this.context, 'Checking input validity and correctness');
 		if (!orgName) {
 			await logger.logError(this.context, 'GitHub organisation name cannot be empty');
@@ -107,6 +127,13 @@ class TestConnectorValidator {
 			throw new Error(
 				`Failed! Error: lxToken provided belongs to a different workspace. Hint: Please provide lxToken belonging to current workspace Id = ${workspaceId} `
 			);
+		}
+
+		const isDoraFeatureFlagEnabled = await this.isFeatureFlagEnabled(await Util.getAccessToken(host, lxToken), DORA_FEATURE_FLAG);
+
+		if (flags && flags.sendEventsForDORA && !isDoraFeatureFlagEnabled) {
+			await logger.logInfo(this.context, `${DORA_FEATURE_FLAG} Feature flag is not ENABLED on workspace ${workspaceId}`);
+			throw new Error(`Failed! Error: Feature Flag for Dora is not Enabled. Hint: Please contact your CSM to Enable ${DORA_FEATURE_FLAG} `);
 		}
 
 		try {
