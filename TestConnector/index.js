@@ -48,7 +48,7 @@ class TestConnectorValidator {
 				return !!(vsmFeature.status && vsmFeature.status === 'ENABLED');
 			})
 			.catch((e) => {
-				throw new Error(`Failed to perform data sync direction check. Error: ${e.message}`);
+				throw new Error(`Failed to check for DORA feature flag status on the workspace. Error: ${e.message}`);
 			});
 	}
 
@@ -90,6 +90,28 @@ class TestConnectorValidator {
 		 * */
 		const manifestFileNameRegex = /[a-zA-Z0-9-_]+\.?\S+/gs;
 		return manifestFileNameRegex.test(manifestFileName);
+	}
+
+	isValidHostName(host) {
+		if (!host) {
+			return false;
+		}
+		/**
+		 * Allow any valid file name with/without extension
+		 * */
+		const hostNameRegex = /\w+-*\w+.leanix.net/gs;
+		return hostNameRegex.test(host);
+	}
+
+	isValidLxToken(lxToken) {
+		if (!lxToken) {
+			return false;
+		}
+		/**
+		 * Allow any valid file name with/without extension
+		 * */
+		const lxTokenRegex = /\w{40}/gs;
+		return lxTokenRegex.test(lxToken);
 	}
 
 	async test() {
@@ -136,6 +158,22 @@ class TestConnectorValidator {
 		}
 
 		if (flags && flags.sendEventsForDORA) {
+			const isValidHost = await this.isValidHostName(host);
+			if (!isValidHost) {
+				await logger.logError(this.context, `Host name provided is NOT valid`);
+				throw new Error(
+					`Failed! Error: Host name provided is either empty or NOT valid. Hint: Please make sure your host name ends with '<XYZ>.leanix.net' `
+				);
+			}
+
+			const isValidLxToken = await this.isValidLxToken(host);
+			if (!isValidLxToken) {
+				await logger.logError(this.context, `lxToken provided is NOT valid`);
+				throw new Error(
+					`Failed! Error: lxToken provided is either empty or NOT valid. Hint: Please make sure to create a correct technical user token with admin permissions`
+				);
+			}
+
 			const isDoraFeatureFlagEnabled = await this.isFeatureFlagEnabled(await Util.getAccessToken(host, lxToken), DORA_FEATURE_FLAG);
 			if (!isDoraFeatureFlagEnabled) {
 				await logger.logError(this.context, `${DORA_FEATURE_FLAG} Feature flag is not ENABLED on workspace ${workspaceId}`);
