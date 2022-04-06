@@ -11,7 +11,7 @@ const { DateTime } = require('luxon');
 const Util = require('../Lib/helper');
 
 const MAX_CAPACITY = 100;
-const MAX_EVENT_REGISTER_CAPACITY = 15;
+const MAX_EVENT_REGISTER_CAPACITY = 20;
 class LdifProcessor {
 	constructor(context, logger) {
 		this.context = context;
