@@ -94,7 +94,7 @@ class TestConnectorValidator {
 
 	async test() {
 		const { orgName, repoNamesExcludeList, repoNamesIncludeList, flags, monoRepoManifestFileName, repoNamesFilterStrategy, host } =
-		this.input.connectorConfiguration;
+			this.input.connectorConfiguration;
 		const { ghToken, lxToken } = this.input.secretsConfiguration;
 		const workspaceId = this.input.bindingKey.lxWorkspace;
 		const DORA_FEATURE_FLAG = 'integration.vsm.dora';
