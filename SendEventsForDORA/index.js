@@ -243,7 +243,10 @@ class EventsDataHandler {
 				author: author
 			});
 		} catch (e) {
-			this.logger.logError(this.context, `Error while registerig change event: ${e.message}`);
+			await this.logger.logError(
+				this.context,
+				`Failed to register change event, for the repo : ${ceSource} with commit SHA: ${ceId} commited at: ${ceTime}. Will ignore for now and continue to register other events. Error: ${e.message}`
+			);
 		}
 	}
 
@@ -266,7 +269,10 @@ class EventsDataHandler {
 				changeIds: changeIds
 			});
 		} catch (e) {
-			this.logger.logError(this.context, `Error while registerig release event: ${e.message}`);
+			await this.logger.logError(
+				this.context,
+				`Failed to register release event, for the repo : ${ceSource} with PR headRefOid: ${ceId} merged at: ${ceTime}. Will ignore for now and continue to register other events. Error: ${e.message}`
+			);
 		}
 	}
 }
