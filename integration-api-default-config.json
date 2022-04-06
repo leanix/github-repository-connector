@@ -253,6 +253,9 @@
 						},
 						"values": [
 							{
+								"expr": "${lx.factsheet.description}"
+							},
+							{
 								"expr": "${data.description}"
 							}
 						]
@@ -349,6 +352,9 @@
 							"expr": "description"
 						},
 						"values": [
+							{
+								"expr": "${lx.factsheet.description}"
+							},
 							{
 								"expr": "${data.description}"
 							}
