@@ -263,6 +263,9 @@
 						},
 						"values": [
 							{
+								"expr": "${lx.factsheet.description}"
+							},
+							{
 								"expr": "${data.description}"
 							}
 						]
@@ -309,7 +312,7 @@
 					}
 				],
 				"read": {
-					"fields": ["name", "category"]
+					"fields": ["name", "category", "description"]
 				},
 				"variables": [
 					{
@@ -370,6 +373,9 @@
 						},
 						"values": [
 							{
+								"expr": "${lx.factsheet.description}"
+							},
+							{
 								"expr": "${data.description}"
 							}
 						]
@@ -396,7 +402,7 @@
 					}
 				],
 				"read": {
-					"fields": ["name", "category"]
+					"fields": ["name", "category", "description"]
 				},
 				"variables": [
 					{
