@@ -166,7 +166,7 @@ class TestConnectorValidator {
 				);
 			}
 
-			const isValidLxToken = await this.isValidLxToken(host);
+			const isValidLxToken = await this.isValidLxToken(lxToken);
 			if (!isValidLxToken) {
 				await logger.logError(this.context, `lxToken provided is NOT valid`);
 				throw new Error(
