@@ -75,7 +75,7 @@ class GetAllRepositoriesForOrgHandler {
 
 		if (!finalResult || !finalResult.length) {
 			await this.logger.logError(this.context, `Zero repositories found in ${orgName} GitHub organisation.`);
-			throw new Error(`Zero repositories found in ${orgName} GitHub organisation.`);
+			throw new Error(`Zero repositories found in ${orgName} GitHub organisation. Hint: In case organisation is valid, check if the inclusion list has at least one valid repository name. or select the "Exclude" strategy with empty list to allow all repositories.`);
 		}
 
 		await this.logger.logInfo(this.context, `Fetched Org Repositories Ids. Result : ${finalResult.length.toString()} repos`);
