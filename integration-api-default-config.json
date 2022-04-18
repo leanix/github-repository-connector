@@ -210,14 +210,14 @@
 				"updates": [
 					{
 						"key": {
-						  "expr": "githubId.externalId"
+							"expr": "githubId.externalId"
 						},
 						"values": [
-						  {
-							"expr": "${'team/'.concat(lx.factsheet.githubId)}"
-						  }
+							{
+								"expr": "${'team/'.concat(lx.factsheet.githubId)}"
+							}
 						]
-					  }
+					}
 				],
 				"read": {
 					"fields": ["name", "githubId"]

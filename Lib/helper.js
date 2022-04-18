@@ -7,7 +7,7 @@ class Util {
 	}
 
 	static externalId() {
-		const teamFactSheetExternalIdPrefix  = 'team';
+		const teamFactSheetExternalIdPrefix = 'team';
 		return {
 			repository: function (orgName, repoData) {
 				/**
