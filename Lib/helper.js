@@ -7,6 +7,7 @@ class Util {
 	}
 
 	static externalId() {
+		const teamFactSheetExternalIdPrefix  = 'team';
 		return {
 			repository: function (orgName, repoData) {
 				/**
@@ -24,7 +25,7 @@ class Util {
 				if (!orgName || !teamData) {
 					throw new Error('Failed to generate team external ID');
 				}
-				return `${orgName}/${teamData.name}`;
+				return `${teamFactSheetExternalIdPrefix}/${orgName}/${teamData.name}`;
 			},
 			language: function (langData) {
 				if (!langData) {
