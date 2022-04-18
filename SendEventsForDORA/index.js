@@ -1,13 +1,21 @@
 const GitHubClient = require('../Lib/GitHubClient');
+const HttpClient = require('../Lib/HttpClient');
 const { getISODateStringOnFromToday, getAccessToken, getEventsServiceBaseUrl } = require('../Lib/helper');
 const { getLoggerInstanceFromUrlAndRunId } = require('../Lib/connectorLogger');
-const axios = require('axios');
 
 module.exports = async function (
 	context,
 	{ repositoriesIds, host, ghToken, lxToken, orgName, metadata: { connectorLoggingUrl, runId, progressCallbackUrl } }
 ) {
-	const handler = new EventsDataHandler(context, connectorLoggingUrl, progressCallbackUrl, runId, new GitHubClient(ghToken), host);
+	const handler = new EventsDataHandler(
+		context,
+		connectorLoggingUrl,
+		progressCallbackUrl,
+		runId,
+		new GitHubClient(ghToken),
+		host,
+		new HttpClient()
+	);
 	let result = [];
 	for (let repoId of repositoriesIds) {
 		let eventsSent = await handler.sendEventsForRepo(repoId, host, lxToken, orgName);
@@ -17,11 +25,13 @@ module.exports = async function (
 };
 
 class EventsDataHandler {
-	constructor(context, connectorLoggingUrl, progressCallbackUrl, runId, graphqlClient, host) {
+	constructor(context, connectorLoggingUrl, progressCallbackUrl, runId, graphqlClient, host, httpClient) {
 		this.context = context;
 		this.graphqlClient = graphqlClient;
+		this.httpClient = httpClient;
 		this.logger = getLoggerInstanceFromUrlAndRunId(connectorLoggingUrl, runId);
 		this.graphqlClient.setLogger(this.logger, this.context, progressCallbackUrl);
+		this.httpClient.setLogger(this.logger, this.context, progressCallbackUrl);
 		this.baseUrl = getEventsServiceBaseUrl(host);
 	}
 
@@ -225,23 +235,18 @@ class EventsDataHandler {
 	}
 
 	async registerChangeEventInVSM(bearerToken, ceId, ceSource, ceTime, author) {
-		let changeEventClient = axios.create({
-			baseURL: this.baseUrl,
-			headers: {
-				'Ce-Specversion': '1.0',
-				'Ce-Type': 'net.leanix.valuestreams.change',
-				'Ce-Id': ceId,
-				'Ce-Source': ceSource,
-				'Ce-Time': ceTime,
-				'Ce-Datacontenttype': 'application/json',
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${bearerToken}`
-			}
-		});
+		let headers = {
+			'Ce-Specversion': '1.0',
+			'Ce-Type': 'net.leanix.valuestreams.change',
+			'Ce-Id': ceId,
+			'Ce-Source': ceSource,
+			'Ce-Time': ceTime,
+			'Ce-Datacontenttype': 'application/json',
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${bearerToken}`
+		};
 		try {
-			await changeEventClient.post('/events', {
-				author: author
-			});
+			await this.httpClient.queryPostFn()(`${this.baseUrl}/events`, headers, { author: author });
 		} catch (e) {
 			await this.logger.logError(
 				this.context,
@@ -251,23 +256,18 @@ class EventsDataHandler {
 	}
 
 	async registerReleaseEventInVSM(bearerToken, ceId, ceSource, ceTime, changeIds) {
-		let releaseEventClient = axios.create({
-			baseURL: this.baseUrl,
-			headers: {
-				'Ce-Specversion': '1.0',
-				'Ce-Type': 'net.leanix.valuestreams.release',
-				'Ce-Id': ceId,
-				'Ce-Source': ceSource,
-				'Ce-Time': ceTime,
-				'Ce-Datacontenttype': 'application/json',
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${bearerToken}`
-			}
-		});
+		let headers = {
+			'Ce-Specversion': '1.0',
+			'Ce-Type': 'net.leanix.valuestreams.release',
+			'Ce-Id': ceId,
+			'Ce-Source': ceSource,
+			'Ce-Time': ceTime,
+			'Ce-Datacontenttype': 'application/json',
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${bearerToken}`
+		};
 		try {
-			await releaseEventClient.post('/events', {
-				changeIds: changeIds
-			});
+			await this.httpClient.queryPostFn()(`${this.baseUrl}/events`, headers, { changeIds: changeIds });
 		} catch (e) {
 			await this.logger.logError(
 				this.context,
