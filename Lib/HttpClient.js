@@ -2,12 +2,15 @@ const UpdateProgressToIHub = require('../UpdateProgressToIHub');
 const IHubStatus = require('./IHubStatus');
 const { DateTime } = require('luxon');
 const axios = require('axios');
-
+const Agent = require('agentkeepalive');
 const RETRY_WAIT = 10; // 10 seconds
 
 class HttpClient {
 	constructor() {
 		this.lastUpdated = DateTime.now();
+		this.axiosInstance = axios.create({
+			httpAgent: new Agent({ maxSockets: 10, timeout: 60000, freeSocketTimeout: 30000 })
+		});
 	}
 
 	setLogger(logger, context, progressCallbackUrl) {
@@ -20,7 +23,7 @@ class HttpClient {
 		return this.query();
 	}
 
-	query(method = 'POST') {
+	query() {
 		return async (url, headers, data, iHubUpdateStatusMessage = 'In Progress') => {
 			if (this.lastUpdated.diffNow('minutes').minutes < -5) {
 				await UpdateProgressToIHub(this.context, {
@@ -31,12 +34,7 @@ class HttpClient {
 				this.lastUpdated = DateTime.now();
 			}
 			try {
-				return await axios({
-					method,
-					url,
-					headers,
-					data
-				});
+				return await this.axiosInstance.post(url, data, { headers: headers });
 			} catch (error) {
 				if (
 					error.message.includes('Request failed with status code 429') ||
@@ -59,13 +57,8 @@ class HttpClient {
 						message: 'Connector Awake: retrying to register event'
 					});
 					this.lastUpdated = DateTime.now();
-					let response = await axios({
-						method,
-						url,
-						headers,
-						data
-					});
-					if (response.status === 200) {
+					let response = await this.axiosInstance.post(url, data, { headers: headers });
+					if (200 <= response.status < 300) {
 						return response.data;
 					}
 				}
