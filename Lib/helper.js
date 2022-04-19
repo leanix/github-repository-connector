@@ -24,7 +24,7 @@ class Util {
 				if (!orgName || !teamData) {
 					throw new Error('Failed to generate team external ID');
 				}
-				return `${orgName}/${teamData.name}`;
+				return `team/${orgName}/${teamData.name}`;
 			},
 			language: function (langData) {
 				if (!langData) {

@@ -178,6 +178,53 @@
 			},
 			{
 				"processorType": "inboundFactSheet",
+				"processorName": "Migrate existing GitHub External IDs",
+				"processorDescription": "Update the existing Team FactSheets to reflect new External ID format (team/org/<team name>)",
+				"type": "Team",
+				"filter": {
+					"advanced": "${integration.contentIndex == 0}",
+					"onRead": "${!lx.factsheet.githubId.startsWith('team/')}"
+				},
+				"identifier": {
+					"search": {
+						"scope": {
+							"ids": [],
+							"facetFilters": [
+								{
+									"keys": ["Team"],
+									"facetKey": "FactSheetTypes",
+									"operator": "AND"
+								},
+								{
+									"keys": ["${integration.tags.getTagId('Data Source','GitHub Repository')}"],
+									"facetKey": "${integration.tags.getTagGroupId('Data Source')}",
+									"operator": "AND"
+								}
+							]
+						},
+						"filter": "true",
+						"multipleMatchesAllowed": true
+					}
+				},
+				"run": 1,
+				"updates": [
+					{
+						"key": {
+							"expr": "githubId.externalId"
+						},
+						"values": [
+							{
+								"expr": "${'team/'.concat(lx.factsheet.githubId)}"
+							}
+						]
+					}
+				],
+				"read": {
+					"fields": ["name", "githubId"]
+				}
+			},
+			{
+				"processorType": "inboundFactSheet",
 				"processorName": "update-archived-swa",
 				"processorDescription": "This inboundFactSheet updates a SWA FS which is archived in source system",
 				"type": "Microservice",
