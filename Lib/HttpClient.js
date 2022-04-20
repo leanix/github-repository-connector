@@ -28,7 +28,7 @@ class HttpClient {
 		return this.query();
 	}
 
-	query() {
+	query(method = 'POST') {
 		return async (url, headers, data, iHubUpdateStatusMessage = 'In Progress') => {
 			if (this.lastUpdated.diffNow('minutes').minutes < -5) {
 				await UpdateProgressToIHub(this.context, {
@@ -40,7 +40,12 @@ class HttpClient {
 			}
 			try {
 				await sleep(WAIT_AFTER_POST_CALL);
-				let response = await this.axiosInstance.post(url, data, { headers: headers });
+				let response = await this.axiosInstance.request({
+					method,
+					url,
+					headers,
+					data
+				});
 				if (isSuccessfulHttpCode(response.status)) {
 					return response.data;
 				}
@@ -66,7 +71,12 @@ class HttpClient {
 						message: 'Connector Awake: retrying to register event'
 					});
 					this.lastUpdated = DateTime.now();
-					let response = await this.axiosInstance.post(url, data, { headers: headers });
+					let response = await this.axiosInstance.request({
+						method,
+						url,
+						headers,
+						data
+					});
 					if (isSuccessfulHttpCode(response.status)) {
 						return response.data;
 					}
