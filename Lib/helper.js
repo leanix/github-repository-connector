@@ -24,7 +24,7 @@ class Util {
 				if (!orgName || !teamData) {
 					throw new Error('Failed to generate team external ID');
 				}
-				return `${orgName}/${teamData.name}`;
+				return `team/${orgName}/${teamData.name}`;
 			},
 			language: function (langData) {
 				if (!langData) {
@@ -91,6 +91,10 @@ class Util {
 
 	static getEventsServiceBaseUrl(host) {
 		return `https://${host}/services/valuestreams/v1/api`;
+	}
+
+	static isSuccessfulHttpCode(code) {
+		return 200 <= code < 300;
 	}
 }
 

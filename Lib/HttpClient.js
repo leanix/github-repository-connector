@@ -1,15 +1,20 @@
 const UpdateProgressToIHub = require('../UpdateProgressToIHub');
 const IHubStatus = require('./IHubStatus');
 const { DateTime } = require('luxon');
+const { isSuccessfulHttpCode } = require('../Lib/helper');
 const axios = require('axios');
-const Agent = require('agentkeepalive');
+const HttpsAgent = require('agentkeepalive').HttpsAgent;
+const HttpAgent = require('agentkeepalive');
+
 const RETRY_WAIT = 10; // 10 seconds
+const WAIT_AFTER_POST_CALL = 100; // 100 milli seconds
 
 class HttpClient {
 	constructor() {
 		this.lastUpdated = DateTime.now();
 		this.axiosInstance = axios.create({
-			httpAgent: new Agent({ maxSockets: 10, timeout: 60000, freeSocketTimeout: 30000 })
+			httpsAgent: new HttpsAgent({ maxSockets: 10, timeout: 60000, freeSocketTimeout: 30000 }),
+			httpAgent: new HttpAgent({ maxSockets: 10, timeout: 60000, freeSocketTimeout: 30000 })
 		});
 	}
 
@@ -34,7 +39,11 @@ class HttpClient {
 				this.lastUpdated = DateTime.now();
 			}
 			try {
-				return await this.axiosInstance.post(url, data, { headers: headers });
+				await sleep(WAIT_AFTER_POST_CALL);
+				let response = await this.axiosInstance.post(url, data, { headers: headers });
+				if (isSuccessfulHttpCode(response.status)) {
+					return response.data;
+				}
 			} catch (error) {
 				if (
 					error.message.includes('Request failed with status code 429') ||
@@ -58,7 +67,7 @@ class HttpClient {
 					});
 					this.lastUpdated = DateTime.now();
 					let response = await this.axiosInstance.post(url, data, { headers: headers });
-					if (200 <= response.status < 300) {
+					if (isSuccessfulHttpCode(response.status)) {
 						return response.data;
 					}
 				}
