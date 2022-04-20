@@ -31,13 +31,13 @@ class HttpClient {
 				this.lastUpdated = DateTime.now();
 			}
 			try {
+				await sleep(WAIT_AFTER_POST_CALL);
 				let response = await axios({
 					method,
 					url,
 					headers,
 					data
 				});
-				await sleep(WAIT_AFTER_POST_CALL);
 				if (200 <= response.status < 300) {
 					return response.data;
 				}
@@ -69,7 +69,6 @@ class HttpClient {
 						headers,
 						data
 					});
-					await sleep(WAIT_AFTER_POST_CALL);
 					if (200 <= response.status < 300) {
 						return response.data;
 					}
