@@ -3,12 +3,19 @@ const IHubStatus = require('./IHubStatus');
 const { DateTime } = require('luxon');
 const { isSuccessfulHttpCode } = require('../Lib/helper');
 const axios = require('axios');
+const HttpsAgent = require('agentkeepalive').HttpsAgent;
+const HttpAgent = require('agentkeepalive');
 
 const RETRY_WAIT = 10; // 10 seconds
 const WAIT_AFTER_POST_CALL = 100; // 100 milli seconds
+
 class HttpClient {
 	constructor() {
 		this.lastUpdated = DateTime.now();
+		this.axiosInstance = axios.create({
+			httpsAgent: new HttpsAgent({ maxSockets: 10, timeout: 60000, freeSocketTimeout: 30000 }),
+			httpAgent: new HttpAgent({ maxSockets: 10, timeout: 60000, freeSocketTimeout: 30000 })
+		});
 	}
 
 	setLogger(logger, context, progressCallbackUrl) {
@@ -33,7 +40,7 @@ class HttpClient {
 			}
 			try {
 				await sleep(WAIT_AFTER_POST_CALL);
-				let response = await axios({
+				let response = await this.axiosInstance.request({
 					method,
 					url,
 					headers,
@@ -64,7 +71,7 @@ class HttpClient {
 						message: 'Connector Awake: retrying to register event'
 					});
 					this.lastUpdated = DateTime.now();
-					let response = await axios({
+					let response = await this.axiosInstance.request({
 						method,
 						url,
 						headers,
