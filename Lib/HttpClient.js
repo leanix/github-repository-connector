@@ -1,6 +1,7 @@
 const UpdateProgressToIHub = require('../UpdateProgressToIHub');
 const IHubStatus = require('./IHubStatus');
 const { DateTime } = require('luxon');
+const { isSuccessfulHttpCode } = require('../Lib/helper');
 const axios = require('axios');
 
 const RETRY_WAIT = 10; // 10 seconds
@@ -38,7 +39,7 @@ class HttpClient {
 					headers,
 					data
 				});
-				if (200 <= response.status < 300) {
+				if (isSuccessfulHttpCode(response.status)) {
 					return response.data;
 				}
 			} catch (error) {
@@ -69,7 +70,7 @@ class HttpClient {
 						headers,
 						data
 					});
-					if (200 <= response.status < 300) {
+					if (isSuccessfulHttpCode(response.status)) {
 						return response.data;
 					}
 				}
