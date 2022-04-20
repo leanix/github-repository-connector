@@ -1,10 +1,11 @@
 const UpdateProgressToIHub = require('../UpdateProgressToIHub');
 const IHubStatus = require('./IHubStatus');
 const { DateTime } = require('luxon');
+const { isSuccessfulHttpCode } = require('../Lib/helper');
 const axios = require('axios');
 
 const RETRY_WAIT = 10; // 10 seconds
-
+const WAIT_AFTER_POST_CALL = 100; // 100 milli seconds
 class HttpClient {
 	constructor() {
 		this.lastUpdated = DateTime.now();
@@ -31,12 +32,16 @@ class HttpClient {
 				this.lastUpdated = DateTime.now();
 			}
 			try {
-				return await axios({
+				await sleep(WAIT_AFTER_POST_CALL);
+				let response = await axios({
 					method,
 					url,
 					headers,
 					data
 				});
+				if (isSuccessfulHttpCode(response.status)) {
+					return response.data;
+				}
 			} catch (error) {
 				if (
 					error.message.includes('Request failed with status code 429') ||
@@ -65,7 +70,7 @@ class HttpClient {
 						headers,
 						data
 					});
-					if (response.status === 200) {
+					if (isSuccessfulHttpCode(response.status)) {
 						return response.data;
 					}
 				}

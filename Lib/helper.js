@@ -92,6 +92,10 @@ class Util {
 	static getEventsServiceBaseUrl(host) {
 		return `https://${host}/services/valuestreams/v1/api`;
 	}
+
+	static isSuccessfulHttpCode(code) {
+		return 200 <= code < 300;
+	}
 }
 
 module.exports = Util;
