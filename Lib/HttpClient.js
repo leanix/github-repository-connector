@@ -4,7 +4,7 @@ const { DateTime } = require('luxon');
 const axios = require('axios');
 
 const RETRY_WAIT = 10; // 10 seconds
-
+const WAIT_AFTER_POST_CALL = 100; // 100 milli seconds
 class HttpClient {
 	constructor() {
 		this.lastUpdated = DateTime.now();
@@ -31,12 +31,16 @@ class HttpClient {
 				this.lastUpdated = DateTime.now();
 			}
 			try {
-				return await axios({
+				let response = await axios({
 					method,
 					url,
 					headers,
 					data
 				});
+				await sleep(WAIT_AFTER_POST_CALL);
+				if (200 <= response.status < 300) {
+					return response.data;
+				}
 			} catch (error) {
 				if (
 					error.message.includes('Request failed with status code 429') ||
@@ -65,7 +69,8 @@ class HttpClient {
 						headers,
 						data
 					});
-					if (response.status === 200) {
+					await sleep(WAIT_AFTER_POST_CALL);
+					if (200 <= response.status < 300) {
 						return response.data;
 					}
 				}
