@@ -168,20 +168,35 @@ class LdifProcessor {
 
 		for (const workingGroup of workingGroups) {
 			const output = [];
-			for (const workingGroupElement of workingGroup) {
-				output.push(
-					this.context.df.callActivity('SendEventsForDORA', {
-						repositoriesIds: workingGroupElement,
-						host,
-						ghToken,
-						lxToken,
-						orgName,
-						metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
-					})
-				);
+			try {
+				for (const workingGroupElement of workingGroup) {
+					output.push(
+						this.context.df.callActivity('SendEventsForDORA', {
+							repositoriesIds: workingGroupElement,
+							host,
+							ghToken,
+							lxToken,
+							orgName,
+							metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
+						})
+					);
+				}
+				const partialResults = yield this.context.df.Task.all(output);
+				completePartialResults.push(...partialResults);
+			} catch (e) {
+				let [limitExceeded, reset] = Util.isRateLimitExceededError(e);
+				if (limitExceeded) {
+					yield this.logger.logInfoFromOrchestrator(
+						this.context,
+						this.context.df.isReplaying,
+						`GitHub GraphQL API rate limit exceeded while registering events to DORA. Attempting to automatically recover. Reset after: ${reset}`
+					);
+					yield* this.sleepWithTimelyIHubUpdate(`Progress 50%`);
+					workingGroups.push(workingGroup);
+				} else {
+					throw e;
+				}
 			}
-			const partialResults = yield this.context.df.Task.all(output);
-			completePartialResults.push(...partialResults);
 		}
 
 		return completePartialResults;
