@@ -21,7 +21,7 @@ class HttpClient {
 		return this.query();
 	}
 
-	getFn() {
+	queryGetFn() {
 		return this.query('GET');
 	}
 

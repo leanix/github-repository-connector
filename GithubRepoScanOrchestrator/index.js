@@ -274,7 +274,7 @@ class LdifProcessor {
 		return completePartialResults;
 	}
 
-	*getAllMonoReposWithSubRepos(allRepos) {
+	getAllMonoReposWithSubRepos(allRepos) {
 		let monoRepos = [];
 		for (let i = 0; i < allRepos.length; i++) {
 			for (let j = 0; j < allRepos[i].length; j++) {

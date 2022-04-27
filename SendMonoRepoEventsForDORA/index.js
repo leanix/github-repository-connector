@@ -262,7 +262,7 @@ class EventsDataHandler {
 			let headers = {
 				authorization: `token ${ghToken}`
 			};
-			let commitsInfo = await this.httpClient.getFn()(`https://api.github.com/repos/${ceSource}/commits/${commit.oid}`, headers, {});
+			let commitsInfo = await this.httpClient.queryGetFn()(`https://api.github.com/repos/${ceSource}/commits/${commit.oid}`, headers, {});
 			return commitsInfo.files;
 		} catch (e) {
 			await this.logger.logError(this.context, `Error: ${e.message}`);
@@ -322,8 +322,6 @@ class EventsDataHandler {
 		};
 		try {
 			await this.httpClient.queryPostFn()(`${this.baseUrl}/events`, headers, data);
-			console.log('Sending event headers: ' + JSON.stringify(headers));
-			console.log('Sending event data: ' + JSON.stringify(data));
 		} catch (e) {
 			await this.logger.logError(
 				this.context,
@@ -345,8 +343,6 @@ class EventsDataHandler {
 		};
 		try {
 			await this.httpClient.queryPostFn()(`${this.baseUrl}/events`, headers, { changeIds: changeIds });
-			console.log('Sending release event headers: ' + JSON.stringify(headers));
-			console.log('Sending release event changeIds: ' + JSON.stringify(changeIds));
 		} catch (e) {
 			await this.logger.logError(
 				this.context,
