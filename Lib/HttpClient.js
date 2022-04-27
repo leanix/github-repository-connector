@@ -28,6 +28,10 @@ class HttpClient {
 		return this.query();
 	}
 
+	queryGetFn() {
+		return this.query('GET');
+	}
+
 	query(method = 'POST') {
 		return async (url, headers, data, iHubUpdateStatusMessage = 'In Progress') => {
 			if (this.lastUpdated.diffNow('minutes').minutes < -5) {

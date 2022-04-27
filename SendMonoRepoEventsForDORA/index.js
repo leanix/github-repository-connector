@@ -5,7 +5,7 @@ const { getLoggerInstanceFromUrlAndRunId } = require('../Lib/connectorLogger');
 
 module.exports = async function (
 	context,
-	{ repositoriesIds, host, ghToken, lxToken, orgName, metadata: { connectorLoggingUrl, runId, progressCallbackUrl } }
+	{ monoReposWithSubRepos, host, ghToken, lxToken, orgName, metadata: { connectorLoggingUrl, runId, progressCallbackUrl } }
 ) {
 	const handler = new EventsDataHandler(
 		context,
@@ -17,8 +17,8 @@ module.exports = async function (
 		new HttpClient()
 	);
 	let result = [];
-	for (let repoId of repositoriesIds) {
-		let eventsSent = await handler.sendEventsForRepo(repoId, host, lxToken, orgName);
+	for (let monoRepo of monoReposWithSubRepos) {
+		let eventsSent = await handler.sendEventsForRepo(monoRepo, host, lxToken, orgName, ghToken);
 		result.push(eventsSent);
 	}
 	return result;
@@ -35,7 +35,9 @@ class EventsDataHandler {
 		this.baseUrl = getEventsServiceBaseUrl(host);
 	}
 
-	async sendEventsForRepo(repoId, host, lxToken, orgName) {
+	//Every closed PR in the past 30 days is considered a release
+	//All the commits inside the PR is considered a change event
+	async sendEventsForRepo(monoRepo, host, lxToken, orgName, ghToken) {
 		let bearerToken = await getAccessToken(host, lxToken);
 		let initialPullRequestPageCount = 100;
 		let eventsCount = 0;
@@ -67,11 +69,12 @@ class EventsDataHandler {
 			}
 		  }
 		`,
-			repoIds: [repoId],
+			repoIds: [monoRepo.id],
 			pullReqPageCount: initialPullRequestPageCount,
 			cursor: null
 		});
 		let repoPullRequestInfo = data.nodes;
+
 		let last30day = new Date(getISODateStringOnFromToday(30));
 		if (repoPullRequestInfo[0].pullRequests.nodes && repoPullRequestInfo[0].pullRequests.nodes.length > 0) {
 			let lastPRInListMergeDate = new Date(
@@ -95,19 +98,75 @@ class EventsDataHandler {
 				eventsCount: eventsCount
 			};
 		}
+
 		for (let pullReq of pullRequestsBelow30Days) {
 			let commits = await this.getAllCommitsForPullRequest(pullReq.id);
-			let changeIds = [];
+			let changeIds = {};
+
 			for (let commit of commits) {
-				await this.registerChangeEventInVSM(
-					bearerToken,
-					commit.oid,
-					`${orgName}/${repoPullRequestInfo[0].name}`,
-					commit.committedDate,
-					commit.author.email
-				);
-				changeIds.push(commit.oid);
+				const ceId = commit.oid;
+				const ceTime = commit.committedDate;
+				const ceSource = `${orgName}/${repoPullRequestInfo[0].name}`;
+
+				let changedFiles = await this.getAllFilesChangedPerCommit(commit, ghToken, ceSource);
+
+				for (let subRepo of monoRepo.subRepos) {
+					for (let i = 0; i < changedFiles.length; i++) {
+						if (changedFiles[i].filename.includes(subRepo.name)) {
+							const subRepoCommitId = ceId + '_' + subRepo.name;
+
+							if (Object.keys(changeIds).includes(subRepo.name)) {
+								changeIds[subRepo.name].push(subRepoCommitId);
+							} else {
+								Object.assign(changeIds, {
+									...changeIds,
+									[subRepo.name]: [subRepoCommitId]
+								});
+							}
+
+							eventsCount += 1;
+							let subRepoCeSource = ceSource + '/' + subRepo.name;
+							const data = {
+								author: commit.author.email,
+								rawID: ceId
+							};
+							await this.registerChangeEventInVSM(bearerToken, subRepoCommitId, subRepoCeSource, ceTime, data);
+							break;
+						}
+						const data = {
+							author: commit.author.email
+						};
+						await this.registerChangeEventInVSM(bearerToken, ceId, ceSource, ceTime, data);
+					}
+				}
+				if (Object.keys(changeIds).includes(`${repoPullRequestInfo[0].name}`)) {
+					changeIds[`${repoPullRequestInfo[0].name}`].push(commit.oid);
+				} else {
+					Object.assign(changeIds, {
+						...changeIds,
+						[`${repoPullRequestInfo[0].name}`]: [commit.oid]
+					});
+				}
 				eventsCount += 1;
+			}
+			for (const repoName in changeIds) {
+				if (repoName === `${repoPullRequestInfo[0].name}`) {
+					await this.registerReleaseEventInVSM(
+						bearerToken,
+						pullReq.headRefOid,
+						`${orgName}/${repoPullRequestInfo[0].name}`,
+						pullReq.mergedAt,
+						changeIds[repoName]
+					);
+				} else {
+					await this.registerReleaseEventInVSM(
+						bearerToken,
+						pullReq.headRefOid + '_' + `${repoName}`,
+						`${orgName}/${repoPullRequestInfo[0].name}/${repoName}`,
+						pullReq.mergedAt,
+						changeIds[repoName]
+					);
+				}
 			}
 			await this.registerReleaseEventInVSM(
 				bearerToken,
@@ -194,6 +253,22 @@ class EventsDataHandler {
 		return finalResult;
 	}
 
+	async getAllFilesChangedPerCommit(commit, ghToken, ceSource) {
+		return await this.retrieveAllFilesChanged(commit, ghToken, ceSource);
+	}
+
+	async retrieveAllFilesChanged(commit, ghToken, ceSource) {
+		try {
+			let headers = {
+				authorization: `token ${ghToken}`
+			};
+			let commitsInfo = await this.httpClient.queryGetFn()(`https://api.github.com/repos/${ceSource}/commits/${commit.oid}`, headers, {});
+			return commitsInfo.files;
+		} catch (e) {
+			await this.logger.logError(this.context, `Error: ${e.message}`);
+		}
+	}
+
 	async getPagedCommitsForPullRequest(pullReqId, cursor) {
 		let initialCommitPageCount = 100;
 		const data = await this.graphqlClient.query({
@@ -210,6 +285,7 @@ class EventsDataHandler {
 					  }
 					  nodes {
 						commit {
+						  changedFiles
 						  committedDate
 						  oid
 						  id
@@ -233,7 +309,7 @@ class EventsDataHandler {
 		};
 	}
 
-	async registerChangeEventInVSM(bearerToken, ceId, ceSource, ceTime, author) {
+	async registerChangeEventInVSM(bearerToken, ceId, ceSource, ceTime, data) {
 		let headers = {
 			'Ce-Specversion': '1.0',
 			'Ce-Type': 'net.leanix.valuestreams.change',
@@ -245,7 +321,7 @@ class EventsDataHandler {
 			Authorization: `Bearer ${bearerToken}`
 		};
 		try {
-			await this.httpClient.queryPostFn()(`${this.baseUrl}/events`, headers, { author: author });
+			await this.httpClient.queryPostFn()(`${this.baseUrl}/events`, headers, data);
 		} catch (e) {
 			await this.logger.logError(
 				this.context,
