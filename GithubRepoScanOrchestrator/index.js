@@ -170,10 +170,67 @@ class LdifProcessor {
 
 		for (const workingGroup of workingGroups) {
 			const output = [];
+			try {
+				for (const workingGroupElement of workingGroup) {
+					output.push(
+						this.context.df.callActivity('SendEventsForDORA', {
+							repositoriesIds: workingGroupElement,
+							host,
+							ghToken,
+							lxToken,
+							orgName,
+							metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
+						})
+					);
+				}
+				const partialResults = yield this.context.df.Task.all(output);
+				completePartialResults.push(...partialResults);
+			} catch (e) {
+				let [limitExceeded, reset] = Util.isRateLimitExceededError(e);
+				if (limitExceeded) {
+					yield this.logger.logInfoFromOrchestrator(
+						this.context,
+						this.context.df.isReplaying,
+						`GitHub GraphQL API rate limit exceeded while registering events to DORA. Attempting to automatically recover. Reset after: ${reset}`
+					);
+					yield* this.sleepWithTimelyIHubUpdate(`Progress 50%`);
+					workingGroups.push(workingGroup);
+				} else {
+					throw e;
+				}
+			}
+		}
+
+		return completePartialResults;
+	}
+
+	*sendMonoRepoEventsForDORA(monoReposWithSubRepos, maxConcurrentWorkers = 3) {
+		const {
+			secretsConfiguration: { ghToken, lxToken },
+			connectorConfiguration: { host, orgName },
+			connectorLoggingUrl,
+			runId,
+			progressCallbackUrl
+		} = this.context.bindingData.input;
+
+		const scannerCapacity = MAX_EVENT_REGISTER_CAPACITY;
+		const allRepoIdsSetToRegisterEvents = [];
+		for (let i = 0, j = monoReposWithSubRepos.length; i < j; i += scannerCapacity) {
+			allRepoIdsSetToRegisterEvents.push(monoReposWithSubRepos.slice(i, i + scannerCapacity));
+		}
+
+		const completePartialResults = [];
+		const workingGroups = [];
+		for (let i = 0, j = allRepoIdsSetToRegisterEvents.length; i < j; i += maxConcurrentWorkers) {
+			workingGroups.push(allRepoIdsSetToRegisterEvents.slice(i, i + maxConcurrentWorkers));
+		}
+
+		for (const workingGroup of workingGroups) {
+			const output = [];
 			for (const workingGroupElement of workingGroup) {
 				output.push(
-					this.context.df.callActivity('SendEventsForDORA', {
-						repositoriesIds: workingGroupElement,
+					this.context.df.callActivity('SendMonoRepoEventsForDORA', {
+						monoReposWithSubRepos: workingGroupElement,
 						host,
 						ghToken,
 						lxToken,

@@ -210,7 +210,6 @@ class EventsDataHandler {
 					  }
 					  nodes {
 						commit {
-						  changedFiles
 						  committedDate
 						  oid
 						  id
