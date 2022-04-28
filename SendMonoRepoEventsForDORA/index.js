@@ -168,13 +168,6 @@ class EventsDataHandler {
 					);
 				}
 			}
-			await this.registerReleaseEventInVSM(
-				bearerToken,
-				pullReq.headRefOid,
-				`${orgName}/${repoPullRequestInfo[0].name}`,
-				pullReq.mergedAt,
-				changeIds
-			);
 			eventsCount += 1;
 		}
 		await this.logger.logInfo(
