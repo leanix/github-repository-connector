@@ -58,7 +58,6 @@ class LdifProcessor {
 		);
 
 		const partialResults = yield* this.fetchReposDataConcurrently(repositoriesIds);
-		const monoReposWithSubRepos = yield* this.getAllMonoReposWithSubRepos(partialResults);
 
 		yield this.context.df.callActivity('UpdateProgressToIHub', {
 			progressCallbackUrl,
@@ -103,8 +102,16 @@ class LdifProcessor {
 				this.context.df.isReplaying,
 				`Starting events processing to send required data for DORA metrics calculation. reason: 'sendEventsForDORA' flag is true`
 			);
-			yield* this.sendEventsForDORA(repositoriesIds);
-			yield* this.sendMonoRepoEventsForDORA(monoReposWithSubRepos);
+
+			let conditionalReposIds = repositoriesIds;
+			if (flags && flags.detectMonoRepos) {
+				//Filtering out mono repos to avoid sending parent metrics twice
+				const monoReposWithSubRepos = Util.getAllMonoReposWithSubRepos(partialResults);
+				conditionalReposIds = repositoriesIds.filter((repoId) => monoReposWithSubRepos.some((monoRepo) => monoRepo.id !== repoId));
+				yield* this.sendMonoRepoEventsForDORA(monoReposWithSubRepos);
+			}
+
+			yield* this.sendEventsForDORA(conditionalReposIds);
 			yield this.logger.logInfoFromOrchestrator(
 				this.context,
 				this.context.df.isReplaying,
@@ -227,20 +234,35 @@ class LdifProcessor {
 
 		for (const workingGroup of workingGroups) {
 			const output = [];
-			for (const workingGroupElement of workingGroup) {
-				output.push(
-					this.context.df.callActivity('SendMonoRepoEventsForDORA', {
-						monoReposWithSubRepos: workingGroupElement,
-						host,
-						ghToken,
-						lxToken,
-						orgName,
-						metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
-					})
-				);
+			try {
+				for (const workingGroupElement of workingGroup) {
+					output.push(
+						this.context.df.callActivity('SendMonoRepoEventsForDORA', {
+							monoReposWithSubRepos: workingGroupElement,
+							host,
+							ghToken,
+							lxToken,
+							orgName,
+							metadata: { connectorLoggingUrl, runId, progressCallbackUrl }
+						})
+					);
+				}
+				const partialResults = yield this.context.df.Task.all(output);
+				completePartialResults.push(...partialResults);
+			} catch (e) {
+				let [limitExceeded, reset] = Util.isRateLimitExceededError(e);
+				if (limitExceeded) {
+					yield this.logger.logInfoFromOrchestrator(
+						this.context,
+						this.context.df.isReplaying,
+						`GitHub GraphQL API rate limit exceeded while registering mono repo events to DORA. Attempting to automatically recover. Reset after: ${reset}`
+					);
+					yield* this.sleepWithTimelyIHubUpdate(`Progress 50%`);
+					workingGroups.push(workingGroup);
+				} else {
+					throw e;
+				}
 			}
-			const partialResults = yield this.context.df.Task.all(output);
-			completePartialResults.push(...partialResults);
 		}
 
 		return completePartialResults;
@@ -287,30 +309,6 @@ class LdifProcessor {
 		}
 
 		return completePartialResults;
-	}
-
-	getAllMonoReposWithSubRepos(allRepos) {
-		let monoRepos = [];
-		for (let i = 0; i < allRepos.length; i++) {
-			for (let j = 0; j < allRepos[i].length; j++) {
-				if (allRepos[i][j].isMonoRepo) {
-					monoRepos.push({ ...allRepos[i][j], subRepos: [] });
-				}
-			}
-		}
-
-		for (let i = 0; i < allRepos.length; i++) {
-			for (let j = 0; j < allRepos[i].length; j++) {
-				if (allRepos[i][j].isSubRepo) {
-					monoRepos.map((repo) => {
-						if (repo.name === allRepos[i][j].monoRepoName) {
-							repo.subRepos.push(allRepos[i][j]);
-						}
-					});
-				}
-			}
-		}
-		return monoRepos;
 	}
 
 	*fetchTeams(repositoriesIds) {
