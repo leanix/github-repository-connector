@@ -58,7 +58,7 @@ class LdifProcessor {
 		);
 
 		const partialResults = yield* this.fetchReposDataConcurrently(repositoriesIds);
-		const monoReposWithSubRepos = this.getAllMonoReposWithSubRepos(partialResults);
+		const monoReposWithSubRepos = Util.getAllMonoReposWithSubRepos(partialResults);
 
 		yield this.context.df.callActivity('UpdateProgressToIHub', {
 			progressCallbackUrl,
@@ -306,29 +306,6 @@ class LdifProcessor {
 		}
 
 		return completePartialResults;
-	}
-
-	getAllMonoReposWithSubRepos(allRepos) {
-		let monoRepos = [];
-
-		//allRepos is an Array of arrays of repos i.e.: [[{repo1}, {repo2}], [{repo3}, {repo4}]]
-		allRepos.forEach((repoArr) => {
-			repoArr.filter((repo) => repo.isMonoRepo).map((monoRepo) => monoRepos.push({ ...monoRepo, subRepos: [] }));
-		});
-
-		allRepos.forEach((repoArr) => {
-			repoArr
-				.filter((repo) => repo.isSubRepo)
-				.map((subRepo) => {
-					monoRepos.map((repo) => {
-						if (repo.name === subRepo.monoRepoName) {
-							repo.subRepos.push(subRepo);
-						}
-					});
-				});
-		});
-
-		return monoRepos;
 	}
 
 	*fetchTeams(repositoriesIds) {
