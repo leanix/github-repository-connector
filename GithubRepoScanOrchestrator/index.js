@@ -58,7 +58,6 @@ class LdifProcessor {
 		);
 
 		const partialResults = yield* this.fetchReposDataConcurrently(repositoriesIds);
-		const monoReposWithSubRepos = Util.getAllMonoReposWithSubRepos(partialResults);
 
 		yield this.context.df.callActivity('UpdateProgressToIHub', {
 			progressCallbackUrl,
@@ -103,12 +102,16 @@ class LdifProcessor {
 				this.context.df.isReplaying,
 				`Starting events processing to send required data for DORA metrics calculation. reason: 'sendEventsForDORA' flag is true`
 			);
-			const repositoriesIdsWithoutMonoRepos = repositoriesIds.filter((repoId) =>
-				monoReposWithSubRepos.some((monoRepo) => monoRepo.id !== repoId)
-			);
 
-			yield* this.sendEventsForDORA(repositoriesIdsWithoutMonoRepos);
-			yield* this.sendMonoRepoEventsForDORA(monoReposWithSubRepos);
+			let conditionalReposIds = repositoriesIds;
+			if (flags && flags.detectMonoRepos) {
+				//Filtering out mono repos to avoid sending parent metrics twice
+				const monoReposWithSubRepos = Util.getAllMonoReposWithSubRepos(partialResults);
+				conditionalReposIds = repositoriesIds.filter((repoId) => monoReposWithSubRepos.some((monoRepo) => monoRepo.id !== repoId));
+				yield* this.sendMonoRepoEventsForDORA(monoReposWithSubRepos);
+			}
+
+			yield* this.sendEventsForDORA(conditionalReposIds);
 			yield this.logger.logInfoFromOrchestrator(
 				this.context,
 				this.context.df.isReplaying,
