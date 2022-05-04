@@ -11,7 +11,7 @@ const { DateTime } = require('luxon');
 const Util = require('../Lib/helper');
 
 const MAX_CAPACITY = 100;
-const MAX_EVENT_REGISTER_CAPACITY = 5;
+const MAX_EVENT_REGISTER_CAPACITY = 20;
 class LdifProcessor {
 	constructor(context, logger) {
 		this.context = context;
@@ -179,6 +179,11 @@ class LdifProcessor {
 			const output = [];
 			try {
 				for (const workingGroupElement of workingGroup) {
+					yield this.context.df.callActivity('UpdateProgressToIHub', {
+						progressCallbackUrl,
+						status: iHubStatus.IN_PROGRESS,
+						message: 'Progress 40%'
+					});
 					output.push(
 						this.context.df.callActivity('SendEventsForDORA', {
 							repositoriesIds: workingGroupElement,
@@ -236,6 +241,11 @@ class LdifProcessor {
 			const output = [];
 			try {
 				for (const workingGroupElement of workingGroup) {
+					yield this.context.df.callActivity('UpdateProgressToIHub', {
+						progressCallbackUrl,
+						status: iHubStatus.IN_PROGRESS,
+						message: 'Progress 45%'
+					});
 					output.push(
 						this.context.df.callActivity('SendMonoRepoEventsForDORA', {
 							monoReposWithSubRepos: workingGroupElement,
@@ -447,7 +457,7 @@ class LdifProcessor {
 		return repoIdsVisibilityMap;
 	}
 
-	*sleepWithTimelyIHubUpdate(message, updateEveryMinutes = 5, waitForMinutes = 60) {
+	*sleepWithTimelyIHubUpdate(message, updateEveryMinutes = 10, waitForMinutes = 60) {
 		const { progressCallbackUrl } = this.context.bindingData.input;
 
 		for (let i = 0; i < Math.ceil(waitForMinutes / updateEveryMinutes); i++) {
