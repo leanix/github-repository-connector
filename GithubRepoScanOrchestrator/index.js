@@ -244,7 +244,7 @@ class LdifProcessor {
 					yield this.context.df.callActivity('UpdateProgressToIHub', {
 						progressCallbackUrl,
 						status: iHubStatus.IN_PROGRESS,
-						message: 'Progress 45%'
+						message: 'Progress 40%: Computing DORA metrics'
 					});
 					output.push(
 						this.context.df.callActivity('SendMonoRepoEventsForDORA', {
