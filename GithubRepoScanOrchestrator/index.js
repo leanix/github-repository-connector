@@ -179,11 +179,6 @@ class LdifProcessor {
 			const output = [];
 			try {
 				for (const workingGroupElement of workingGroup) {
-					yield this.context.df.callActivity('UpdateProgressToIHub', {
-						progressCallbackUrl,
-						status: iHubStatus.IN_PROGRESS,
-						message: 'Progress 40%'
-					});
 					output.push(
 						this.context.df.callActivity('SendEventsForDORA', {
 							repositoriesIds: workingGroupElement,
@@ -195,6 +190,11 @@ class LdifProcessor {
 						})
 					);
 				}
+				yield this.context.df.callActivity('UpdateProgressToIHub', {
+					progressCallbackUrl,
+					status: iHubStatus.IN_PROGRESS,
+					message: 'Progress 40%'
+				});
 				const partialResults = yield this.context.df.Task.all(output);
 				completePartialResults.push(...partialResults);
 			} catch (e) {
@@ -241,11 +241,6 @@ class LdifProcessor {
 			const output = [];
 			try {
 				for (const workingGroupElement of workingGroup) {
-					yield this.context.df.callActivity('UpdateProgressToIHub', {
-						progressCallbackUrl,
-						status: iHubStatus.IN_PROGRESS,
-						message: 'Progress 45%'
-					});
 					output.push(
 						this.context.df.callActivity('SendMonoRepoEventsForDORA', {
 							monoReposWithSubRepos: workingGroupElement,
@@ -257,6 +252,11 @@ class LdifProcessor {
 						})
 					);
 				}
+				yield this.context.df.callActivity('UpdateProgressToIHub', {
+					progressCallbackUrl,
+					status: iHubStatus.IN_PROGRESS,
+					message: 'Progress 45%'
+				});
 				const partialResults = yield this.context.df.Task.all(output);
 				completePartialResults.push(...partialResults);
 			} catch (e) {
