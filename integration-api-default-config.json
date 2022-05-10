@@ -81,16 +81,17 @@
 				"processorName": "repository-topic-tags-creation",
 				"processorDescription": "This inboundTag processor creates a tag group and adds tags in it. Also assigns tags to FS fetching from variable",
 				"filter": {
-					"advanced": "${content.type == 'Topic' && helper:getFromMap(variables, 'ws_swa_fs_ids').contains(helper:getFromMap(variables,'topic_'.concat(content.id)))}"
+					"advanced": "${content.type == 'Topic' && helper:getFromMap(variables, 'ws_swa_fs_ids').contains(integration.valueOfForEach)}"
 				},
 				"factSheets": {
 					"external": {
-						"ids": "${helper:getFromMap(variables,'topic_'.concat(content.id))}",
+						"ids": "${integration.valueOfForEach}",
 						"type": {
 							"expr": "githubId"
 						}
 					}
 				},
+				"forEach": "${helper:getFromMap(variables,'topic_'.concat(content.id))}",
 				"run": 3,
 				"updates": [
 					{
