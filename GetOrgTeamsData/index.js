@@ -15,7 +15,7 @@ class GetOrgTeamsDataHandler {
 	}
 
 	async getPagedTeamsData({ orgName, pageCount, cursor }) {
-		const initialRepoPageSize = 100;
+		const initialRepoPageSize = 60;
 		const data = await this.graphqlClient.query({
 			query: `
             query getOrgTeams($queryString: String!, $pageCount: Int!, $cursor: String, $reposPageCount: Int!) {
